@@ -98,7 +98,7 @@ public class AccountService : IAccountService
             if (user != null)
             {
                 var token = await _userRepository.GeneratePasswordResetTokenAsync(user);
-                await _emailService.SendPasswordResetEmailAsync(user.Email!, $"{user.FirstName} {user.LastName}", token);
+                await _emailService.SendPasswordResetEmailAsync(user.Email!, user.UserName!, token);
             }
 
             return ForgotPasswordResult.Success();

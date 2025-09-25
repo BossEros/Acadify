@@ -22,8 +22,8 @@ public class AccountService : IAccountService
 
     public async Task<AuthResult> RegisterAsync(RegisterRequest request)
     {
-        var existingUser = await _userRepository.FindByEmailAsync(request.Email);
-        if (existingUser != null)
+        bool emailExists = await _userRepository.FindByEmailAsync(request.Email) != null;
+        if (emailExists)
         {
             return AuthResult.Failure(new[] { "Email is already in use." });
         }

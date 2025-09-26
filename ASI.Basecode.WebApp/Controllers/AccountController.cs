@@ -136,11 +136,6 @@ public class AccountController : Controller
 
         var result = await _accountService.SendPasswordResetTokenAsync(model.Email);
 
-        // Always show success message for security (prevents email enumeration attacks)
-        // Even if the email doesn't exist, we show the same message
-        ViewBag.Message = AccountMessages.PasswordResetEmailSent;
-        ViewBag.Email = model.Email; // Optional: to show which email was used
-
         return View("ForgotPasswordConfirmation");
     }
 

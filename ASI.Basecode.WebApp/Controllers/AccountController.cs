@@ -58,31 +58,39 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var result = await _accountService.RegisterAsync(new RegisterRequest
+        try
         {
-            FirstName = model.FirstName,
-            LastName = model.LastName,
-            Email = model.Email,
-            Password = model.Password,
-            Role = model.Role
-        });
+            var result = await _accountService.RegisterAsync(new RegisterRequest
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                Password = model.Password,
+                Role = model.Role
+            });
 
-        if (result.Succeeded)
-        {
-            return RedirectToAction("Login", "Account");
+            if (result.Succeeded)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Add errors to ModelState
+            foreach (var error in result.Errors)
+            {
+                if (error.Contains("Email"))
+                {
+                    ModelState.AddModelError(nameof(model.Email), error);
+                }
+                else
+                {
+                    ModelState.AddModelError("", error);
+                }
+            }
         }
-
-        // Add errors to ModelState
-        foreach (var error in result.Errors)
+        catch (Exception ex)
         {
-            if (error.Contains("Email"))
-            {
-                ModelState.AddModelError(nameof(model.Email), error);
-            }
-            else
-            {
-                ModelState.AddModelError("", error);
-            }
+            // Log the exception (add logging service)
+            ModelState.AddModelError("", "An unexpected error occurred during registration. Please try again.");
         }
 
         return View(model);
@@ -98,30 +106,39 @@ public class AccountController : Controller
             return ViewWithReturnUrl(model, returnUrl);
         }
 
-        var result = await _accountService.LoginAsync(new LoginRequest
+        try
         {
-            Email = model.Email,
-            Password = model.Password,
-            RememberMe = model.RememberMe
-        });
-
-        if (result.Succeeded)
-        {
-            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            var result = await _accountService.LoginAsync(new LoginRequest
             {
-                return Redirect(returnUrl);
+                Email = model.Email,
+                Password = model.Password,
+                RememberMe = model.RememberMe
+            });
+
+            if (result.Succeeded)
+            {
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+                return await RedirectBasedOnRoleAsync(model.Email);
             }
 
-            return await RedirectBasedOnRoleAsync(model.Email);
+            if (result.IsLockedOut)
+            {
+                ModelState.AddModelError("", AccountMessages.AccountLockedOut);
+                return ViewWithReturnUrl(model, returnUrl);
+            }
+            
+            ModelState.AddModelError("", result.ErrorMessage ?? AccountMessages.InvalidLoginAttempt);
+        }
+        catch (Exception ex)
+        {
+            // Log the exception (add logging service)
+            ModelState.AddModelError("", "An unexpected error occurred during login. Please try again.");
         }
 
-        if (result.IsLockedOut)
-        {
-            ModelState.AddModelError("", AccountMessages.AccountLockedOut);
-            return ViewWithReturnUrl(model, returnUrl);
-        }
-        
-        ModelState.AddModelError("", result.ErrorMessage ?? AccountMessages.InvalidLoginAttempt);
         return ViewWithReturnUrl(model, returnUrl);
     }
 
@@ -149,17 +166,25 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var result = await _accountService.ResetPasswordAsync(model.Email, model.Token, model.Password);
-
-        if (result.Succeeded)
+        try
         {
-            ViewBag.Message = AccountMessages.PasswordResetSuccessful;
-            return View("ResetPasswordConfirmation");
+            var result = await _accountService.ResetPasswordAsync(model.Email, model.Token, model.Password);
+
+            if (result.Succeeded)
+            {
+                ViewBag.Message = AccountMessages.PasswordResetSuccessful;
+                return View("ResetPasswordConfirmation");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error);
+            }
         }
-
-        foreach (var error in result.Errors)
+        catch (Exception ex)
         {
-            ModelState.AddModelError("", error);
+            // Log the exception (add logging service)
+            ModelState.AddModelError("", "An unexpected error occurred during password reset. Please try again.");
         }
 
         return View(model);

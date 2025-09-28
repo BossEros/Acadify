@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Student_Performance_Tracker.ViewModels.AccountManagement
+namespace ASI.Basecode.WebApp.ViewModels.AccountManagement
 {
     public class EditUserViewModel
     {
@@ -9,19 +9,22 @@ namespace Student_Performance_Tracker.ViewModels.AccountManagement
         [Required(ErrorMessage = "Username is required")]
         [StringLength(50, ErrorMessage = "Username cannot exceed 50 characters")]
         [Display(Name = "Username")]
-        public string UserName { get; set; } = null!;
+        public string UserName { get; set; } = string.Empty;
 
         // Read-only fields for display purposes
         [Display(Name = "Email Address")]
-        public string Email { get; set; } = null!;
+        public string Email { get; set; } = string.Empty;
 
         [Display(Name = "First Name")]
-        public string FirstName { get; set; } = null!;
+        public string FirstName { get; set; } = string.Empty;
 
         [Display(Name = "Last Name")]
-        public string LastName { get; set; } = null!;
+        public string LastName { get; set; } = string.Empty;
 
-        [Display(Name = "Approve User Account")]
-        public bool IsApproved { get; set; }
+        [Display(Name = "Role")]
+        public string Role { get; set; } = string.Empty;
+
+        [Display(Name = "Active Status")]
+        public bool IsActive { get; set; }
     }
 }

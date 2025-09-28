@@ -1,8 +1,14 @@
-﻿@using Microsoft.AspNetCore.Identity
-@model IEnumerable<ASI.Basecode.Data.Models.User>
+﻿@model ASI.Basecode.WebApp.ViewModels.AccountManagement.UserListViewModel
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Admin"; 
+    ViewData["Title"] = "Account Management"; 
+}
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="mb-4 p-4 rounded @(Model.MessageType == "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+        @Model.Message
+    </div>
 }
 
 <div class="bg-white rounded-lg shadow p-4">
@@ -26,51 +32,53 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var user in Model)
+            @foreach (var user in Model.Users)
             {
                 <tr class="border-b">
                     <td class="p-2">@user.Id</td>
-                    <td class="p-2">@($"{user.FirstName} {user.LastName}")</td>
+                    <td class="p-2">@user.FullName</td>
                     <td class="p-2">@user.Email</td>
                     <td class="p-2">
-                        @* show role with color *@
                         @{
-                            var roles = await Context.RequestServices
-                            .GetService<UserManager<ASI.Basecode.Data.Models.User>>()
-                            .GetRolesAsync(user);
-                        }
-                        @foreach (var role in roles)
-                        {
-                            var color = role switch
+                            var color = user.Role switch
                             {
-                                "ADMIN" => "bg-yellow-100 text-yellow-700",
-                                "TEACHER" => "bg-green-100 text-green-700",
-                                "STUDENT" => "bg-blue-100 text-blue-700",
+                                "Admin" => "bg-yellow-100 text-yellow-700",
+                                "Teacher" => "bg-green-100 text-green-700",
+                                "Student" => "bg-blue-100 text-blue-700",
                                 _ => "bg-gray-100 text-gray-700"
                             };
-                            <span class="px-2 py-1 rounded text-xs font-medium @color">@role</span>
                         }
+                        <span class="px-2 py-1 rounded text-xs font-medium @color">@user.Role</span>
                     </td>
                     <td class="p-2">
-                        <span class="text-green-600">Active</span>
+                        @if (user.IsActive)
+                        {
+                            <span class="text-green-600 font-medium">Active</span>
+                        }
+                        else
+                        {
+                            <span class="text-red-600 font-medium">Inactive</span>
+                        }
                     </td>
                     <td class="p-2 flex space-x-2">
                         <a asp-action="Edit" asp-route-id="@user.Id"
-                           class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded">
+                           class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm">
                             Edit
+                        </a>
+                        
+                        <a asp-action="ChangePassword" asp-route-id="@user.Id"
+                           class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                            Change Password
                         </a>
 
                         @* Hide Delete if Admin *@
-                        @if (!(await Context.RequestServices
-                                            .GetService<UserManager<ASI.Basecode.Data.Models.User>>()
-                                            .GetRolesAsync(user)).Contains("Admin"))
+                        @if (!user.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
                         {
-                            <form asp-action="Delete" asp-route-id="@user.Id" method="post" class="inline">
-                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
-                                        onclick="return confirm('Are you sure you want to delete this user?');">
-                                    Delete
-                                </button>
-                            </form>
+                            <a asp-action="Delete" asp-route-id="@user.Id"
+                               class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                               onclick="return confirm('Are you sure you want to delete this user?');">
+                                Delete
+                            </a>
                         }
                     </td>
                 </tr>

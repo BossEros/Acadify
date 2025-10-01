@@ -3,11 +3,11 @@ using ASI.Basecode.Services.Results;
 
 namespace ASI.Basecode.Services.Interfaces
 {
-    public interface IUserManagementService
+    public interface IAccountManagementService
     {
         Task<IEnumerable<UserManagementDto>> GetAllUsersAsync();
         Task<UserManagementDto?> GetUserByIdAsync(int id);
-        Task<UserManagementResult> CreateUserAsync(CreateUserRequest request);
+        Task<UserManagementResult> CreateUserAsync(RegisterRequest request);
         Task<UserManagementResult> UpdateUserAsync(UpdateUserRequest request);
         Task<UserManagementResult> ChangePasswordAsync(ChangePasswordRequest request);
         Task<UserManagementResult> DeleteUserAsync(int id);

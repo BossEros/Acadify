@@ -4,11 +4,6 @@ namespace ASI.Basecode.WebApp.ViewModels.AccountManagement
 {
     public class CreateUserViewModel
     {
-        [Required(ErrorMessage = "Username is required")]
-        [StringLength(50, ErrorMessage = "Username cannot exceed 50 characters")]
-        [Display(Name = "Username")]
-        public string UserName { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Please enter a valid email address")]
         [StringLength(100, ErrorMessage = "Email cannot exceed 100 characters")]

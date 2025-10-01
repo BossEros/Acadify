@@ -49,7 +49,7 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 
 // Services
 builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IAccountManagementService, AccountManagementService>();
 builder.Services.AddHttpClient<IEmailService, SendGridEmailService>();
 
 // Repositories (Data layer)

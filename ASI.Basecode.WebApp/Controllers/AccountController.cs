@@ -87,7 +87,7 @@ public class AccountController : Controller
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log the exception (add logging service)
             ModelState.AddModelError("", "An unexpected error occurred during registration. Please try again.");
@@ -133,7 +133,7 @@ public class AccountController : Controller
             
             ModelState.AddModelError("", result.ErrorMessage ?? AccountMessages.InvalidLoginAttempt);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log the exception (add logging service)
             ModelState.AddModelError("", "An unexpected error occurred during login. Please try again.");
@@ -181,7 +181,7 @@ public class AccountController : Controller
                 ModelState.AddModelError("", error);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log the exception (add logging service)
             ModelState.AddModelError("", "An unexpected error occurred during password reset. Please try again.");

@@ -6,14 +6,14 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [AllowAnonymous]
     public class AccountManagementController : Controller
     {
-        private readonly IUserManagementService _userManagementService;
+        private readonly IAccountManagementService _accountManagementService;
 
-        public AccountManagementController(IUserManagementService userManagementService)
+        public AccountManagementController(IAccountManagementService accountManagementService)
         {
-            _userManagementService = userManagementService;
+            _accountManagementService = accountManagementService;
         }
 
         // READ: View all users from database
@@ -21,7 +21,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
-                var users = await _userManagementService.GetAllUsersAsync();
+                var users = await _accountManagementService.GetAllUsersAsync();
                 
                 var viewModel = new UserListViewModel
                 {
@@ -49,7 +49,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
-                var user = await _userManagementService.GetUserByIdAsync(id);
+                var user = await _accountManagementService.GetUserByIdAsync(id);
 
                 if (user == null)
                 {
@@ -71,7 +71,7 @@ namespace ASI.Basecode.WebApp.Controllers
         // CREATE: Show create form
         public async Task<IActionResult> Create()
         {
-            var availableRoles = await _userManagementService.GetAvailableRolesAsync();
+            var availableRoles = await _accountManagementService.GetAvailableRolesAsync();
             var viewModel = new CreateUserViewModel
             {
                 AvailableRoles = availableRoles.ToList()
@@ -88,18 +88,16 @@ namespace ASI.Basecode.WebApp.Controllers
             {
                 try
                 {
-                    var request = new CreateUserRequest
+                    var request = new RegisterRequest
                     {
-                        UserName = model.UserName,
                         Email = model.Email,
                         FirstName = model.FirstName,
                         LastName = model.LastName,
                         Password = model.Password,
-                        Role = model.Role,
-                        IsActive = model.IsActive
+                        Role = model.Role
                     };
 
-                    var result = await _userManagementService.CreateUserAsync(request);
+                    var result = await _accountManagementService.CreateUserAsync(request);
 
                     if (result.Succeeded)
                     {
@@ -121,7 +119,7 @@ namespace ASI.Basecode.WebApp.Controllers
             }
 
             // Reload available roles for the form
-            model.AvailableRoles = (await _userManagementService.GetAvailableRolesAsync()).ToList();
+            model.AvailableRoles = (await _accountManagementService.GetAvailableRolesAsync()).ToList();
             return View(model);
         }
 
@@ -130,7 +128,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
-                var user = await _userManagementService.GetUserByIdAsync(id);
+                var user = await _accountManagementService.GetUserByIdAsync(id);
                 if (user == null)
                 {
                     TempData["Message"] = "User not found.";
@@ -182,7 +180,7 @@ namespace ASI.Basecode.WebApp.Controllers
                         IsActive = model.IsActive
                     };
 
-                    var result = await _userManagementService.UpdateUserAsync(request);
+                    var result = await _accountManagementService.UpdateUserAsync(request);
 
                     if (result.Succeeded)
                     {
@@ -209,7 +207,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
-                var user = await _userManagementService.GetUserByIdAsync(id);
+                var user = await _accountManagementService.GetUserByIdAsync(id);
                 if (user == null)
                 {
                     TempData["Message"] = "User not found.";
@@ -250,7 +248,7 @@ namespace ASI.Basecode.WebApp.Controllers
                         NewPassword = model.NewPassword
                     };
 
-                    var result = await _userManagementService.ChangePasswordAsync(request);
+                    var result = await _accountManagementService.ChangePasswordAsync(request);
 
                     if (result.Succeeded)
                     {
@@ -275,7 +273,7 @@ namespace ASI.Basecode.WebApp.Controllers
         // DELETE: Show delete confirmation
         public async Task<IActionResult> Delete(int id)
         {
-            var user = await _userManagementService.GetUserByIdAsync(id);
+            var user = await _accountManagementService.GetUserByIdAsync(id);
             if (user == null)
             {
                 TempData["Message"] = "User not found.";
@@ -293,7 +291,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
-                var result = await _userManagementService.DeleteUserAsync(id);
+                var result = await _accountManagementService.DeleteUserAsync(id);
                 
                 TempData["Message"] = result.Message ?? (result.Succeeded ? "User deleted successfully!" : "Error deleting user.");
                 TempData["MessageType"] = result.Succeeded ? "success" : "error";

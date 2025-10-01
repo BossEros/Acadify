@@ -8,13 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ASI.Basecode.Services.Implementation
 {
-    public class UserManagementService : IUserManagementService
+    public class AccountManagementService : IAccountManagementService
     {
         private readonly IUserRepository _userRepository;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
 
-        public UserManagementService(
+        public AccountManagementService(
             IUserRepository userRepository,
             UserManager<User> userManager,
             RoleManager<IdentityRole<int>> roleManager)
@@ -74,17 +74,17 @@ namespace ASI.Basecode.Services.Implementation
             };
         }
 
-        public async Task<UserManagementResult> CreateUserAsync(CreateUserRequest request)
+        public async Task<UserManagementResult> CreateUserAsync(RegisterRequest request)
         {
             try
             {
                 // Check if username or email already exists
-                var existingUserByUsername = await _userRepository.FindByUserNameAsync(request.UserName);
+                var existingUserByUsername = await _userRepository.FindByUserNameAsync(request.Email); // Using email as username
                 var existingUserByEmail = await _userRepository.FindByEmailAsync(request.Email);
 
                 if (existingUserByUsername != null)
                 {
-                    return UserManagementResult.Failure("Username already exists.");
+                    return UserManagementResult.Failure("Email already exists.");
                 }
 
                 if (existingUserByEmail != null)
@@ -95,11 +95,11 @@ namespace ASI.Basecode.Services.Implementation
                 // Create new user
                 var user = new User
                 {
-                    UserName = request.UserName,
+                    UserName = request.Email, // Using email as username like in AccountService
                     Email = request.Email,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
-                    IsApproved = request.IsActive,
+                    IsApproved = request.Role == "Student", // Set IsApproved based on role like in AccountService
                     EmailConfirmed = true,
                     CreatedAt = DateTime.UtcNow
                 };

@@ -12,5 +12,7 @@ namespace ASI.Basecode.Services.Interfaces
         Task<UserManagementResult> ChangePasswordAsync(ChangePasswordRequest request);
         Task<UserManagementResult> DeleteUserAsync(int id);
         Task<IEnumerable<string>> GetAvailableRolesAsync();
+        Task<UserManagementResult> EnrollStudentAsync(int userId, string edpCode);
+        Task<UserManagementResult> AssignTeacherAsync(int userId, string edpCode);
     }
 }

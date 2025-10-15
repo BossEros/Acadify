@@ -16,6 +16,11 @@ namespace ASI.Basecode.WebApp.Controllers
             _accountManagementService = accountManagementService;
         }
 
+        private JsonResult JsonResponse(bool success, string message, object? data = null)
+        {
+            return Json(new { success, message, data });
+        }
+
         // READ: View all users from database
         public async Task<IActionResult> Index()
         {
@@ -44,265 +49,113 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
-        // READ: View individual user details
-        public async Task<IActionResult> Details(int id)
+        // Remove old MVC view-based CRUD actions; new UI uses AJAX endpoints below
+
+        // ==== AJAX ENDPOINTS FOR NEW UI ====
+
+        [HttpGet]
+        public async Task<IActionResult> FindUser(int userId)
         {
             try
             {
-                var user = await _accountManagementService.GetUserByIdAsync(id);
-
+                var user = await _accountManagementService.GetUserByIdAsync(userId);
                 if (user == null)
                 {
-                    TempData["Message"] = "User not found.";
-                    TempData["MessageType"] = "error";
-                    return RedirectToAction("Index");
+                    return JsonResponse(false, "User not found.");
                 }
 
-                return View(user);
+                return JsonResponse(true, "User found", new
+                {
+                    id = user.Id,
+                    firstName = user.FirstName,
+                    lastName = user.LastName,
+                    email = user.Email,
+                    role = user.Role
+                });
             }
             catch (Exception ex)
             {
-                TempData["Message"] = "Error loading user details: " + ex.Message;
-                TempData["MessageType"] = "error";
-                return RedirectToAction("Index");
+                return JsonResponse(false, "Error searching user: " + ex.Message);
             }
         }
 
-        // CREATE: Show create form
-        public async Task<IActionResult> Create()
+        public class SimpleUserCourseRequest
         {
-            var availableRoles = await _accountManagementService.GetAvailableRolesAsync();
-            var viewModel = new CreateUserViewModel
-            {
-                AvailableRoles = availableRoles.ToList()
-            };
-            return View(viewModel);
+            public int UserId { get; set; }
+            public string EdpCode { get; set; } = string.Empty;
         }
 
-        // CREATE: Add new users to the database
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateUserViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var request = new RegisterRequest
-                    {
-                        Email = model.Email,
-                        FirstName = model.FirstName,
-                        LastName = model.LastName,
-                        Password = model.Password,
-                        Role = model.Role
-                    };
-
-                    var result = await _accountManagementService.CreateUserAsync(request);
-
-                    if (result.Succeeded)
-                    {
-                        TempData["Message"] = result.Message ?? "User created successfully!";
-                        TempData["MessageType"] = "success";
-                        return RedirectToAction("Index");
-                    }
-
-                    // Add errors to ModelState
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError(string.Empty, "Error creating user: " + ex.Message);
-                }
-            }
-
-            // Reload available roles for the form
-            model.AvailableRoles = (await _accountManagementService.GetAvailableRolesAsync()).ToList();
-            return View(model);
-        }
-
-        // UPDATE: Show edit form (Admin can only edit Username and IsActive)
-        public async Task<IActionResult> Edit(int id)
+        public async Task<IActionResult> EnrollStudent([FromBody] SimpleUserCourseRequest request)
         {
             try
             {
-                var user = await _accountManagementService.GetUserByIdAsync(id);
-                if (user == null)
-                {
-                    TempData["Message"] = "User not found.";
-                    TempData["MessageType"] = "error";
-                    return RedirectToAction("Index");
-                }
-
-                var model = new EditUserViewModel
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email, // Read-only display
-                    FirstName = user.FirstName, // Read-only display
-                    LastName = user.LastName, // Read-only display
-                    Role = user.Role, // Read-only display
-                    IsActive = user.IsActive
-                };
-
-                return View(model);
+                // This assumes service understands creating a student-class relation by EDP code.
+                var result = await _accountManagementService.EnrollStudentAsync(request.UserId, request.EdpCode);
+                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Student enrolled." : "Failed to enroll student."));
             }
             catch (Exception ex)
             {
-                TempData["Message"] = "Error loading user: " + ex.Message;
-                TempData["MessageType"] = "error";
-                return RedirectToAction("Index");
+                return JsonResponse(false, "Error enrolling student: " + ex.Message);
             }
         }
 
-        // UPDATE: Update Username and IsActive only (Email, FirstName, LastName, and Role are read-only)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, EditUserViewModel model)
-        {
-            if (id != model.Id)
-            {
-                TempData["Message"] = "Invalid user ID.";
-                TempData["MessageType"] = "error";
-                return RedirectToAction("Index");
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var request = new UpdateUserRequest
-                    {
-                        Id = model.Id,
-                        UserName = model.UserName,
-                        IsActive = model.IsActive
-                    };
-
-                    var result = await _accountManagementService.UpdateUserAsync(request);
-
-                    if (result.Succeeded)
-                    {
-                        TempData["Message"] = result.Message ?? "User updated successfully!";
-                        TempData["MessageType"] = "success";
-                        return RedirectToAction("Index");
-                    }
-
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError(string.Empty, "Error updating user: " + ex.Message);
-                }
-            }
-            return View(model);
-        }
-
-        // CHANGE PASSWORD: Show change password form
-        public async Task<IActionResult> ChangePassword(int id)
+        public async Task<IActionResult> AssignTeacher([FromBody] SimpleUserCourseRequest request)
         {
             try
             {
-                var user = await _accountManagementService.GetUserByIdAsync(id);
-                if (user == null)
-                {
-                    TempData["Message"] = "User not found.";
-                    TempData["MessageType"] = "error";
-                    return RedirectToAction("Index");
-                }
-
-                var model = new ChangePasswordViewModel
-                {
-                    UserId = user.Id,
-                    UserName = user.UserName,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName
-                };
-
-                return View(model);
+                var result = await _accountManagementService.AssignTeacherAsync(request.UserId, request.EdpCode);
+                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Teacher assigned." : "Failed to assign teacher."));
             }
             catch (Exception ex)
             {
-                TempData["Message"] = "Error loading user: " + ex.Message;
-                TempData["MessageType"] = "error";
-                return RedirectToAction("Index");
+                return JsonResponse(false, "Error assigning teacher: " + ex.Message);
             }
         }
 
-        // CHANGE PASSWORD: Admin can change user password
+        public class EditPasswordRequest
+        {
+            public int UserId { get; set; }
+            public string NewPassword { get; set; } = string.Empty;
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var request = new ChangePasswordRequest
-                    {
-                        UserId = model.UserId,
-                        NewPassword = model.NewPassword
-                    };
-
-                    var result = await _accountManagementService.ChangePasswordAsync(request);
-
-                    if (result.Succeeded)
-                    {
-                        TempData["Message"] = result.Message ?? "Password changed successfully!";
-                        TempData["MessageType"] = "success";
-                        return RedirectToAction("Index");
-                    }
-
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError(string.Empty, "Error changing password: " + ex.Message);
-                }
-            }
-            return View(model);
-        }
-
-        // DELETE: Show delete confirmation
-        public async Task<IActionResult> Delete(int id)
-        {
-            var user = await _accountManagementService.GetUserByIdAsync(id);
-            if (user == null)
-            {
-                TempData["Message"] = "User not found.";
-                TempData["MessageType"] = "error";
-                return RedirectToAction("Index");
-            }
-
-            return View(user);
-        }
-
-        // DELETE: Confirm delete
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> EditUser([FromBody] EditPasswordRequest request)
         {
             try
             {
-                var result = await _accountManagementService.DeleteUserAsync(id);
-                
-                TempData["Message"] = result.Message ?? (result.Succeeded ? "User deleted successfully!" : "Error deleting user.");
-                TempData["MessageType"] = result.Succeeded ? "success" : "error";
+                var result = await _accountManagementService.ChangePasswordAsync(new ChangePasswordRequest
+                {
+                    UserId = request.UserId,
+                    NewPassword = request.NewPassword
+                });
+                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Password updated." : "Failed to update password."));
             }
             catch (Exception ex)
             {
-                TempData["Message"] = "Error deleting user: " + ex.Message;
-                TempData["MessageType"] = "error";
+                return JsonResponse(false, "Error updating user: " + ex.Message);
             }
+        }
 
-            return RedirectToAction("Index");
+        public class DeleteUserAjaxRequest { public int UserId { get; set; } }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUser([FromBody] DeleteUserAjaxRequest request)
+        {
+            try
+            {
+                var result = await _accountManagementService.DeleteUserAsync(request.UserId);
+                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "User deleted." : "Failed to delete user."));
+            }
+            catch (Exception ex)
+            {
+                return JsonResponse(false, "Error deleting user: " + ex.Message);
+            }
         }
     }
 }

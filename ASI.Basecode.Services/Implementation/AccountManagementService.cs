@@ -204,13 +204,14 @@ namespace ASI.Basecode.Services.Implementation
                     return UserManagementResult.Failure("Admins cannot be deleted.");
                 }
 
-                var (succeeded, errors) = await _userRepository.DeleteUserAsync(user);
-                if (succeeded)
+                // Soft delete: mark inactive instead of removing
+                if (user.IsApproved)
                 {
-                    return UserManagementResult.Success($"User '{user.FirstName} {user.LastName}' deleted successfully!");
+                    user.IsApproved = false;
+                    var (ok, errs) = await _userRepository.UpdateUserAsync(user);
+                    if (!ok) return UserManagementResult.Failure(errs);
                 }
-
-                return UserManagementResult.Failure(errors);
+                return UserManagementResult.Success($"User '{user.FirstName} {user.LastName}' set to Inactive.");
             }
             catch (Exception ex)
             {
@@ -222,6 +223,40 @@ namespace ASI.Basecode.Services.Implementation
         {
             var roles = await _roleManager.Roles.Select(r => r.Name!).ToListAsync();
             return roles;
+        }
+
+        // Placeholder business actions for EDP enroll/assign. Replace with real domain logic when available.
+        public async Task<UserManagementResult> EnrollStudentAsync(int userId, string edpCode)
+        {
+            var user = await _userRepository.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return UserManagementResult.Failure("User not found.");
+            }
+            // No-op example: mark approved if not yet
+            if (!user.IsApproved)
+            {
+                user.IsApproved = true;
+                var (ok, errors) = await _userRepository.UpdateUserAsync(user);
+                if (!ok) return UserManagementResult.Failure(errors);
+            }
+            return UserManagementResult.Success("Student enrolled to EDP successfully.");
+        }
+
+        public async Task<UserManagementResult> AssignTeacherAsync(int userId, string edpCode)
+        {
+            var user = await _userRepository.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return UserManagementResult.Failure("User not found.");
+            }
+            // Ensure role Teacher
+            var roles = await _userRepository.GetRolesAsync(user);
+            if (!roles.Contains("Teacher"))
+            {
+                await _userRepository.AddToRoleAsync(user, "Teacher");
+            }
+            return UserManagementResult.Success("Teacher assigned to EDP successfully.");
         }
     }
 }

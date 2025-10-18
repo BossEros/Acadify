@@ -58,7 +58,7 @@ namespace Student_Performance_Tracker.Controllers
             {
                 TempData["Message"] = "Class not found.";
                 TempData["MessageType"] = "error";
-                return View("Edit", new Class { EdpCode = edpCode });
+                return View("Edit", new Class { Id = edpCode });
             }
             return View("Edit", cls);
         }
@@ -105,7 +105,7 @@ namespace Student_Performance_Tracker.Controllers
             {
                 TempData["Message"] = "Class not found.";
                 TempData["MessageType"] = "error";
-                return View("Delete", new Class { EdpCode = edpCode });
+                return View("Delete", new Class { Id = edpCode });
             }
             return View("Delete", cls);
         }

@@ -50,11 +50,15 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 // Services
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IAccountManagementService, AccountManagementService>();
+builder.Services.AddScoped<IClassManagementService, ClassManagementService>();
 builder.Services.AddHttpClient<IEmailService, SendGridEmailService>();
+builder.Services.AddScoped<ICourseManagementService, CourseManagementService>();
 
 // Repositories (Data layer)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IClassManagementRepository, ClassManagementRepository>();
+builder.Services.AddScoped<ICourseManagementRepository, CourseManagementRepository>();
 
 var app = builder.Build();
 
@@ -76,6 +80,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=ClassManagement}/{action=Index}/{id?}");
 
 app.Run();

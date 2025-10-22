@@ -1,0 +1,47 @@
+﻿@model IEnumerable<ASI.Basecode.Data.Models.Class>
+@{
+    ViewData["Title"] = "Classes";
+}
+<h1>Classes</h1>
+
+<p>
+    <a asp-action="Create">Create</a>
+    <a asp-action="Edit">Edit</a> 
+    <a asp-action="Delete">Delete</a>
+</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="width:100%">
+    <thead>
+        <tr>
+            <th>EDP (Id)</th>
+            <th>CourseId</th>
+            <th>Units</th>
+            <th>YearLevel</th>
+            <th>Semester</th>
+            <th>Schedule</th>
+            <th>TeacherId</th>
+            <th>Status</th>
+            <th>Room</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @if (Model != null)
+    {
+        foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.CourseId</td>
+                @*<td>@item.Units</td>*@
+                <td>@item.YearLevel</td>
+                <td>@item.Semester</td>
+                <td>@item.Schedule</td>
+                <td>@item.TeacherId</td>
+                <td>@(item.IsActive ? "Active" : "Inactive")</td>
+                <td>@item.Room</td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>

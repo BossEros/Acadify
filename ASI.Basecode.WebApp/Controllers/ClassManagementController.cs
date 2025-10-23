@@ -172,12 +172,12 @@ public class ClassManagementController : Controller
                 var state = ModelState[key];
                 if (state.Errors.Count > 0)
                 {
-                    Console.WriteLine($"{key}: {string.Join(", ", state.Errors.Select(e => e.ErrorMessage))}");
+                    System.Diagnostics.Debug.WriteLine($"{key}: {string.Join(", ", state.Errors.Select(e => e.ErrorMessage))}");
                 }
             }
 
             // Optional: also log overall state
-            Console.WriteLine("ModelState invalid — form didn't pass validation.");
+            System.Diagnostics.Debug.WriteLine("ModelState invalid — form didn't pass validation.");
     
             var courses = await _courseManagementService.GetAllCoursesAsync();
             var allUsers = await _userManagementService.GetAllUsersAsync();

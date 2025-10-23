@@ -32,12 +32,13 @@ public class ClassManagementRepository : IClassManagementRepository
     
     public async Task<int> GetNextClassIdAsync()
     {
-        var lastId = await _dbContext.Classes
+        /*var lastId = await _dbContext.Classes
             .OrderByDescending(c => c.Id)
             .Select(c => c.Id)
             .FirstOrDefaultAsync();
 
-        return lastId + 1;
+        return lastId + 1;*/
+        return 0;
     }
 
 

@@ -18,6 +18,7 @@ public class ClassManagementRepository : IClassManagementRepository
     {
         return await _dbContext.Classes
             .Include(c => c.Course)
+            .Include(c => c.Teacher)
             .ToListAsync();
     }
 

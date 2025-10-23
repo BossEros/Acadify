@@ -1,0 +1,45 @@
+﻿@model ASI.Basecode.Data.Models.Class
+
+<div class="p-3">
+    <h5 class="mb-3">Class Details</h5>
+    <dl class="row">
+        <dt class="col-sm-4">EDP Code</dt>
+        <dd class="col-sm-8">@Model.Id</dd>
+
+        <dt class="col-sm-4">Course Code</dt>
+        <dd class="col-sm-8">@Model.Course?.CourseCode</dd>
+
+        <dt class="col-sm-4">Course Name</dt>
+        <dd class="col-sm-8">@Model.Course?.CourseName</dd>
+
+        <dt class="col-sm-4">Teacher</dt>
+        <dd class="col-sm-8">@($"{Model.Teacher?.FirstName} {Model.Teacher?.LastName}")</dd>
+
+        <dt class="col-sm-4">Semester</dt>
+        <dd class="col-sm-8">@Model.Semester</dd>
+
+        <dt class="col-sm-4">Year</dt>
+        <dd class="col-sm-8">@Model.YearLevel</dd>
+
+        <dt class="col-sm-4">Schedule</dt>
+        <dd class="col-sm-8">@Model.Schedule</dd>
+
+        <dt class="col-sm-4">Room</dt>
+        <dd class="col-sm-8">@Model.Room</dd>
+
+        <dt class="col-sm-4">Join Code</dt>
+        <dd class="col-sm-8">@Model.JoinCode</dd>
+
+        <dt class="col-sm-4">Status</dt>
+        <dd class="col-sm-8">
+            @if (Model.IsActive)
+            {
+                <span class="badge bg-success">Active</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary">Inactive</span>
+            }
+        </dd>
+    </dl>
+</div>

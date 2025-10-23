@@ -28,7 +28,7 @@ public class ClassManagementController : Controller
 
         var nextId = await _classManagementService.GetNextClassIdAsync();
         ViewBag.NextEdpCode = nextId.ToString();
-    
+
         ViewBag.Courses = courses
             .Select(c => new SelectListItem
             {
@@ -55,9 +55,30 @@ public class ClassManagementController : Controller
             id = t.Id,
             name = $"{t.FirstName} {t.LastName}"
         }).ToList();
-    
+
         return View();
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var classes = await _classManagementService.GetAllClassesAsync();
+        return View(classes);
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> Details(int id)
+    {
+        var classes = await _classManagementService.GetAllClassesAsync();
+        var classEntity = classes.FirstOrDefault(c => c.Id == id);
+
+        if (classEntity == null)
+            return NotFound();
+
+        return PartialView("Details", classEntity);
+    }
+
+
 
     [HttpPost]
     [ValidateAntiForgeryToken]

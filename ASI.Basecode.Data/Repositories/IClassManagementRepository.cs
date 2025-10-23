@@ -11,6 +11,7 @@ public interface IClassManagementRepository
     Task<int> GetNextClassIdAsync();
     Task AddAsync(Class classEntity);
     Task UpdateAsync(Class classEntity);
+    Task<bool> HasEnrolledStudentsAsync(int classId);
     Task DeleteAsync(int id);
 }
 

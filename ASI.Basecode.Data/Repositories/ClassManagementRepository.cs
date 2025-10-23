@@ -26,6 +26,7 @@ public class ClassManagementRepository : IClassManagementRepository
     {
         return await _dbContext.Classes
             .Include(c => c.Course)
+            .Include(c => c.Teacher)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
     
@@ -51,6 +52,12 @@ public class ClassManagementRepository : IClassManagementRepository
         _dbContext.Classes.Update(classEntity);
         await _dbContext.SaveChangesAsync();
     }
+
+    public async Task<bool> HasEnrolledStudentsAsync(int classId)
+    {
+        return await _dbContext.Enrollments.AnyAsync(e => e.ClassId == classId);
+    }
+
 
     public async Task DeleteAsync(int id)
     {

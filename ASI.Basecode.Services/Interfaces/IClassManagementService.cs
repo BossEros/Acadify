@@ -11,7 +11,7 @@ public interface IClassManagementService
     Task<int> GetNextClassIdAsync();
     Task CreateClassAsync(Class classEntity);
     Task UpdateClassAsync(Class classEntity);
-    Task DeleteClassAsync(int id);
+    Task<bool> DeleteClassAsync(int id);
 }
 
 

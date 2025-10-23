@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 public interface ICourseManagementRepository
 {
     Task<IEnumerable<Course>> GetAllAsync();
-    Task<Course?> GetByIdAsync(int id);
+    Task<Course?> GetByIdAsync(int? id);
 }
 
 

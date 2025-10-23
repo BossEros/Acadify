@@ -21,6 +21,6 @@ namespace ASI.Basecode.Data.Models
         // Navigation properties
         public virtual Course? Course { get; set; }
         public virtual User? Teacher { get; set; }
-        public virtual ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
+        public virtual ICollection<Enrollment>? Enrollments { get; set; } = new List<Enrollment>();
     }
 }

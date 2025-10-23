@@ -19,7 +19,7 @@ public class CourseManagementRepository : ICourseManagementRepository
         return await _dbContext.Courses.ToListAsync();
     }
 
-    public async Task<Course?> GetByIdAsync(int id)
+    public async Task<Course?> GetByIdAsync(int? id)
     {
         return await _dbContext.Courses.FindAsync(id);
     }

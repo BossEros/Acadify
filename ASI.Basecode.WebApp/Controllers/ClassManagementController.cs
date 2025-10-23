@@ -50,12 +50,6 @@ public class ClassManagementController : Controller
             Text = $"{t.FirstName} {t.LastName}"
         }).ToList();
 
-        ViewBag.TeachersList = teachers.Select(t => new
-        {
-            id = t.Id,
-            name = $"{t.FirstName} {t.LastName}"
-        }).ToList();
-
         return View();
     }
 
@@ -65,17 +59,60 @@ public class ClassManagementController : Controller
         var classes = await _classManagementService.GetAllClassesAsync();
         return View(classes);
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        var classes = await _classManagementService.GetAllClassesAsync();
-        var classEntity = classes.FirstOrDefault(c => c.Id == id);
+        var classEntity = await _classManagementService.GetClassByIdAsync(id);
 
         if (classEntity == null)
             return NotFound();
 
         return PartialView("Details", classEntity);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var classEntity = await _classManagementService.GetClassByIdAsync(id);
+        if (classEntity == null)
+            return NotFound();
+
+        var courses = await _courseManagementService.GetAllCoursesAsync();
+        var allUsers = await _userManagementService.GetAllUsersAsync();
+        var teachers = allUsers.Where(u => u.Role == "Teacher").ToList();
+
+        ViewBag.Courses = new SelectList(courses, "Id", "CourseCode", classEntity.CourseId);
+        ViewBag.Teachers = new SelectList(teachers, "Id", "FullName", classEntity.TeacherId);
+
+        ViewBag.CourseList = courses.Select(c => new
+        {
+            id = c.Id,
+            courseName = c.CourseName,
+            courseUnit = c.Units
+        }).ToList();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
+        {
+            await _classManagementService.DeleteClassAsync(id);
+            TempData["SuccessMessage"] = "Class deleted successfully.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+        }
+        catch (Exception)
+        {
+            TempData["ErrorMessage"] = "An unexpected error occurred while deleting the class.";
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
 
@@ -95,9 +132,9 @@ public class ClassManagementController : Controller
             }).ToList();
             return View(classEntity);
         }
-        
 
-        var abbreviations  = Days.Select(d => d switch
+
+        var abbreviations = Days.Select(d => d switch
         {
             "Monday" => "M",
             "Tuesday" => "T",
@@ -122,5 +159,56 @@ public class ClassManagementController : Controller
 
         await _classManagementService.CreateClassAsync(classEntity);
         return RedirectToAction("Index", "ClassManagement");
+    }
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Class classEntity, string[] Days, string StartTime, string EndTime)
+    {
+        if (!ModelState.IsValid)
+        {
+            var courses = await _courseManagementService.GetAllCoursesAsync();
+            var allUsers = await _userManagementService.GetAllUsersAsync();
+            var teachers = allUsers.Where(u => u.Role == "Teacher").ToList();
+
+            ViewBag.Courses = courses.Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.CourseCode
+            }).ToList();
+
+            ViewBag.Teachers = teachers.Select(t => new SelectListItem
+            {
+                Value = t.Id.ToString(),
+                Text = $"{t.FirstName} {t.LastName}"
+            }).ToList();
+
+            return View(classEntity);
+        }
+
+        var abbreviations = Days.Select(d => d switch
+        {
+            "Monday" => "M",
+            "Tuesday" => "T",
+            "Wednesday" => "W",
+            "Thursday" => "TH",
+            "Friday" => "F",
+            "Saturday" => "S",
+            _ => ""
+        });
+
+        if (DateTime.TryParse(StartTime, out var start) && DateTime.TryParse(EndTime, out var end))
+        {
+            string startFormatted = start.ToString("h:mm tt");
+            string endFormatted = end.ToString("h:mm tt");
+            classEntity.Schedule = $"{string.Join("", abbreviations)}, {startFormatted} – {endFormatted}";
+        }
+        else
+        {
+            classEntity.Schedule = string.Join("", abbreviations);
+        }
+
+        await _classManagementService.UpdateClassAsync(classEntity);
+        return RedirectToAction("Index");
     }
 }

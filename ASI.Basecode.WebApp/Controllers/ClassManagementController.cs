@@ -92,7 +92,7 @@ public class ClassManagementController : Controller
             courseUnit = c.Units
         }).ToList();
 
-        return RedirectToAction(nameof(Index));
+        return View(classEntity);
     }
 
     [HttpPost]
@@ -167,6 +167,18 @@ public class ClassManagementController : Controller
     {
         if (!ModelState.IsValid)
         {
+            foreach (var key in ModelState.Keys)
+            {
+                var state = ModelState[key];
+                if (state.Errors.Count > 0)
+                {
+                    Console.WriteLine($"{key}: {string.Join(", ", state.Errors.Select(e => e.ErrorMessage))}");
+                }
+            }
+
+            // Optional: also log overall state
+            Console.WriteLine("ModelState invalid — form didn't pass validation.");
+    
             var courses = await _courseManagementService.GetAllCoursesAsync();
             var allUsers = await _userManagementService.GetAllUsersAsync();
             var teachers = allUsers.Where(u => u.Role == "Teacher").ToList();

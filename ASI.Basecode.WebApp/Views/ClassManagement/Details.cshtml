@@ -4,46 +4,75 @@
     Layout = null;
 }
 
-<div class="p-3">
-    <h5 class="mb-3">Class Details</h5>
-    <dl class="row">
-        <dt class="col-sm-4">EDP Code</dt>
-        <dd class="col-sm-8">@Model.Id</dd>
+<div class="space-y-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
+        <div>
+            <p class="text-sm text-gray-500">EDP Code</p>
+            <p class="font-medium text-gray-800">@Model.Id</p>
+        </div>
 
-        <dt class="col-sm-4">Course Code</dt>
-        <dd class="col-sm-8">@Model.Course?.CourseCode</dd>
+        <div>
+            <p class="text-sm text-gray-500">Course Code</p>
+            <p class="font-medium text-gray-800">@Model.Course?.CourseCode</p>
+        </div>
 
-        <dt class="col-sm-4">Course Name</dt>
-        <dd class="col-sm-8">@Model.Course?.CourseName</dd>
+        <div>
+            <p class="text-sm text-gray-500">Course Name</p>
+            <p class="font-medium text-gray-800">@Model.Course?.CourseName</p>
+        </div>
 
-        <dt class="col-sm-4">Teacher</dt>
-        <dd class="col-sm-8">@($"{Model.Teacher?.FirstName} {Model.Teacher?.LastName}")</dd>
+        <div>
+            <p class="text-sm text-gray-500">Teacher</p>
+            <p class="font-medium text-gray-800">@($"{Model.Teacher?.FirstName} {Model.Teacher?.LastName}")</p>
+        </div>
 
-        <dt class="col-sm-4">Semester</dt>
-        <dd class="col-sm-8">@Model.Semester</dd>
+        <div>
+            <p class="text-sm text-gray-500">Semester</p>
+            <p class="font-medium text-gray-800">@Model.Semester</p>
+        </div>
 
-        <dt class="col-sm-4">Year</dt>
-        <dd class="col-sm-8">@Model.YearLevel</dd>
+        <div>
+            <p class="text-sm text-gray-500">Year</p>
+            <p class="font-medium text-gray-800">@Model.YearLevel</p>
+        </div>
 
-        <dt class="col-sm-4">Schedule</dt>
-        <dd class="col-sm-8">@Model.Schedule</dd>
+        <div>
+            <p class="text-sm text-gray-500">Schedule</p>
+            <p class="font-medium text-gray-800">@Model.Schedule</p>
+        </div>
 
-        <dt class="col-sm-4">Room</dt>
-        <dd class="col-sm-8">@Model.Room</dd>
+        <div>
+            <p class="text-sm text-gray-500">Room</p>
+            <p class="font-medium text-gray-800">@Model.Room</p>
+        </div>
 
-        <dt class="col-sm-4">Join Code</dt>
-        <dd class="col-sm-8">@Model.JoinCode</dd>
+        <div>
+            <p class="text-sm text-gray-500">Join Code</p>
+            <p class="font-medium text-gray-800">@Model.JoinCode</p>
+        </div>
 
-        <dt class="col-sm-4">Status</dt>
-        <dd class="col-sm-8">
+        <div>
+            <p class="text-sm text-gray-500">Status</p>
             @if (Model.IsActive)
             {
-                <span class="badge bg-success">Active</span>
+                <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                    Active
+                </span>
             }
             else
             {
-                <span class="badge bg-secondary">Inactive</span>
+                <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-700">
+                    Inactive
+                </span>
             }
-        </dd>
-    </dl>
+        </div>
+    </div>
+
+    <div class="flex justify-end pt-4 border-t">
+        <button type="button" 
+                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                onclick="closeModal('modalDetails')">
+            Close
+        </button>
+    </div>
 </div>

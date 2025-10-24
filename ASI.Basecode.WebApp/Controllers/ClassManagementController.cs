@@ -50,7 +50,7 @@ public class ClassManagementController : Controller
             Text = $"{t.FirstName} {t.LastName}"
         }).ToList();
 
-        return View();
+        return PartialView("Create");
     }
 
     [HttpGet]
@@ -92,30 +92,18 @@ public class ClassManagementController : Controller
             courseUnit = c.Units
         }).ToList();
 
-        return View(classEntity);
+        return PartialView("Edit", classEntity);
     }
 
-    [HttpPost]
+    [HttpGet]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            await _classManagementService.DeleteClassAsync(id);
-            TempData["SuccessMessage"] = "Class deleted successfully.";
-        }
-        catch (InvalidOperationException ex)
-        {
-            TempData["ErrorMessage"] = ex.Message;
-        }
-        catch (Exception)
-        {
-            TempData["ErrorMessage"] = "An unexpected error occurred while deleting the class.";
-        }
+        var classEntity = await _classManagementService.GetClassByIdAsync(id);
+        if (classEntity == null)
+            return NotFound();
 
-        return RedirectToAction(nameof(Index));
+        return PartialView(classEntity);
     }
-
-
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -160,25 +148,13 @@ public class ClassManagementController : Controller
         await _classManagementService.CreateClassAsync(classEntity);
         return RedirectToAction("Index", "ClassManagement");
     }
-    
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Class classEntity, string[] Days, string StartTime, string EndTime)
     {
         if (!ModelState.IsValid)
         {
-            foreach (var key in ModelState.Keys)
-            {
-                var state = ModelState[key];
-                if (state.Errors.Count > 0)
-                {
-                    System.Diagnostics.Debug.WriteLine($"{key}: {string.Join(", ", state.Errors.Select(e => e.ErrorMessage))}");
-                }
-            }
-
-            // Optional: also log overall state
-            System.Diagnostics.Debug.WriteLine("ModelState invalid — form didn't pass validation.");
-    
             var courses = await _courseManagementService.GetAllCoursesAsync();
             var allUsers = await _userManagementService.GetAllUsersAsync();
             var teachers = allUsers.Where(u => u.Role == "Teacher").ToList();
@@ -222,5 +198,21 @@ public class ClassManagementController : Controller
 
         await _classManagementService.UpdateClassAsync(classEntity);
         return RedirectToAction("Index");
+    }
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmDelete(int id)
+    {
+        var success = await _classManagementService.DeleteClassAsync(id);
+
+        if (success)
+        {
+            return Json(new { success = true, message = "Class deleted successfully." });
+        }
+        else
+        {
+            return Json(new { success = false, message = "Unable to delete class. It may be active or has enrolled students." });
+        }
     }
 }

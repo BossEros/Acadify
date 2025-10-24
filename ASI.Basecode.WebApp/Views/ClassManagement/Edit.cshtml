@@ -1,150 +1,138 @@
 ﻿@model ASI.Basecode.Data.Models.Class
-
 @{
     Layout = null;
 }
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" class="space-y-6">
+    @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
 
-    <div class="modal fade show d-block" id="editClassModal" tabindex="-1" role="dialog" aria-labelledby="editClassModalLabel" aria-modal="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-            <div class="modal-content shadow-lg rounded-4 border-0">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="editClassModalLabel">Edit Class</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
+    <!-- EDP Code -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">EDP Code</label>
+        <input asp-for="Id" class="w-full border rounded-lg px-3 py-2 bg-gray-100 cursor-not-allowed" readonly />
+    </div>
 
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">EDP Code</label>
-                            <input asp-for="Id" class="form-control" readonly />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Status</label>
-                            <select asp-for="IsActive" class="form-select">
-                                <option value="true">Active</option>
-                                <option value="false">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
+    <!-- Course Code & Description -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Course Code</label>
+            <select id="courseSelect" asp-for="CourseId" asp-items="ViewBag.Courses" 
+                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <input id="courseName" class="w-full border rounded-lg px-3 py-2 bg-gray-100 cursor-not-allowed" readonly />
+        </div>
+    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Course Code</label>
-                            <select id="courseSelect" asp-for="CourseId" asp-items="ViewBag.Courses" class="form-select"></select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Course Name</label>
-                            <input id="courseName" class="form-control" readonly />
-                        </div>
-                    </div>
+    <!-- Units -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Units</label>
+        <input id="courseUnit" class="w-full border rounded-lg px-3 py-2 bg-gray-100 cursor-not-allowed" readonly />
+    </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Units</label>
-                        <input id="courseUnit" class="form-control" readonly />
-                    </div>
+    <!-- Days -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Days</label>
+        <div class="flex flex-wrap gap-4">
+            @foreach (var day in new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" })
+            {
+                <label class="inline-flex items-center space-x-2 text-sm">
+                    <input type="checkbox" name="Days" value="@day" 
+                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <span>@day</span>
+                </label>
+            }
+        </div>
+    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Teacher</label>
-                            <select id="teacherSelect" asp-for="TeacherId" asp-items="ViewBag.Teachers" class="form-select"></select>
-                        </div>
+    <!-- Time -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+            <input type="time" id="startTime" name="StartTime" 
+                   class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+            <input type="time" id="endTime" name="EndTime" 
+                   class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" />
+        </div>
+    </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">Semester</label>
-                            <select asp-for="Semester" class="form-select">
-                                <option>1</option>
-                                <option>2</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Year</label>
-                            <select asp-for="YearLevel" class="form-select">
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
-                                <option>4</option>
-                            </select>
-                        </div>
-                    </div>
+    <!-- Teacher -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
+        <select id="teacherSelect" asp-for="TeacherId" asp-items="ViewBag.Teachers" 
+                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label d-block">Days</label>
-                            <div class="d-flex flex-wrap gap-3">
-                                @foreach (var day in new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" })
-                                {
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="@day" name="Days" value="@day">
-                                        <label class="form-check-label" for="@day">@day</label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Start Time</label>
-                            <input type="time" class="form-control" id="startTime" name="StartTime" />
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">End Time</label>
-                            <input type="time" class="form-control" id="endTime" name="EndTime" />
-                        </div>
-                    </div>
+    <!-- Year, Semester & IsActive -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+            <select asp-for="YearLevel" 
+                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+            </select>
+        </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Room</label>
-                            <input asp-for="Room" class="form-control" />
-                        </div>
-                    </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+            <select asp-for="Semester" 
+                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option>1</option>
+                <option>2</option>
+            </select>
+        </div>
 
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update Class</button>
-                    </div>
-                </div>
+        <!-- IsActive Dropdown aligned right -->
+        <div class="flex justify-end mt-5 sm:mt-6">
+            <div class="flex flex-col">
+                <label class="block text-sm font-medium text-gray-700 mb-1 text-right">Status</label>
+                <select asp-for="IsActive" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                    <option value="true" selected="@(Model.IsActive ? "selected" : null)">Active</option>
+                    <option value="false" selected="@(!Model.IsActive ? "selected" : null)">Inactive</option>
+                </select>
             </div>
         </div>
     </div>
+
+    <!-- Room -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Room</label>
+        <input asp-for="Room" 
+               class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex justify-end gap-3 pt-4 border-t">
+        <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300" onclick="closeModal('modalEdit')">
+            Cancel
+        </button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            Update Class
+        </button>
+    </div>
 </form>
 
-<style>
-    body {
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-    .modal-backdrop {
-        display: none;
-    }
-</style>
-
+<!-- Script -->
 <script>
-    // preloads data for lookup 
-    const courses = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        ViewBag.CourseList ?? new List<object>()
-    ));
-
+    // preload course data
+    const courses = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.CourseList ?? new List<object>()));
     const courseSelect = document.getElementById('courseSelect');
     const courseName = document.getElementById('courseName');
     const courseUnit = document.getElementById('courseUnit');
 
     function updateCourseDetails() {
-        if (!courseSelect) return;
         const selected = courses.find(c => c.id == courseSelect.value);
-        if (courseName) courseName.value = selected ? selected.courseName : '';
-        if (courseUnit) courseUnit.value = selected ? selected.courseUnit : '';
+        courseName.value = selected ? selected.courseName : '';
+        courseUnit.value = selected ? selected.courseUnit : '';
     }
-
-    if (courseSelect) {
-        courseSelect.addEventListener('change', updateCourseDetails);
-    }
-
-    document.addEventListener('shown.bs.modal', function (event) {
-        if (event.target.id === 'createClassModal' || event.target.id === 'editClassModal') {
-            updateCourseDetails();
-        }
-    });
-
+    if (courseSelect) courseSelect.addEventListener('change', updateCourseDetails);
     updateCourseDetails();
 </script>

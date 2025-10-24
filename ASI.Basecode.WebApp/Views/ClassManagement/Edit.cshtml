@@ -126,7 +126,7 @@
     const courses = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.CourseList ?? new List<object>()));
     const courseSelect = document.getElementById('courseSelect');
     const courseName = document.getElementById('courseName');
-    const courseUnit = document.getElementById('courseUnit');
+    const courseUnit = document.getElementById('courseUnit'); 
 
     function updateCourseDetails() {
         const selected = courses.find(c => c.id == courseSelect.value);

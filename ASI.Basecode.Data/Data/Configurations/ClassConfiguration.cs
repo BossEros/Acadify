@@ -65,7 +65,7 @@ namespace ASI.Basecode.Data.Data.Configurations
                 .HasColumnType("TIMESTAMPTZ")
                 .HasDefaultValueSql("NOW()");
 
-            // Relationships
+            // Relationship
             builder.HasOne(c => c.Course)
                 .WithMany(co => co.Classes)
                 .HasForeignKey(c => c.CourseId)

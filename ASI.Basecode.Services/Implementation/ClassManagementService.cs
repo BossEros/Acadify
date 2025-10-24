@@ -66,7 +66,7 @@ namespace ASI.Basecode.Services.Implementation
             classEntity.JoinCode = Regex.Replace(classEntity.JoinCode, "[^a-zA-Z0-9]", "");
 
             classEntity.JoinCodeGeneratedAt = DateTime.UtcNow;
-            await _classManagementRepository.UpdateAsync(classEntity);
+            await _classManagementRepository.UpdateAsync(classEntity); 
         }
 
 

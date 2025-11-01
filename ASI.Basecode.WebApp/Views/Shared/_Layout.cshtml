@@ -4,47 +4,360 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Student_Performance_Tracker</title>
-    <script type="importmap"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Student_Performance_Tracker.styles.css" asp-append-version="true" />
+    <style>
+        .sidebar-active {
+            background-color: #f3f4f6;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+            .submenu.open {
+                max-height: 200px;
+            }
+
+        .rotate-90 {
+            transform: rotate(90deg);
+        }
+
+        .logout-btn {
+            background-color: #3A4D75;
+            color: white;
+        }
+
+            .logout-btn:hover {
+                background-color: #2d3a5a;
+            }
+    </style>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Student_Performance_Tracker</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-md">
+            <!-- Logo -->
+            <div class="p-6 border-b">
+                <h1 class="text-xl font-bold text-gray-800">ACADIFY</h1>
+            </div>
+
+            <!-- User Info at Top -->
+            <div class="px-4 py-3 border-b bg-blue-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <text>@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value?[0]</text>
+                            }
+                            else
+                            {
+                                <text>U</text>
+                            }
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">
+                                @if (User.Identity.IsAuthenticated)
+                                {
+                                    <text>@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</text>
+                                }
+                                else
+                                {
+                                    <text>User</text>
+                                }
+                            </p>
+                            <p class="text-xs text-gray-500">Online</p>
+                        </div>
+                    </div>
+                    <!-- Logout Button -->
+                    <form asp-controller="Settings" asp-action="Logout" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit"
+                                class="logout-btn px-3 py-1 rounded text-sm transition-colors duration-200"
+                                title="Sign Out">
+                            <i class="fas fa-sign-out-alt mr-1"></i>
+                            Logout
+                        </button>
+                    </form>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+            <!-- Navigation -->
+            <nav class="mt-4">
+                <!-- Dashboard -->
+                <div class="mb-4">
+                    <a asp-controller="Home" asp-action="Dashboard"
+                       class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                        <i class="fas fa-tachometer-alt mr-3 text-gray-500"></i>
+                        Dashboard
+                    </a>
+                </div>
+
+                <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Databoard
+                </div>
+
+                <ul class="mt-2">
+                    <!-- 1st Year with dropdown -->
+                    <li class="mb-1">
+                        <div class="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer year-toggle transition-colors duration-200">
+                            <div class="flex items-center">
+                                <i class="fas fa-chevron-right mr-3 text-gray-400 text-xs chevron transition-transform duration-200"></i>
+                                <span>1st Year</span>
+                            </div>
+                        </div>
+                        <ul class="submenu bg-gray-50">
+                            <li>
+                                <a asp-controller="Academic" asp-action="FirstSemester"
+                                   class="block px-8 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                                    1st Semester
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Academic" asp-action="SecondSemester"
+                                   class="block px-8 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                                    2nd Semester
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- 2nd Year with dropdown -->
+                    <li class="mb-1">
+                        <div class="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer year-toggle transition-colors duration-200">
+                            <div class="flex items-center">
+                                <i class="fas fa-chevron-right mr-3 text-gray-400 text-xs chevron transition-transform duration-200"></i>
+                                <span>2nd Year</span>
+                            </div>
+                        </div>
+                        <ul class="submenu bg-gray-50">
+                            <li>
+                                <a asp-controller="Academic" asp-action="SecondYearFirstSemester"
+                                   class="block px-8 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                                    1st Semester
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Academic" asp-action="SecondYearSecondSemester"
+                                   class="block px-8 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                                    2nd Semester
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- 3rd Year with dropdown -->
+                    <li class="mb-1">
+                        <div class="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer year-toggle transition-colors duration-200">
+                            <div class="flex items-center">
+                                <i class="fas fa-chevron-right mr-3 text-gray-400 text-xs chevron transition-transform duration-200"></i>
+                                <span>3rd Year</span>
+                            </div>
+                        </div>
+                        <ul class="submenu bg-gray-50">
+                            <li>
+                                <a asp-controller="Academic" asp-action="ThirdYearFirstSemester"
+                                   class="block px-8 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                                    1st Semester
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Academic" asp-action="ThirdYearSecondSemester"
+                                   class="block px-8 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                                    2nd Semester
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- 4th Year with dropdown -->
+                    <li class="mb-1">
+                        <div class="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer year-toggle transition-colors duration-200">
+                            <div class="flex items-center">
+                                <i class="fas fa-chevron-right mr-3 text-gray-400 text-xs chevron transition-transform duration-200"></i>
+                                <span>4th Year</span>
+                            </div>
+                        </div>
+                        <ul class="submenu bg-gray-50">
+                            <li>
+                                <a asp-controller="Academic" asp-action="FourthYearFirstSemester"
+                                   class="block px-8 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                                    1st Semester
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Academic" asp-action="FourthYearSecondSemester"
+                                   class="block px-8 py-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                                    2nd Semester
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- Settings -->
+                <div class="mt-6">
+                    <a asp-controller="Settings" asp-action="Index"
+                       class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200">
+                        <i class="fas fa-cog mr-3 text-gray-500"></i>
+                        Settings
+                    </a>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Updated Header with User Info -->
+            <header>
+                <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+                    <div class="container-fluid">
+                        <div class="flex items-center justify-between w-full">
+                            <div class="flex items-center">
+                                <a class="navbar-brand font-bold text-gray-800" asp-area="" asp-controller="Home" asp-action="Index">
+                                    <i class="fas fa-graduation-cap mr-2 text-blue-600"></i>
+                                    Student Performance Tracker
+                                </a>
+                            </div>
+
+                            <div class="flex items-center space-x-4">
+                                <!-- User Welcome Message -->
+                                <div class="hidden sm:flex items-center text-sm text-gray-700">
+                                    <i class="fas fa-user-circle mr-2 text-gray-400"></i>
+
+                                    <span class="font-semibold ml-1 text-gray-900">
+                                        @if (User.Identity.IsAuthenticated)
+                                        {
+                                            <text>@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Guest</text>
+                                        }
+                                    </span>
+                                </div>
+
+                                <!-- Desktop Logout Button -->
+                                <form asp-controller="Settings" asp-action="Logout" method="post" class="hidden sm:block">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="logout-btn flex items-center px-4 py-2 text-sm rounded-lg transition-colors duration-200">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>
+                                        Log Out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                                aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+
+                        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                            <ul class="navbar-nav flex-grow-1">
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                                </li>
+                            </ul>
+
+                            <!-- Mobile Logout Button -->
+                            <div class="sm:hidden mt-2">
+                                <form asp-controller="Settings" asp-action="Logout" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="logout-btn w-full flex items-center justify-center px-4 py-2 text-sm rounded-lg transition-colors duration-200">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>
+                                        Log Out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </header>
+
+            <!-- Main Content -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="container">
+                    <main role="main" class="pb-3">
+                        @RenderBody()
+                    </main>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="border-top footer text-muted">
+                <div class="container">
+                    &copy; 2025 - Student_Performance_Tracker - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                </div>
+            </footer>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - Student_Performance_Tracker - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle year submenus
+            const yearToggles = document.querySelectorAll('.year-toggle');
+
+            yearToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const submenu = this.nextElementSibling;
+                    const chevron = this.querySelector('.chevron');
+
+                    // Toggle submenu
+                    submenu.classList.toggle('open');
+
+                    // Rotate chevron
+                    chevron.classList.toggle('rotate-90');
+                });
+            });
+
+            // Active state for sidebar items
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            const currentPath = window.location.pathname.toLowerCase();
+
+            sidebarItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Remove active class from all items
+                    sidebarItems.forEach(i => {
+                        i.classList.remove('sidebar-active');
+                        i.classList.remove('bg-gray-100');
+                        i.classList.remove('border-l-4');
+                        i.classList.remove('border-blue-500');
+                    });
+
+                    // Add active class to clicked item
+                    this.classList.add('bg-gray-100');
+                    this.classList.add('border-l-4');
+                    this.classList.add('border-blue-500');
+                });
+
+                // Set active state based on current URL
+                const href = item.getAttribute('href') || '';
+                if (currentPath.includes(href.toLowerCase().replace('~', '')) && href !== '') {
+                    item.classList.add('bg-gray-100');
+                    item.classList.add('border-l-4');
+                    item.classList.add('border-blue-500');
+                }
+            });
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

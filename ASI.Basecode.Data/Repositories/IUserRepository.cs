@@ -17,6 +17,12 @@ public interface IUserRepository
     Task<(bool Succeeded, IEnumerable<string> Errors)> UpdateUserAsync(User user);
     Task<(bool Succeeded, IEnumerable<string> Errors)> DeleteUserAsync(User user);
     Task<IEnumerable<User>> GetAllUsersAsync();
+    Task<(bool Succeeded, IEnumerable<string> Errors)> ChangePasswordAsync(User user, string currentPassword, string newPassword);
+   
+
+
 }
+
+
 
 

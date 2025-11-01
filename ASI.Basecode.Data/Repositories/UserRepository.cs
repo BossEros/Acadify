@@ -59,6 +59,12 @@ public class UserRepository : IUserRepository
     {
         return await _userManager.Users.ToListAsync();
     }
+
+    public async Task<(bool Succeeded, IEnumerable<string> Errors)> ChangePasswordAsync(User user, string currentPassword, string newPassword)
+    {
+        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        return (result.Succeeded, result.Errors.Select(e => e.Description));
+    }
 }
 
 

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Student_Performance_Tracker.styles.css" asp-append-version="true" />
     <style>
+
         .sidebar-active {
             background-color: #f3f4f6;
             border-left: 4px solid #3b82f6;
@@ -79,12 +80,7 @@
                     <!-- Logout Button -->
                     <form asp-controller="Settings" asp-action="Logout" method="post" class="inline">
                         @Html.AntiForgeryToken()
-                        <button type="submit"
-                                class="logout-btn px-3 py-1 rounded text-sm transition-colors duration-200"
-                                title="Sign Out">
-                            <i class="fas fa-sign-out-alt mr-1"></i>
-                            Logout
-                        </button>
+  
                     </form>
                 </div>
             </div>

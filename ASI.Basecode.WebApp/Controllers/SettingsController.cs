@@ -44,7 +44,8 @@ namespace ASI.Basecode.WebApp.Controllers
 
             var viewModel = new SettingsViewModel
             {
-                UserDetails = userDetails
+                UserDetails = userDetails,
+                ChangePasswordModel = new ChangePasswordViewModel()
             };
 
             return View(viewModel);
@@ -52,10 +53,20 @@ namespace ASI.Basecode.WebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        public async Task<IActionResult> ChangePassword([Bind(Prefix = "ChangePasswordModel")] ChangePasswordViewModel model)
         {
+            _logger.LogInformation("ChangePassword POST method called");
+
+            if (model == null)
+            {
+                model = new ChangePasswordViewModel();
+            }
+
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("ModelState is invalid. Errors: {Errors}",
+                    string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+
                 var currentUsername = User.Identity?.Name;
                 if (string.IsNullOrEmpty(currentUsername))
                 {
@@ -84,19 +95,27 @@ namespace ASI.Basecode.WebApp.Controllers
                 return View("Index", settingsViewModel);
             }
 
+            _logger.LogInformation("ModelState is valid. Proceeding with password change...");
+
             var currentUser = User.Identity?.Name;
             if (string.IsNullOrEmpty(currentUser))
             {
                 return RedirectToAction("Login", "Account");
             }
 
+            _logger.LogInformation("Calling AccountService.ChangePasswordAsync for user: {User}", currentUser);
+
             var result = await _accountService.ChangePasswordAsync(currentUser, model.CurrentPassword, model.NewPassword);
 
             if (result.Succeeded)
             {
+                _logger.LogInformation("Password change SUCCESSFUL for user: {User}", currentUser);
                 TempData["SuccessMessage"] = "Password changed successfully!";
                 return RedirectToAction(nameof(Index));
             }
+
+            _logger.LogWarning("Password change FAILED for user: {User}. Errors: {Errors}",
+                currentUser, string.Join(", ", result.Errors ?? Enumerable.Empty<string>()));
 
             foreach (var error in result.Errors ?? Enumerable.Empty<string>())
             {

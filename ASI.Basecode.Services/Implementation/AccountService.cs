@@ -174,11 +174,16 @@ namespace ASI.Basecode.Services.Implementation
         {
             try
             {
+                _logger.LogInformation("ChangePasswordAsync called for user: {Username}", username);
+
                 var user = await _userRepository.FindByUserNameAsync(username);
                 if (user == null)
                 {
+                    _logger.LogWarning("User not found: {Username}", username);
                     return AuthResult.Failure(new[] { "User not found." });
                 }
+
+                _logger.LogInformation("Attempting to change password for user: {UserId} - {Email}", user.Id, user.Email);
 
                 var result = await _userRepository.ChangePasswordAsync(user, currentPassword, newPassword);
 
@@ -186,6 +191,12 @@ namespace ASI.Basecode.Services.Implementation
                 {
                     _logger.LogInformation("Password changed successfully for user: {Username}", username);
                     return AuthResult.Success();
+                }
+
+                // Log each error individually
+                foreach (var error in result.Errors)
+                {
+                    _logger.LogWarning("Password change error for {Username}: {Error}", username, error);
                 }
 
                 return AuthResult.Failure(result.Errors);
@@ -196,7 +207,6 @@ namespace ASI.Basecode.Services.Implementation
                 return AuthResult.Failure(new[] { "An error occurred while changing password." });
             }
         }
-
         public async Task<AuthResult> DeleteAccountAsync(string username)
         {
             try

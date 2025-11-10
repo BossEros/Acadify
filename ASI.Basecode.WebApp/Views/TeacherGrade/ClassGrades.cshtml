@@ -1,0 +1,161 @@
+@model ASI.Basecode.WebApp.ViewModels.TeacherGradeViewModel
+@{
+    ViewData["Title"] = "Class Grades";
+    Layout = "_Layout";
+}
+
+@* Add anti-forgery token so JS can send it in header *@
+@Html.AntiForgeryToken()
+
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-semibold">@Model.CourseCode - @Model.CourseName</h2>
+                <p class="text-gray-600">@Model.Schedule • @Model.Units units • @Model.StudentGrades.Count students</p>
+            </div>
+            <button class="bg-[#3A4D75] text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Class Report</span>
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="border-b">
+                        <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student No.</th>
+                        <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student Name</th>
+                        <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Midterm</th>
+                        <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Final</th>
+                        <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Remark</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in Model.StudentGrades)
+                    {
+                        <tr class="border-b hover:bg-gray-50" data-enrollment-id="@student.EnrollmentId">
+                            <td class="py-3 px-4">@student.StudentId</td>
+                            <td class="py-3 px-4">@student.StudentName</td>
+                            <td class="py-3 px-4 text-center relative group">
+                                <span class="grade-display">@(student.MidtermGrade?.ToString("0.00") ?? "--")</span>
+                                <button data-type="midterm" onclick="editGrade(this)" class="hidden group-hover:block absolute top-1/2 -translate-y-1/2 right-2">
+                                    <svg class="w-4 h-4 text-gray-500 hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                            </td>
+                            <td class="py-3 px-4 text-center relative group">
+                                <span class="grade-display">@(student.FinalGrade?.ToString("0.00") ?? "--")</span>
+                                <button data-type="final" onclick="editGrade(this)" class="hidden group-hover:block absolute top-1/2 -translate-y-1/2 right-2">
+                                    <svg class="w-4 h-4 text-gray-500 hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                            </td>
+                            <td class="py-3 px-4 text-center remark-cell">
+                                @if (student.IsPassed)
+                                {
+                                    <span class="px-2 py-1 text-green-700 text-sm bg-green-100 rounded-full">@student.Remark</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-1 text-orange-700 text-sm bg-orange-100 rounded-full">@student.Remark</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function editGrade(button) {
+            const cell = button.parentElement;
+            const display = cell.querySelector('.grade-display');
+            const currentValue = display.textContent.trim();
+            const input = document.createElement('input');
+
+            input.type = 'number';
+            input.step = '0.01';
+            input.min = '0';
+            input.max = '5';
+            input.value = currentValue === '--' ? '' : currentValue;
+            input.className = 'w-20 text-center border rounded py-1';
+
+            input.addEventListener('blur', async function() {
+                const newValue = this.value.trim();
+                const row = cell.closest('tr');
+                const enrollmentId = parseInt(row.dataset.enrollmentId, 10);
+                const isMidterm = button.dataset.type === 'midterm';
+                const parsedValue = newValue === '' ? null : parseFloat(newValue);
+
+                // anti-forgery token value
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                const token = tokenInput ? tokenInput.value : '';
+
+                // Build payload containing ONLY the field being edited and only when a value is present.
+                // IMPORTANT: omit the other grade property entirely (do not send explicit null)
+                const payload = { enrollmentId: enrollmentId };
+                if (isMidterm) {
+                    if (parsedValue !== null) {
+                        payload.midtermGrade = Number(parsedValue.toFixed(2));
+                    }
+                } else {
+                    if (parsedValue !== null) {
+                        payload.finalGrade = Number(parsedValue.toFixed(2));
+                    }
+                }
+
+                try {
+                    const response = await fetch('/TeacherGrade/UpdateGrade', {
+                        method: 'POST',
+                        credentials: 'same-origin', // send cookies for auth & antiforgery
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        // Update displayed value (leave other column alone)
+                        display.textContent = parsedValue === null ? '--' : (parsedValue).toFixed(2);
+
+                        // put display back
+                        cell.replaceChild(display, input);
+                        button.classList.remove('hidden');
+
+                        // Update remark cell if server returned remark
+                        if (data && data.remark) {
+                            const remarkCell = row.querySelector('td.remark-cell');
+                            if (remarkCell) {
+                                remarkCell.innerHTML = `<span class="px-2 py-1 text-green-700 text-sm bg-green-100 rounded-full">${data.remark}</span>`;
+                            }
+                        }
+                    } else {
+                        const text = await response.text();
+                        alert('Failed to update grade: ' + text);
+                        cell.replaceChild(display, input);
+                        button.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    alert('Error updating grade');
+                    cell.replaceChild(display, input);
+                    button.classList.remove('hidden');
+                }
+            });
+
+            display.replaceWith(input);
+            button.classList.add('hidden');
+            input.focus();
+        }
+    </script>
+}

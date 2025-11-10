@@ -1,0 +1,153 @@
+﻿@using ASI.Basecode.Data.Models
+@model List<ASI.Basecode.WebApp.ViewModels.SemesterGradesViewModel>
+@{
+    ViewData["Title"] = "My Grades";
+    Layout = "_Layout";
+}
+
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800">My Grades</h2>
+            </div>
+            <!-- Button color updated to layout color (#3A4D75) -->
+            <button class="bg-[#3A4D75] text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Semester Report</span>
+            </button>
+        </div>
+
+        <!-- Year and Semester Navigation -->
+        <div class="mb-6 border-b pb-4">
+            <div class="flex flex-wrap gap-4">
+                @for (var year = 1; year <= 4; year++)
+                {
+                    var currentYearGrades = Model.Where(s => s.YearLevel == year).ToList();
+                    if (currentYearGrades.Any())
+                    {
+                        <div class="relative group">
+                            <button onclick="toggleYearDropdown(@year)" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none">
+                                @year.ToString() Year
+                                <svg class="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div id="yearDropdown_@year" class="hidden absolute z-10 mt-2 w-48 bg-white rounded-lg shadow-lg">
+                                @foreach (var sem in currentYearGrades)
+                                {
+                                    <a href="#semester_@(year)_@(sem.Semester)" onclick="showSemester(@year, @sem.Semester)"
+                                       class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                        @(sem.Semester == 1 ? "1st" : "2nd") Semester
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Grades Section -->
+        @foreach (var semester in Model)
+        {
+            <div id="semester_@(semester.YearLevel)_@(semester.Semester)" class="mb-8 semester-section hidden">
+                <h3 class="text-xl font-semibold mb-4">
+                    @{
+                        var yearOrdinal = semester.YearLevel switch
+                        {
+                            1 => "1st",
+                            2 => "2nd",
+                            3 => "3rd",
+                            4 => "4th",
+                            _ => semester.YearLevel + "th"
+                        };
+                        var semesterOrdinal = semester.Semester == 1 ? "1st" : "2nd";
+                    }
+                    @yearOrdinal Year - @semesterOrdinal Semester
+                </h3>
+
+                @if (!semester.Grades.Any())
+                {
+                    <div class="bg-gray-50 rounded-lg p-4 text-gray-600">
+                        No grades available for this semester.
+                    </div>
+                }
+                else
+                {
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Subject Code</th>
+                                    <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Subject Name</th>
+                                    <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Units</th>
+                                    <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Midterm</th>
+                                    <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Final</th>
+                                    <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Remark</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var grade in semester.Grades)
+                                {
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">@grade.CourseCode</td>
+                                        <td class="py-3 px-4 text-blue-600">@grade.CourseName</td>
+                                        <td class="py-3 px-4 text-center">@grade.Units</td>
+                                        <td class="py-3 px-4 text-center">@(grade.MidtermGrade?.ToString("0.00") ?? "--")</td>
+                                        <td class="py-3 px-4 text-center">@(grade.FinalGrade?.ToString("0.00") ?? "--")</td>
+                                        <td class="py-3 px-4 text-center">
+                                            @if (grade.IsPassed)
+                                            {
+                                                <span class="px-2 py-1 text-green-700 text-sm bg-green-100 rounded-full">@grade.Remark</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="px-2 py-1 text-orange-700 text-sm bg-orange-100 rounded-full">@grade.Remark</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleYearDropdown(year) {
+            const dropdown = document.getElementById(`yearDropdown_${year}`);
+            const allDropdowns = document.querySelectorAll('[id^="yearDropdown_"]');
+            allDropdowns.forEach(d => {
+                if (d.id !== `yearDropdown_${year}`) d.classList.add('hidden');
+            });
+            dropdown.classList.toggle('hidden');
+        }
+
+        function showSemester(year, semester) {
+            document.querySelectorAll('.semester-section').forEach(section => section.classList.add('hidden'));
+            const selectedSection = document.getElementById(`semester_${year}_${semester}`);
+            if (selectedSection) selectedSection.classList.remove('hidden');
+            document.getElementById(`yearDropdown_${year}`).classList.add('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstSection = document.querySelector('.semester-section');
+            if (firstSection) firstSection.classList.remove('hidden');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('button')) {
+                const allDropdowns = document.querySelectorAll('[id^="yearDropdown_"]');
+                allDropdowns.forEach(d => d.classList.add('hidden'));
+            }
+        });
+    </script>
+}

@@ -6,10 +6,34 @@
 
 <div class="flex flex-col space-y-4">
     <!-- Status message -->
-    @if (ViewData["Message"] != null)
+    <div id="successMessage" class="hidden p-4 rounded-lg bg-green-50 border border-green-200 shadow-sm">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span id="successMessageText" class="text-green-800 font-medium"></span>
+        </div>
+    </div>
+
+    @if (TempData["Message"] != null)
     {
-        <div class="p-4 rounded @(ViewData["MessageType"]?.ToString() == "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
-            @ViewData["Message"]
+        <div class="p-4 rounded-lg shadow-sm @(TempData["MessageType"]?.ToString() == "success" ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200")">
+            <div class="flex items-center">
+                @if (TempData["MessageType"]?.ToString() == "success")
+                {
+                    <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-green-800 font-medium">@TempData["Message"]</span>
+                }
+                else
+                {
+                    <svg class="w-5 h-5 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-red-800 font-medium">@TempData["Message"]</span>
+                }
+            </div>
         </div>
     }
 
@@ -147,6 +171,21 @@
     const qs = (s) => document.querySelector(s);
     const qsa = (s) => document.querySelectorAll(s);
 
+    // Check for success message from sessionStorage
+    const successMsg = sessionStorage.getItem('successMessage');
+    if (successMsg) {
+        const msgDiv = qs('#successMessage');
+        const msgText = qs('#successMessageText');
+        msgText.textContent = successMsg;
+        msgDiv.classList.remove('hidden');
+        sessionStorage.removeItem('successMessage');
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            msgDiv.classList.add('hidden');
+        }, 5000);
+    }
+
     function openModal(id, url, target) {
         const modal = qs('#' + id);
         modal.classList.remove('hidden');
@@ -163,6 +202,55 @@
 
     // Expose closeModal globally (for partials)
     window.closeModal = closeModal;
+
+    // Handle form submission for Create modal
+    document.addEventListener('submit', function(e) {
+        if (e.target.id === 'createClassForm') {
+            e.preventDefault();
+
+            const form = e.target;
+            const formData = new FormData(form);
+            const validationSummary = qs('#validationSummary');
+            const validationErrors = qs('#validationErrors');
+
+            // Hide previous errors
+            if (validationSummary) {
+                validationSummary.classList.add('hidden');
+                validationErrors.innerHTML = '';
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Store success message and reload
+                    sessionStorage.setItem('successMessage', data.message);
+                    window.location.href = '@Url.Action("Index", "ClassManagement")';
+                } else {
+                    // Show validation errors
+                    if (validationSummary) {
+                        validationSummary.classList.remove('hidden');
+                        if (data.errors && data.errors.length > 0) {
+                            data.errors.forEach(error => {
+                                const li = document.createElement('li');
+                                li.textContent = error;
+                                validationErrors.appendChild(li);
+                            });
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
 
     // Create
     qs('#openCreate').addEventListener('click', () =>

@@ -2,6 +2,7 @@ namespace ASI.Basecode.WebApp.Controllers;
 
 using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.Interfaces;
+using ASI.Basecode.WebApp.ViewModels.ClassManagement;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -50,7 +51,12 @@ public class ClassManagementController : Controller
             Text = $"{t.FirstName} {t.LastName}"
         }).ToList();
 
-        return PartialView("Create");
+        var viewModel = new CreateClassViewModel
+        {
+            Id = nextId
+        };
+
+        return PartialView("Create", viewModel);
     }
 
     [HttpGet]
@@ -107,43 +113,49 @@ public class ClassManagementController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Class classEntity, string[] Days, string StartTime, string EndTime)
+    public async Task<IActionResult> Create(CreateClassViewModel viewModel)
     {
-        if (!ModelState.IsValid)
+        // Check if end time is after start time
+        if (!string.IsNullOrEmpty(viewModel.StartTime) && !string.IsNullOrEmpty(viewModel.EndTime))
         {
-            var courses = await _courseManagementService.GetAllCoursesAsync();
-            var allUsers = await _userManagementService.GetAllUsersAsync();
-            var teachers = allUsers.Where(u => u.Role == "Teacher").ToList();
-
-            var nextId = await _classManagementService.GetNextClassIdAsync();
-            ViewBag.NextEdpCode = nextId.ToString();
-
-            ViewBag.Courses = courses
-                .Select(c => new SelectListItem
+            if (TimeSpan.TryParse(viewModel.StartTime, out var startTime) &&
+                TimeSpan.TryParse(viewModel.EndTime, out var endTime))
+            {
+                if (endTime <= startTime)
                 {
-                    Value = c.Id.ToString(),
-                    Text = c.CourseCode
-                })
-                .ToList();
-
-            ViewBag.CourseList = courses.Select(c => new
-            {
-                id = c.Id,
-                courseName = c.CourseName,
-                courseUnit = c.Units
-            }).ToList();
-
-            ViewBag.Teachers = teachers.Select(t => new SelectListItem
-            {
-                Value = t.Id.ToString(),
-                Text = $"{t.FirstName} {t.LastName}"
-            }).ToList();
-
-            return PartialView("Create", classEntity);
+                    ModelState.AddModelError("EndTime", "End time must be after start time");
+                }
+            }
         }
 
+        // Check if teacher is selected (not default value)
+        if (viewModel.TeacherId == 0)
+        {
+            ModelState.AddModelError("TeacherId", "Teacher is required");
+        }
 
-        var abbreviations = Days.Select(d => d switch
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+
+            return Json(new { success = false, errors = errors });
+        }
+
+        // Map ViewModel to Entity
+        var classEntity = new Class
+        {
+            Id = viewModel.Id,
+            CourseId = viewModel.CourseId,
+            TeacherId = viewModel.TeacherId,
+            Semester = viewModel.Semester,
+            YearLevel = viewModel.YearLevel
+        };
+
+        // Build schedule string
+        var abbreviations = viewModel.Days.Select(d => d switch
         {
             "Monday" => "M",
             "Tuesday" => "T",
@@ -154,7 +166,7 @@ public class ClassManagementController : Controller
             _ => ""
         });
 
-        if (DateTime.TryParse(StartTime, out var start) && DateTime.TryParse(EndTime, out var end))
+        if (DateTime.TryParse(viewModel.StartTime, out var start) && DateTime.TryParse(viewModel.EndTime, out var end))
         {
             string startFormatted = start.ToString("h:mm tt");
             string endFormatted = end.ToString("h:mm tt");
@@ -167,7 +179,8 @@ public class ClassManagementController : Controller
         }
 
         await _classManagementService.CreateClassAsync(classEntity);
-        return RedirectToAction("Index", "ClassManagement");
+
+        return Json(new { success = true, message = "Class created successfully" });
     }
 
     [HttpPost]

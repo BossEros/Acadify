@@ -1,13 +1,20 @@
-﻿@model ASI.Basecode.Data.Models.Class
+﻿@model ASI.Basecode.WebApp.ViewModels.ClassManagement.CreateClassViewModel
 @{
     Layout = null;
 }
 
+<!-- Validation Summary -->
+<div id="validationSummary" class="hidden mb-4 p-4 rounded bg-red-100 text-red-700">
+    <ul id="validationErrors" class="list-disc list-inside space-y-1"></ul>
+</div>
+
 <form asp-action="Create" method="post" id="createClassForm" class="space-y-4">
+    @Html.AntiForgeryToken()
+
     <!-- EDP Code -->
     <div>
         <label class="block text-sm text-gray-700 mb-1">EDP Code</label>
-        <input id="Id" value="@ViewBag.NextEdpCode" readonly
+        <input asp-for="Id" id="Id" readonly
                placeholder="Enter EDP Code"
                class="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none" />
     </div>
@@ -54,10 +61,10 @@
     <div>
         <label class="block text-sm text-gray-700 mb-1">Time</label>
         <div class="flex items-center space-x-2">
-            <input type="time" id="startTime" name="StartTime"
+            <input type="time" id="startTime" asp-for="StartTime"
                    class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none" />
             <span class="text-gray-500">-</span>
-            <input type="time" id="endTime" name="EndTime"
+            <input type="time" id="endTime" asp-for="EndTime"
                    class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none" />
         </div>
     </div>

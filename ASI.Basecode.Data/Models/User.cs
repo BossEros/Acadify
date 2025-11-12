@@ -8,10 +8,6 @@ namespace ASI.Basecode.Data.Models
     {
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
-<<<<<<< Updated upstream
-=======
-        //public string? Name { get; set; } = null!;
->>>>>>> Stashed changes
         public string? ProfilePicture { get; set; }
         public bool IsApproved { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

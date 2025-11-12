@@ -112,13 +112,34 @@ public class ClassManagementController : Controller
         if (!ModelState.IsValid)
         {
             var courses = await _courseManagementService.GetAllCoursesAsync();
+            var allUsers = await _userManagementService.GetAllUsersAsync();
+            var teachers = allUsers.Where(u => u.Role == "Teacher").ToList();
 
-            ViewBag.Courses = courses.Select(c => new SelectListItem
+            var nextId = await _classManagementService.GetNextClassIdAsync();
+            ViewBag.NextEdpCode = nextId.ToString();
+
+            ViewBag.Courses = courses
+                .Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.CourseCode
+                })
+                .ToList();
+
+            ViewBag.CourseList = courses.Select(c => new
             {
-                Value = c.Id.ToString(),
-                Text = $"{c.CourseCode} - {c.CourseName}"
+                id = c.Id,
+                courseName = c.CourseName,
+                courseUnit = c.Units
             }).ToList();
-            return View(classEntity);
+
+            ViewBag.Teachers = teachers.Select(t => new SelectListItem
+            {
+                Value = t.Id.ToString(),
+                Text = $"{t.FirstName} {t.LastName}"
+            }).ToList();
+
+            return PartialView("Create", classEntity);
         }
 
 

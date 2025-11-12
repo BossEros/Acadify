@@ -1,4 +1,4 @@
-using ASI.Basecode.Data.Models;
+    using ASI.Basecode.Data.Models;
 using ASI.Basecode.Data.Repositories;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.DTOs;
@@ -149,9 +149,9 @@ namespace ASI.Basecode.Services.Implementation
 
             return roles.FirstOrDefault() switch
             {
-                "Admin" => "/Admin",
-                "Teacher" => "/Teacher",
-                "Student" => "/Home/Index",
+                "Admin" => "/AccountManagement/Index",
+                "Teacher" => "/TeacherGrade/ClassGrades",
+                "Student" => "/GradeManagement/GradeView",
                 _ => "/Register"
             };
         }

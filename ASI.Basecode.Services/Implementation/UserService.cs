@@ -40,7 +40,7 @@ namespace ASI.Basecode.Services.Implementation
                 {
                     _logger.LogInformation("Password changed successfully for user: {Username}", username);
                 }
-
+                
                 return result;
             }
             catch (Exception ex)

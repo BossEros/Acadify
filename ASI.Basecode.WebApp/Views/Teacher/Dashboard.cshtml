@@ -1,0 +1,81 @@
+﻿@{
+    ViewData["Title"] = "Teacher Dashboard";
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+}
+
+<div class="dashboard-header mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+</div>
+
+<div class="welcome-card">
+    <h2 class="text-2xl font-semibold">Welcome back, Maria Santos</h2>
+</div>
+
+<div class="activate-class">
+    <h3 class="text-xl font-semibold mb-3">+ Activate a Class</h3>
+    <p class="text-gray-600 mb-4">Enter a class code to activate a new course</p>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label text-gray-700">Enter class code (e.g., IT101, PE101)</label>
+                <input type="text" class="form-control" placeholder="Class code">
+            </div>
+            <button class="btn btn-primary-custom px-4 py-2 rounded text-white">
+                Activate
+            </button>
+        </div>
+    </div>
+</div>
+
+<hr class="my-6">
+
+<div>
+    <h3 class="text-xl font-semibold mb-4">Active Classes (4)</h3>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="class-card">
+                <h5 class="font-semibold text-[#3A4D75] text-lg">MATH 101</h5>
+                <div class="text-gray-500 text-sm mb-2">3 units</div>
+                <div class="text-gray-800">College Algebra</div>
+                <div class="schedule mt-2 text-gray-500 text-sm">
+                    <i class="fas fa-comment mr-1"></i> MWF 8:00-9:00 AM
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="class-card">
+                <h5 class="font-semibold text-[#3A4D75] text-lg">SCI 101</h5>
+                <div class="text-gray-500 text-sm mb-2">4 units</div>
+                <div class="text-gray-800">General Biology</div>
+                <div class="schedule mt-2 text-gray-500 text-sm">
+                    <i class="fas fa-comment mr-1"></i> MWF 1:00-2:30 PM
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="class-card">
+                <h5 class="font-semibold text-[#3A4D75] text-lg">ENG 101</h5>
+                <div class="text-gray-500 text-sm mb-2">3 units</div>
+                <div class="text-gray-800">English Communication</div>
+                <div class="schedule mt-2 text-gray-500 text-sm">
+                    <i class="fas fa-comment mr-1"></i> TTH 10:00-11:30 AM
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="class-card">
+                <h5 class="font-semibold text-[#3A4D75] text-lg">HIST 101</h5>
+                <div class="text-gray-500 text-sm mb-2">3 units</div>
+                <div class="text-gray-800">Philippine History</div>
+                <div class="schedule mt-2 text-gray-500 text-sm">
+                    <i class="fas fa-comment mr-1"></i> TTH 2:00-3:30 PM
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

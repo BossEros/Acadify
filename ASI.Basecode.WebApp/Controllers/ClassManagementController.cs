@@ -88,8 +88,64 @@ public class ClassManagementController : Controller
         var allUsers = await _userManagementService.GetAllUsersAsync();
         var teachers = allUsers.Where(u => u.Role == "Teacher").ToList();
 
-        ViewBag.Courses = new SelectList(courses, "Id", "CourseCode", classEntity.CourseId);
-        ViewBag.Teachers = new SelectList(teachers, "Id", "FullName", classEntity.TeacherId);
+        // Parse schedule to get days and times
+        var days = new List<string>();
+        string startTime = "";
+        string endTime = "";
+
+        if (!string.IsNullOrEmpty(classEntity.Schedule))
+        {
+            var parts = classEntity.Schedule.Split(',');
+            if (parts.Length > 0)
+            {
+                var dayAbbreviations = parts[0].Trim();
+                // Convert abbreviations back to full day names
+                // Check in order and remove matched patterns to avoid conflicts
+                if (dayAbbreviations.Contains("TH"))
+                {
+                    days.Add("Thursday");
+                    dayAbbreviations = dayAbbreviations.Replace("TH", "");
+                }
+                if (dayAbbreviations.Contains("M")) days.Add("Monday");
+                if (dayAbbreviations.Contains("T")) days.Add("Tuesday");
+                if (dayAbbreviations.Contains("W")) days.Add("Wednesday");
+                if (dayAbbreviations.Contains("F")) days.Add("Friday");
+                if (dayAbbreviations.Contains("S")) days.Add("Saturday");
+            }
+
+            if (parts.Length > 1)
+            {
+                var timeRange = parts[1].Trim();
+                var timeParts = timeRange.Split('–');
+                if (timeParts.Length == 2)
+                {
+                    if (DateTime.TryParse(timeParts[0].Trim(), out var start))
+                        startTime = start.ToString("HH:mm");
+                    if (DateTime.TryParse(timeParts[1].Trim(), out var end))
+                        endTime = end.ToString("HH:mm");
+                }
+            }
+        }
+
+        var viewModel = new EditClassViewModel
+        {
+            Id = classEntity.Id,
+            CourseId = classEntity.CourseId,
+            TeacherId = classEntity.TeacherId,
+            Semester = classEntity.Semester,
+            YearLevel = classEntity.YearLevel,
+            Days = days.ToArray(),
+            StartTime = startTime,
+            EndTime = endTime
+        };
+
+        ViewBag.Courses = courses
+            .Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.CourseCode
+            })
+            .ToList();
 
         ViewBag.CourseList = courses.Select(c => new
         {
@@ -98,7 +154,13 @@ public class ClassManagementController : Controller
             courseUnit = c.Units
         }).ToList();
 
-        return PartialView("Edit", classEntity);
+        ViewBag.Teachers = teachers.Select(t => new SelectListItem
+        {
+            Value = t.Id.ToString(),
+            Text = $"{t.FirstName} {t.LastName}"
+        }).ToList();
+
+        return PartialView("Edit", viewModel);
     }
 
     [HttpGet]
@@ -185,30 +247,49 @@ public class ClassManagementController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(Class classEntity, string[] Days, string StartTime, string EndTime)
+    public async Task<IActionResult> Edit(EditClassViewModel viewModel)
     {
-        if (!ModelState.IsValid)
+        // Check if end time is after start time
+        if (!string.IsNullOrEmpty(viewModel.StartTime) && !string.IsNullOrEmpty(viewModel.EndTime))
         {
-            var courses = await _courseManagementService.GetAllCoursesAsync();
-            var allUsers = await _userManagementService.GetAllUsersAsync();
-            var teachers = allUsers.Where(u => u.Role == "Teacher").ToList();
-
-            ViewBag.Courses = courses.Select(c => new SelectListItem
+            if (TimeSpan.TryParse(viewModel.StartTime, out var startTime) &&
+                TimeSpan.TryParse(viewModel.EndTime, out var endTime))
             {
-                Value = c.Id.ToString(),
-                Text = c.CourseCode
-            }).ToList();
-
-            ViewBag.Teachers = teachers.Select(t => new SelectListItem
-            {
-                Value = t.Id.ToString(),
-                Text = $"{t.FirstName} {t.LastName}"
-            }).ToList();
-
-            return View(classEntity);
+                if (endTime <= startTime)
+                {
+                    ModelState.AddModelError("EndTime", "End time must be after start time");
+                }
+            }
         }
 
-        var abbreviations = Days.Select(d => d switch
+        // Check if teacher is selected (not default value)
+        if (viewModel.TeacherId == 0)
+        {
+            ModelState.AddModelError("TeacherId", "Teacher is required");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+
+            return Json(new { success = false, errors = errors });
+        }
+
+        // Map ViewModel to Entity
+        var classEntity = new Class
+        {
+            Id = viewModel.Id,
+            CourseId = viewModel.CourseId,
+            TeacherId = viewModel.TeacherId,
+            Semester = viewModel.Semester,
+            YearLevel = viewModel.YearLevel
+        };
+
+        // Build schedule string
+        var abbreviations = viewModel.Days.Select(d => d switch
         {
             "Monday" => "M",
             "Tuesday" => "T",
@@ -219,7 +300,7 @@ public class ClassManagementController : Controller
             _ => ""
         });
 
-        if (DateTime.TryParse(StartTime, out var start) && DateTime.TryParse(EndTime, out var end))
+        if (DateTime.TryParse(viewModel.StartTime, out var start) && DateTime.TryParse(viewModel.EndTime, out var end))
         {
             string startFormatted = start.ToString("h:mm tt");
             string endFormatted = end.ToString("h:mm tt");
@@ -231,7 +312,8 @@ public class ClassManagementController : Controller
         }
 
         await _classManagementService.UpdateClassAsync(classEntity);
-        return RedirectToAction("Index");
+
+        return Json(new { success = true, message = "Class updated successfully" });
     }
     
     [HttpPost]

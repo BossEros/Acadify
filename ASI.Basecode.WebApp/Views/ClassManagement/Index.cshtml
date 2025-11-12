@@ -203,15 +203,16 @@
     // Expose closeModal globally (for partials)
     window.closeModal = closeModal;
 
-    // Handle form submission for Create modal
+    // Handle form submission for Create and Edit modals
     document.addEventListener('submit', function(e) {
-        if (e.target.id === 'createClassForm') {
+        if (e.target.id === 'createClassForm' || e.target.id === 'editClassForm') {
             e.preventDefault();
 
             const form = e.target;
             const formData = new FormData(form);
-            const validationSummary = qs('#validationSummary');
-            const validationErrors = qs('#validationErrors');
+            const isEdit = e.target.id === 'editClassForm';
+            const validationSummary = qs(isEdit ? '#validationSummaryEdit' : '#validationSummary');
+            const validationErrors = qs(isEdit ? '#validationErrorsEdit' : '#validationErrors');
 
             // Hide previous errors
             if (validationSummary) {

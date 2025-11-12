@@ -63,7 +63,8 @@ public class ClassManagementController : Controller
     public async Task<IActionResult> Index()
     {
         var classes = await _classManagementService.GetAllClassesAsync();
-        return View(classes);
+        var sortedClasses = classes.OrderBy(c => c.Id).ToList();
+        return View(sortedClasses);
     }
 
     [HttpGet]

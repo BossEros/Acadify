@@ -37,14 +37,14 @@ public class AccountController : Controller
     // GET: /Account/ResetPassword
     [HttpGet]
     public IActionResult ResetPassword(string email, string token)
-    {
+    {   
+        // Return to login page if one is missing to prevent tampering
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
         {
             return RedirectToAction("Login");
         }
 
-        var model = new ResetPasswordViewModel{Email = email, Token = token};
-        return View(model);
+        return View(new ResetPasswordViewModel{Email = email, Token = token});
     }
 
 
@@ -71,6 +71,7 @@ public class AccountController : Controller
 
             if (result.Succeeded)
             {
+                TempData["SuccessMessage"] = "Account created successfully! Please sign in with your credentials.";
                 return RedirectToAction("Login", "Account");
             }
 
@@ -89,7 +90,6 @@ public class AccountController : Controller
         }
         catch (Exception)
         {
-            // Log the exception (add logging service)
             ModelState.AddModelError("", "An unexpected error occurred during registration. Please try again.");
         }
 
@@ -183,7 +183,6 @@ public class AccountController : Controller
         }
         catch (Exception)
         {
-            // Log the exception (add logging service)
             ModelState.AddModelError("", "An unexpected error occurred during password reset. Please try again.");
         }
 
@@ -201,8 +200,8 @@ public class AccountController : Controller
     }
 
 
-
     // Helper Methods
+
     private ViewResult ViewWithReturnUrl<T>(T model, string? returnUrl)
     {
         ViewData[nameof(returnUrl)] = returnUrl;

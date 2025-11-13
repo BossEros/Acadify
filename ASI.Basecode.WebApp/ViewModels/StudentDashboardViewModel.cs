@@ -1,9 +1,16 @@
-﻿namespace ASI.Basecode.WebApp.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ASI.Basecode.WebApp.ViewModels
 {
     public class StudentDashboardViewModel
     {
         public string StudentName { get; set; } = "";
         public List<ClassCard> Classes { get; set; } = new();
+
+        [Required(ErrorMessage = "EDP code is required.")]
+        [Display(Name = "EDP Code")]
+        [RegularExpression(@"^\d+$", ErrorMessage = "EDP code must be a valid number.")]
+        public string EdpCode { get; set; } = string.Empty;
 
         public class ClassCard
         {

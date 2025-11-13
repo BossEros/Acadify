@@ -1,26 +1,45 @@
-﻿@model List<ASI.Basecode.Data.Models.Class>
+﻿@model ASI.Basecode.WebApp.ViewModels.StudentDashboardViewModel
 @{
     Layout = "_Layout"; // your student layout
 }
 <div class="container-fluid py-4 bg-light min-vh-100">
     <div class="container" style="max-width: 1200px;">
         <h2 class="fw-bold mb-1" style="font-size: 28px;">Dashboard</h2>
-        <p class="text-muted mb-4" style="font-size: 14px;">Welcome back, @User.Identity.Name</p>
+        <p class="text-muted mb-4" style="font-size: 14px;">Welcome back, @Model.StudentName</p>
 
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 8px;">
             <div class="card-body p-4">
                 <h6 class="fw-semibold mb-2" style="font-size: 15px;">+ Enroll in a Class</h6>
-                <p class="text-muted mb-3" style="font-size: 13px;">Enter a class Join Code to enroll in a new course</p>
-                <div class="d-flex gap-2">
-                    <input type="text" class="form-control" placeholder="Enter Join Code" style="flex: 1; border-radius: 6px; font-size: 14px; border: 1px solid #dee2e6;" />
-                    <button class="btn btn-primary" style="background-color: #1e3a8a; border: none; padding: 8px 24px; border-radius: 6px; font-size: 14px; font-weight: 500;">Enroll</button>
-                </div>
+                <p class="text-muted mb-3" style="font-size: 13px;">Enter EDP Code to enroll in a new course</p>
+                <form id="enrollClassForm" asp-controller="Home" asp-action="EnrollClass" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="d-flex gap-2">
+                        <input type="text"
+                               id="edpCode"
+                               name="EdpCode"
+                               asp-for="EdpCode"
+                               class="form-control @(ViewData.ModelState["EdpCode"]?.Errors.Count > 0 ? "is-invalid" : "")"
+                               placeholder="Enter EDP Code"
+                               style="flex: 1; border-radius: 6px; font-size: 14px; border: 1px solid #dee2e6;"
+                               required>
+                        <button type="submit"
+                                id="enrollBtn"
+                                class="btn btn-primary"
+                                style="background-color: #1e3a8a; border: none; padding: 8px 24px; border-radius: 6px; font-size: 14px; font-weight: 500;">
+                            Enroll
+                        </button>
+                    </div>
+                    <div class="invalid-feedback d-block mt-1">
+                        <span asp-validation-for="EdpCode" class="text-danger small"></span>
+                    </div>
+                    <div id="enrollClassMessage" class="mt-2"></div>
+                </form>
             </div>
         </div>
 
-        <h5 class="fw-semibold mb-3" style="font-size: 18px;">Enrolled Classes (@Model.Count)</h5>
+        <h5 class="fw-semibold mb-3" style="font-size: 18px;">Enrolled Classes (@Model.Classes.Count)</h5>
 
-        @if (!Model.Any())
+        @if (!Model.Classes.Any())
         {
             <div class="alert alert-info shadow-sm border-0">
                 You are not enrolled in any class yet.
@@ -29,17 +48,17 @@
         else
         {
             <div class="row g-3">
-                @foreach (var c in Model)
+                @foreach (var c in Model.Classes)
                 {
                     <div class="col-12 col-md-6">
                         <div class="card border-0 shadow-sm position-relative" style="border-radius: 8px;">
                             <div class="card-body p-3">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div>
-                                        <h6 class="fw-bold mb-1" style="font-size: 15px; color: #1a1a1a;">@c.Course?.CourseCode</h6>
-                                        <p class="text-muted mb-0" style="font-size: 13px;">@c.Course?.CourseName</p>
+                                        <h6 class="fw-bold mb-1" style="font-size: 15px; color: #1a1a1a;">@c.CourseCode</h6>
+                                        <p class="text-muted mb-0" style="font-size: 13px;">@c.CourseName</p>
                                     </div>
-                                    <span class="badge bg-light text-muted border" style="font-size: 11px; font-weight: 500; padding: 4px 10px;">@c.Course?.Units units</span>
+                                    <span class="badge bg-light text-muted border" style="font-size: 11px; font-weight: 500; padding: 4px 10px;">@c.Units units</span>
                                 </div>
                                 <div class="mt-3">
                                     <div class="d-flex align-items-center text-muted mb-1" style="font-size: 12px;">
@@ -53,7 +72,7 @@
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-2" viewBox="0 0 16 16">
                                             <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" />
                                         </svg>
-                                        Prof. @(c.Teacher?.FirstName) @(c.Teacher?.LastName)
+                                        @c.TeacherName
                                     </div>
                                 </div>
                             </div>
@@ -64,3 +83,62 @@
         }
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            $('#enrollClassForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $(this);
+                var submitBtn = $('#enrollBtn');
+                var messageDiv = $('#enrollClassMessage');
+                var edpCodeInput = $('#edpCode');
+
+                // Clear previous messages
+                messageDiv.html('').removeClass('alert alert-success alert-danger');
+                edpCodeInput.removeClass('is-invalid');
+
+                // Disable button during submission
+                submitBtn.prop('disabled', true).text('Enrolling...');
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            messageDiv.html('<div class="alert alert-success small mb-0">' + response.message + '</div>');
+                            edpCodeInput.val('');
+
+                            // Reload the page after a short delay to show updated classes
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            var errorMsg = response.message || (response.errors && response.errors.join('<br>')) || 'An error occurred.';
+                            messageDiv.html('<div class="alert alert-danger small mb-0">' + errorMsg + '</div>');
+                            edpCodeInput.addClass('is-invalid');
+                        }
+                    },
+                    error: function (xhr) {
+                        var errorMsg = 'An error occurred while enrolling in the class.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            errorMsg = xhr.responseJSON.errors.join('<br>');
+                        }
+                        messageDiv.html('<div class="alert alert-danger small mb-0">' + errorMsg + '</div>');
+                        edpCodeInput.addClass('is-invalid');
+                    },
+                    complete: function () {
+                        submitBtn.prop('disabled', false).text('Enroll');
+                    }
+                });
+            });
+        });
+    </script>
+}

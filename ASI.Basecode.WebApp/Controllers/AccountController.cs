@@ -111,8 +111,7 @@ public class AccountController : Controller
             var result = await _accountService.LoginAsync(new LoginRequest
             {
                 Email = model.Email,
-                Password = model.Password,
-                RememberMe = model.RememberMe
+                Password = model.Password
             });
 
             if (result.Succeeded)

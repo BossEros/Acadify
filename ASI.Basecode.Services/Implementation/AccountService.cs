@@ -76,7 +76,7 @@ namespace ASI.Basecode.Services.Implementation
             var (succeeded, isLockedOut) = await _authRepository.PasswordSignInAsync(
                 user,
                 request.Password,
-                isPersistent: request.RememberMe,
+                isPersistent: false,
                 lockoutOnFailure: true);
 
             if (succeeded)

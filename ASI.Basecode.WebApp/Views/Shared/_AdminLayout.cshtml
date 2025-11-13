@@ -27,9 +27,10 @@
                    class="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">
                     📚 <span class="ml-3">Manage Classes</span>
                 </a>
-                <a asp-controller="Reports" asp-action="Index"
-                   class="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg">
-                    📑 <span class="ml-3">Reports</span>
+                <a asp-controller="Settings" asp-action="Index"
+                   class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-[#F9FAFB] cursor-pointer sidebar-item transition-colors duration-200">
+                    <i class="fas fa-cog mr-3 text-gray-500"></i>
+                    Settings
                 </a>
             </nav>
         </div>
@@ -41,7 +42,7 @@
                 <h1 class="text-lg font-semibold">@ViewData["Title"]</h1>
                 <div class="flex items-center space-x-4">
                     <div class="text-right">
-                        <div class="text-sm font-medium text-gray-900">John Doe</div>
+                        <div class="text-sm font-medium text-gray-900">ADMIN</div>
                         <div class="text-xs text-gray-500">System Administrator</div>
                     </div>
                     <form asp-controller="Account" asp-action="login" method="post" class="inline">

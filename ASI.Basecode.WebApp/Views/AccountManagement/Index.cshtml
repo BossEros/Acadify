@@ -18,11 +18,11 @@
             <p class="text-gray-500">Manage user accounts</p>
         </div>
         <div class="w-72">
-            <label class="sr-only" for="searchUserId">Search by User ID</label>
+            <label class="sr-only" for="searchUserId">Search by User ID or Email</label>
             <div class="relative">
-                <input id="searchUserId" type="text" placeholder="Search by User ID" class="w-full rounded border border-gray-300 pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input id="searchUserId" type="text" placeholder="Search by User ID or Email" class="w-full rounded border border-gray-300 pl-3 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 <button type="button" id="btnSearchGlobal" class="absolute right-1 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 p-1" aria-label="Search">
-                    <span class="material-icons"></span> 
+                    <span class="material-icons"></span>
                 </button>
             </div>
         </div>
@@ -50,11 +50,11 @@
             <tbody id="usersTbody">
                 @foreach (var user in Model.Users)
                 {
-                    <tr class="border-b" data-user-id="@user.Id.ToString("D6")">
+                    <tr class="border-b" data-user-id="@user.Id.ToString("D6")" data-email="@(user.Email?.ToLower() ?? "")">
                         <td class="p-3">@user.Id.ToString("D6")</td>
                         <td class="p-3">@user.FirstName</td>
                         <td class="p-3">@user.LastName</td>
-                        <td class="p-3">@user.Email</td>
+                        <td class="p-3">@(user.Email ?? "")</td>
                         <td class="p-3">@user.Role</td>
                         <td class="p-3">
                             @if (user.IsActive)
@@ -303,7 +303,7 @@
             if (result.success) { location.reload(); }
         });
 
-        // Global Search by User ID - reorder and highlight
+        // Global Search by User ID or Email - reorder and highlight
         const tbody = qs('#usersTbody');
         const originalRows = Array.from(tbody.children);
         function resetTable() {
@@ -313,7 +313,16 @@
         function reorderForSearch(term) {
             if (!term) { resetTable(); return; }
             const rows = Array.from(tbody.children);
-            const match = rows.find(r => r.dataset.userId && r.dataset.userId.startsWith(term.padStart(6,'0')));
+            const lowerTerm = term.toLowerCase();
+
+            // Try to find by User ID first (numeric search)
+            let match = rows.find(r => r.dataset.userId && r.dataset.userId.startsWith(term.padStart(6,'0')));
+
+            // If no match by User ID, try email search
+            if (!match) {
+                match = rows.find(r => r.dataset.email && r.dataset.email.includes(lowerTerm));
+            }
+
             if (!match) return; // keep as-is if no match
             tbody.prepend(match);
             match.classList.add('ring-2','ring-blue-300');

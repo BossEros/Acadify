@@ -158,7 +158,7 @@ namespace ASI.Basecode.Services.Implementation
             {
                 "Admin" => "/AdminDashboard/Index",
                 "Teacher" => "/ClassManagement/TeacherDashboard",
-                "Student" => "/GradeManagement/GradeView",
+                "Student" => "/Home/StudentDashboard",
                 _ => "/Register"
             };
         }

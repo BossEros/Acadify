@@ -32,6 +32,7 @@
         <button type="button" id="openEnroll" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Enroll Student</button>
         <button type="button" id="openUnenroll" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Unenroll Student</button>
         <button type="button" id="openAssign" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Assign Teacher</button>
+        <button type="button" id="openUnassign" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded">Unassign Teacher</button>
         <button type="button" id="openEdit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Edit User</button>
     </div>
 
@@ -142,6 +143,32 @@
         </div>
     </div>
 
+    <!-- Unassign Teacher Modal -->
+    <div id="modalUnassign" class="hidden fixed inset-0 z-50 items-center justify-center bg-gray-900/50 backdrop-blur">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow p-6">
+            <h3 class="text-xl font-semibold mb-4">Unassign Teacher</h3>
+            <form id="formUnassign" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">User ID</label>
+                    <div class="flex space-x-2">
+                        <input id="unassignUserId" name="UserId" type="number" class="flex-1 rounded border border-gray-300 px-3 py-2" placeholder="Enter User ID" required />
+                        <button type="button" id="btnLoadTeacherClasses" class="px-3 py-2 rounded bg-gray-800 text-white">Load Classes</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Assigned Classes</label>
+                    <select name="EdpCode" id="assignedClassesDropdown" class="w-full rounded border border-gray-300 px-3 py-2" required disabled>
+                        <option value="">Enter User ID and click Load Classes</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" data-close="modalUnassign" class="px-4 py-2 rounded border">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded bg-yellow-600 text-white">Unassign Teacher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Edit User Modal -->
     <div id="modalEdit" class="hidden fixed inset-0 z-50 items-center justify-center bg-gray-900/50 backdrop-blur">
         <div class="bg-white w-full max-w-2xl rounded-xl shadow p-6">
@@ -201,6 +228,7 @@
         qs('#openEnroll').addEventListener('click', () => open('modalEnroll'));
         qs('#openUnenroll').addEventListener('click', () => open('modalUnenroll'));
         qs('#openAssign').addEventListener('click', () => open('modalAssign'));
+        qs('#openUnassign').addEventListener('click', () => open('modalUnassign'));
         qs('#openEdit').addEventListener('click', () => open('modalEdit'));
 
         document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', (e) => close(e.target.getAttribute('data-close'))));
@@ -274,6 +302,47 @@
             e.preventDefault();
             const data = Object.fromEntries(new FormData(e.target).entries());
             const result = await postForm('@Url.Action("AssignTeacher")', data);
+            alert(result.message);
+            if (result.success) { location.reload(); }
+        });
+
+        // Unassign - Load Teacher Classes
+        qs('#btnLoadTeacherClasses').addEventListener('click', async () => {
+            const userId = qs('#unassignUserId').value;
+            if (!userId) {
+                alert('Please enter a User ID');
+                return;
+            }
+
+            // Fetch assigned classes for the teacher
+            const res = await fetch(`@Url.Action("GetAssignedClasses")?userId=${encodeURIComponent(userId)}`);
+            const result = await res.json();
+
+            const dropdown = qs('#assignedClassesDropdown');
+            dropdown.innerHTML = '';
+
+            if (!result.success || !result.data || result.data.length === 0) {
+                dropdown.innerHTML = '<option value="">No assigned classes found</option>';
+                dropdown.disabled = true;
+                alert(result.message || 'No assigned classes found for this teacher');
+                return;
+            }
+
+            dropdown.disabled = false;
+            dropdown.innerHTML = '<option value="">Select a class to unassign</option>';
+            result.data.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.edpCode;
+                option.textContent = `${cls.edpCode} - ${cls.className || ''}`;
+                dropdown.appendChild(option);
+            });
+        });
+
+        // Unassign - Submit
+        qs('#formUnassign').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target).entries());
+            const result = await postForm('@Url.Action("UnassignTeacher")', data);
             alert(result.message);
             if (result.success) { location.reload(); }
         });

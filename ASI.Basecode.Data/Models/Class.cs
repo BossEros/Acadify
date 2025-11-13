@@ -7,7 +7,7 @@ namespace ASI.Basecode.Data.Models
     {
         public int Id { get; set; }
         public int? CourseId { get; set; }
-        public int TeacherId { get; set; }  
+        public int? TeacherId { get; set; }
         public short Semester { get; set; }
         public short YearLevel { get; set; }
         // public short Units { get; set; }

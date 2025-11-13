@@ -110,6 +110,27 @@ public class ClassManagementRepository : IClassManagementRepository
             await _dbContext.SaveChangesAsync();
         }
     }
+
+    // Teacher assignment methods
+    public async Task<IEnumerable<Class>> GetClassesByTeacherIdAsync(int teacherId)
+    {
+        return await _dbContext.Classes
+            .Where(c => c.TeacherId == teacherId && c.IsActive)
+            .Include(c => c.Course)
+            .ToListAsync();
+    }
+
+    public async Task UnassignTeacherFromClassAsync(int classId)
+    {
+        var classEntity = await _dbContext.Classes.FindAsync(classId);
+        if (classEntity != null)
+        {
+            classEntity.TeacherId = null;
+            classEntity.IsActive = false;
+            _dbContext.Classes.Update(classEntity);
+            await _dbContext.SaveChangesAsync();
+        }
+    }
 }
 
 

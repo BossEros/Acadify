@@ -432,5 +432,71 @@ namespace ASI.Basecode.Services.Implementation
             }
             return UserManagementResult.Success("Teacher assigned to EDP successfully.");
         }
+
+        public async Task<IEnumerable<AssignedClassDto>> GetAssignedClassesAsync(int userId)
+        {
+            var user = await _userRepository.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Enumerable.Empty<AssignedClassDto>();
+            }
+
+            var classes = await _classRepository.GetClassesByTeacherIdAsync(userId);
+
+            var assignedClasses = classes.Select(c => new AssignedClassDto
+            {
+                EdpCode = c.Id.ToString(),
+                ClassName = c.Course != null
+                    ? $"{c.Course.CourseName} (Sem {c.Semester}, Year {c.YearLevel})"
+                    : $"Class {c.Id} (Sem {c.Semester}, Year {c.YearLevel})"
+            }).ToList();
+
+            return assignedClasses;
+        }
+
+        public async Task<UserManagementResult> UnassignTeacherAsync(int userId, string edpCode)
+        {
+            try
+            {
+                var user = await _userRepository.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return UserManagementResult.Failure("User not found.");
+                }
+
+                if (string.IsNullOrWhiteSpace(edpCode))
+                {
+                    return UserManagementResult.Failure("EDP code is required.");
+                }
+
+                // Parse EDP code as Class ID
+                if (!int.TryParse(edpCode, out int classId))
+                {
+                    return UserManagementResult.Failure("Invalid EDP code format. Please enter a valid class ID.");
+                }
+
+                // Find the class by ID
+                var classEntity = await _classRepository.GetByIdAsync(classId);
+                if (classEntity == null)
+                {
+                    return UserManagementResult.Failure("Class not found with the provided EDP code.");
+                }
+
+                // Verify that the user is the teacher of this class
+                if (classEntity.TeacherId != userId)
+                {
+                    return UserManagementResult.Failure("This teacher is not assigned to the specified class.");
+                }
+
+                // Unassign the teacher by deleting the class
+                await _classRepository.UnassignTeacherFromClassAsync(classId);
+
+                return UserManagementResult.Success("Teacher unassigned from class successfully.");
+            }
+            catch (Exception ex)
+            {
+                return UserManagementResult.Failure($"Error unassigning teacher: {ex.Message}");
+            }
+        }
     }
 }

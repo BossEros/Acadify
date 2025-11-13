@@ -10,9 +10,8 @@ namespace ASI.Basecode.WebApp.ViewModels.ClassManagement
         [Display(Name = "Course")]
         public int? CourseId { get; set; }
 
-        [Required(ErrorMessage = "Teacher is required")]
         [Display(Name = "Teacher")]
-        public int TeacherId { get; set; }
+        public int? TeacherId { get; set; }
 
         [Required(ErrorMessage = "Semester is required")]
         [Display(Name = "Semester")]

@@ -38,3 +38,9 @@ public class EnrolledClassDto
     public string EdpCode { get; set; } = string.Empty;
     public string ClassName { get; set; } = string.Empty;
 }
+
+public class AssignedClassDto
+{
+    public string EdpCode { get; set; } = string.Empty;
+    public string ClassName { get; set; } = string.Empty;
+}

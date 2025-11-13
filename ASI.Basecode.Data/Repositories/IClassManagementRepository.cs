@@ -19,6 +19,10 @@ public interface IClassManagementRepository
     Task<bool> IsStudentEnrolledAsync(int studentId, int classId);
     Task EnrollStudentAsync(int studentId, int classId);
     Task UnenrollStudentAsync(int studentId, int classId);
+
+    // Teacher assignment methods
+    Task<IEnumerable<Class>> GetClassesByTeacherIdAsync(int teacherId);
+    Task UnassignTeacherFromClassAsync(int classId);
 }
 
 

@@ -24,8 +24,7 @@ namespace ASI.Basecode.Data.Data.Configurations
                 .IsRequired();
 
             builder.Property(c => c.TeacherId)
-                .HasColumnName("teacher_id")
-                .IsRequired();
+                .HasColumnName("teacher_id");
 
             builder.Property(c => c.Semester)
                 .HasColumnName("semester")

@@ -151,6 +151,40 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAssignedClasses(int userId)
+        {
+            try
+            {
+                var classes = await _accountManagementService.GetAssignedClassesAsync(userId);
+                if (classes == null || !classes.Any())
+                {
+                    return JsonResponse(false, "No assigned classes found for this teacher.");
+                }
+
+                return JsonResponse(true, "Assigned classes retrieved successfully", classes);
+            }
+            catch (Exception ex)
+            {
+                return JsonResponse(false, "Error retrieving assigned classes: " + ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnassignTeacher([FromBody] SimpleUserCourseRequest request)
+        {
+            try
+            {
+                var result = await _accountManagementService.UnassignTeacherAsync(request.UserId, request.EdpCode);
+                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Teacher unassigned successfully." : "Failed to unassign teacher."));
+            }
+            catch (Exception ex)
+            {
+                return JsonResponse(false, "Error unassigning teacher: " + ex.Message);
+            }
+        }
+
         public class EditUserRequest
         {
             public int UserId { get; set; }

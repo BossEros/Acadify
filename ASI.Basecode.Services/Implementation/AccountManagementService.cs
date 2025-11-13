@@ -74,6 +74,27 @@ namespace ASI.Basecode.Services.Implementation
             };
         }
 
+        public async Task<UserManagementDto?> GetUserByEmailAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return null;
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var primaryRole = roles.FirstOrDefault() ?? "Student";
+
+            return new UserManagementDto
+            {
+                Id = user.Id,
+                UserName = user.UserName!,
+                Email = user.Email!,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Role = primaryRole,
+                IsActive = user.IsApproved,
+                CreatedAt = user.CreatedAt
+            };
+        }
+
         public async Task<UserManagementResult> CreateUserAsync(RegisterRequest request)
         {
             try
@@ -139,6 +160,60 @@ namespace ASI.Basecode.Services.Implementation
 
                 // Update user properties
                 user.UserName = request.UserName;
+                user.IsApproved = request.IsActive;
+
+                var (succeeded, errors) = await _userRepository.UpdateUserAsync(user);
+
+                if (succeeded)
+                {
+                    return UserManagementResult.Success($"User '{user.FirstName} {user.LastName}' updated successfully!");
+                }
+
+                return UserManagementResult.Failure(errors);
+            }
+            catch (Exception ex)
+            {
+                return UserManagementResult.Failure($"Error updating user: {ex.Message}");
+            }
+        }
+
+        public async Task<UserManagementResult> UpdateUserEmailAndStatusAsync(UpdateUserEmailAndStatusRequest request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return UserManagementResult.Failure("Invalid request.");
+                }
+
+                var user = await _userRepository.FindByIdAsync(request.UserId);
+                if (user == null)
+                {
+                    return UserManagementResult.Failure("User not found.");
+                }
+
+                // Check if new email conflicts with other users
+                if (!string.IsNullOrWhiteSpace(request.Email))
+                {
+                    var currentEmail = user.Email ?? string.Empty;
+
+                    if (!request.Email.Equals(currentEmail, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var existingUserByEmail = await _userRepository.FindByEmailAsync(request.Email);
+                        if (existingUserByEmail != null && existingUserByEmail.Id != user.Id)
+                        {
+                            return UserManagementResult.Failure("Email address already exists.");
+                        }
+
+                        // Update email
+                        user.Email = request.Email;
+                        user.UserName = request.Email; // Keep username in sync with email
+                        user.NormalizedEmail = request.Email.ToUpperInvariant();
+                        user.NormalizedUserName = request.Email.ToUpperInvariant();
+                    }
+                }
+
+                // Update status
                 user.IsApproved = request.IsActive;
 
                 var (succeeded, errors) = await _userRepository.UpdateUserAsync(user);

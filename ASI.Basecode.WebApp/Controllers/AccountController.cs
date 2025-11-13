@@ -75,7 +75,7 @@ public class AccountController : Controller
                 return RedirectToAction("Login", "Account");
             }
 
-            // Add errors to ModelState
+            // if registation is not successful, add errors to ModelState
             foreach (var error in result.Errors)
             {
                 if (error.Contains("Email"))

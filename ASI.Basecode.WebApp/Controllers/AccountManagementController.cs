@@ -70,7 +70,8 @@ namespace ASI.Basecode.WebApp.Controllers
                     firstName = user.FirstName,
                     lastName = user.LastName,
                     email = user.Email,
-                    role = user.Role
+                    role = user.Role,
+                    isActive = user.IsActive
                 });
             }
             catch (Exception ex)
@@ -116,28 +117,72 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
-        public class EditPasswordRequest
+        public class EditUserRequest
         {
             public int UserId { get; set; }
-            public string NewPassword { get; set; } = string.Empty;
+            public string Email { get; set; } = string.Empty;
+            public bool IsActive { get; set; }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditUser([FromBody] EditPasswordRequest request)
+        public async Task<IActionResult> EditUser([FromBody] EditUserRequest request)
         {
             try
             {
-                var result = await _accountManagementService.ChangePasswordAsync(new ChangePasswordRequest
+                // Validate request
+                if (request == null)
+                {
+                    return JsonResponse(false, "Invalid request data.");
+                }
+
+                if (request.UserId <= 0)
+                {
+                    return JsonResponse(false, "Please search for a user first.");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Email))
+                {
+                    return JsonResponse(false, "Email address is required.");
+                }
+
+                // Get user to retrieve current username
+                var user = await _accountManagementService.GetUserByIdAsync(request.UserId);
+                if (user == null)
+                {
+                    return JsonResponse(false, "User not found.");
+                }
+
+                // Check if email is being changed and if new email already exists
+                if (!string.IsNullOrWhiteSpace(request.Email) &&
+                    !string.IsNullOrWhiteSpace(user.Email) &&
+                    !request.Email.Equals(user.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    var existingUser = await _accountManagementService.GetUserByEmailAsync(request.Email);
+                    if (existingUser != null && existingUser.Id != request.UserId)
+                    {
+                        return JsonResponse(false, "Email address already exists.");
+                    }
+                }
+
+                // Update user email and status
+                var updateResult = await _accountManagementService.UpdateUserEmailAndStatusAsync(new UpdateUserEmailAndStatusRequest
                 {
                     UserId = request.UserId,
-                    NewPassword = request.NewPassword
+                    Email = request.Email,
+                    IsActive = request.IsActive
                 });
-                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Password updated." : "Failed to update password."));
+
+                if (!updateResult.Succeeded)
+                {
+                    return JsonResponse(false, updateResult.Message ?? "Failed to update user.");
+                }
+
+                return JsonResponse(true, "User updated successfully.");
             }
             catch (Exception ex)
             {
-                return JsonResponse(false, "Error updating user: " + ex.Message);
+                return JsonResponse(false, $"Error updating user: {ex.Message} | Stack: {ex.StackTrace}");
             }
         }
 

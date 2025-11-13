@@ -135,10 +135,6 @@
                         <input id="editLastName" class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" disabled />
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-700 mb-1">Email Address</label>
-                        <input id="editEmail" class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" disabled />
-                    </div>
-                    <div>
                         <label class="block text-sm text-gray-700 mb-1">Role</label>
                         <input id="editRole" class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" disabled />
                     </div>
@@ -146,8 +142,16 @@
                 <form id="formEdit" class="space-y-4">
                     <input type="hidden" name="UserId" id="editUserIdHidden" />
                     <div>
-                        <label class="block text-sm text-gray-700 mb-1">Change Password</label>
-                        <input name="NewPassword" type="password" class="w-full rounded border border-gray-300 px-3 py-2" placeholder="Enter new password" required />
+                        <label class="block text-sm text-gray-700 mb-1">Email Address</label>
+                        <input name="Email" id="editEmail" type="email" class="w-full rounded border border-gray-300 px-3 py-2" placeholder="Enter email address" required />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Status</label>
+                        <select name="IsActive" id="editStatus" class="w-full rounded border border-gray-300 px-3 py-2" required>
+                            <option value="">Select Status</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
                     </div>
                     <div class="flex justify-end space-x-2 pt-2">
                         <button type="button" data-close="modalEdit" class="px-4 py-2 rounded border">Cancel</button>
@@ -255,12 +259,23 @@
             qs('#editEmail').value = u.data.email;
             qs('#editRole').value = u.data.role;
             qs('#editUserIdHidden').value = u.data.id;
+            qs('#editStatus').value = u.data.isActive.toString().toLowerCase();
         });
 
         // Edit - submit
         qs('#formEdit').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const data = Object.fromEntries(new FormData(e.target).entries());
+            const userId = qs('#editUserIdHidden').value;
+            if (!userId) {
+                alert('Please search for a user first.');
+                return;
+            }
+            const formData = Object.fromEntries(new FormData(e.target).entries());
+            const data = {
+                UserId: parseInt(formData.UserId),
+                Email: formData.Email,
+                IsActive: formData.IsActive === 'true'
+            };
             const result = await postForm('@Url.Action("EditUser")', data);
             alert(result.message);
             if (result.success) { location.reload(); }

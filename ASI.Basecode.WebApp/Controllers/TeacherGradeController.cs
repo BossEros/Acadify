@@ -24,9 +24,11 @@ namespace ASI.Basecode.WebApp.Controllers
             _userManager = userManager;
         }
 
-        // GET: TeacherGrade/ClassGrades/2
-        public async Task<IActionResult> ClassGrades(int id = 43) // Default class id
+        // GET: TeacherGrade/ClassGrades/{id}
+        public async Task<IActionResult> ClassGrades(int id)
         {
+            if (id <= 0) return BadRequest("Invalid class id.");
+
             var classWithDetails = await _context.Classes
                 .Include(c => c.Course)
                 .Include(c => c.Enrollments)
@@ -45,15 +47,38 @@ namespace ASI.Basecode.WebApp.Controllers
                 CourseName = classWithDetails.Course.CourseName,
                 Schedule = classWithDetails.Schedule,
                 Units = (int)classWithDetails.Course.Units,
-                StudentGrades = classWithDetails.Enrollments.Select(e => new StudentGradeViewModel
+                StudentGrades = classWithDetails.Enrollments.Select(e =>
                 {
-                    EnrollmentId = e.Id,
-                    StudentId = e.StudentId,
-                    StudentName = $"{e.Student.FirstName} {e.Student.LastName}",
-                    MidtermGrade = e.Grade?.MidtermGrade,
-                    FinalGrade = e.Grade?.FinalGrade,
-                    IsPassed = e.Grade?.FinalGrade.HasValue == true,
-                    Remark = e.Grade?.FinalGrade.HasValue == true ? "Passed" : "Incomplete"
+                    var final = e.Grade?.FinalGrade;
+                    string remark;
+                    bool isPassed;
+
+                    if (!final.HasValue)
+                    {
+                        remark = "Incomplete";
+                        isPassed = false;
+                    }
+                    else if (final.Value > 3.0m)
+                    {
+                        remark = "Failed";
+                        isPassed = false;
+                    }
+                    else
+                    {
+                        remark = "Passed";
+                        isPassed = true;
+                    }
+
+                    return new StudentGradeViewModel
+                    {
+                        EnrollmentId = e.Id,
+                        StudentId = e.StudentId,
+                        StudentName = $"{e.Student.FirstName} {e.Student.LastName}",
+                        MidtermGrade = e.Grade?.MidtermGrade,
+                        FinalGrade = final,
+                        IsPassed = isPassed,
+                        Remark = remark
+                    };
                 }).ToList()
             };
 
@@ -61,23 +86,19 @@ namespace ASI.Basecode.WebApp.Controllers
         }
 
         // POST: TeacherGrade/UpdateGrade
-        // Accept raw JSON so we can detect which properties are present and only update those.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateGrade([FromBody] JsonElement payload)
         {
-            // Validate enrollmentId presence and type
             if (!payload.TryGetProperty("enrollmentId", out var enrollmentProp) || enrollmentProp.ValueKind != JsonValueKind.Number)
                 return BadRequest("enrollmentId is required and must be a number.");
 
             var enrollmentId = enrollmentProp.GetInt32();
 
-            // Ensure enrollment exists
             var enrollmentExists = await _context.Enrollments.AnyAsync(e => e.Id == enrollmentId);
             if (!enrollmentExists)
                 return NotFound("Enrollment not found.");
 
-            // Get or create grade row
             var grade = await _context.Grades.FirstOrDefaultAsync(g => g.EnrollmentId == enrollmentId);
             if (grade == null)
             {
@@ -89,42 +110,28 @@ namespace ASI.Basecode.WebApp.Controllers
                 _context.Grades.Add(grade);
             }
 
-            // Update only properties that are present in the JSON payload.
-            // This prevents overwriting an existing value with null when the client is only editing the other field.
             if (payload.TryGetProperty("midtermGrade", out var midElem))
             {
                 if (midElem.ValueKind == JsonValueKind.Null)
-                {
                     grade.MidtermGrade = null;
-                }
                 else if (midElem.ValueKind == JsonValueKind.Number)
-                {
                     grade.MidtermGrade = midElem.GetDecimal();
-                }
                 else if (midElem.ValueKind == JsonValueKind.String && decimal.TryParse(midElem.GetString(), out var midVal))
-                {
                     grade.MidtermGrade = midVal;
-                }
             }
 
             if (payload.TryGetProperty("finalGrade", out var finElem))
             {
                 if (finElem.ValueKind == JsonValueKind.Null)
-                {
                     grade.FinalGrade = null;
-                }
                 else if (finElem.ValueKind == JsonValueKind.Number)
-                {
                     grade.FinalGrade = finElem.GetDecimal();
-                }
                 else if (finElem.ValueKind == JsonValueKind.String && decimal.TryParse(finElem.GetString(), out var finVal))
-                {
                     grade.FinalGrade = finVal;
-                }
             }
 
-            // Compute remark (replace with your actual pass rule if needed)
-            grade.Remarks = ComputeRemark(grade.MidtermGrade, grade.FinalGrade);
+            // Compute remark using requested rule:
+            grade.Remarks = ComputeRemark(grade.FinalGrade);
             grade.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -138,12 +145,11 @@ namespace ASI.Basecode.WebApp.Controllers
             });
         }
 
-        private static string ComputeRemark(decimal? mid, decimal? fin)
+        private static string ComputeRemark(decimal? final)
         {
-            // Simple rule: if either grade exists mark Passed, otherwise Incomplete.
-            // Replace with real pass/fail logic if needed (e.g. threshold).
-            if (fin.HasValue || mid.HasValue) return "Passed";
-            return "Incomplete";
+            if (!final.HasValue) return "Incomplete";
+            if (final.Value > 3.0m) return "Failed";
+            return "Passed";
         }
     }
 }

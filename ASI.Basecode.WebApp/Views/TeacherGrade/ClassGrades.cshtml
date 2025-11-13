@@ -1,13 +1,19 @@
 @model ASI.Basecode.WebApp.ViewModels.TeacherGradeViewModel
 @{
     ViewData["Title"] = "Class Grades";
-    Layout = "_Layout";
+    Layout = "_TeacherLayout";
 }
 
 @* Add anti-forgery token so JS can send it in header *@
 @Html.AntiForgeryToken()
 
 <div class="container mx-auto px-4 py-6">
+    <div class="mb-3">
+        <a asp-controller="ClassManagement" asp-action="TeacherDashboard" class="inline-flex items-center px-3 py-2 border rounded bg-white text-sm text-gray-700 mb-3">
+            <i class="fas fa-chevron-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -56,14 +62,26 @@
                                 </button>
                             </td>
                             <td class="py-3 px-4 text-center remark-cell">
-                                @if (student.IsPassed)
-                                {
-                                    <span class="px-2 py-1 text-green-700 text-sm bg-green-100 rounded-full">@student.Remark</span>
+                                @{
+                                    var remarkLower = (student.Remark ?? string.Empty).Trim().ToLowerInvariant();
+                                    string textClass, bgClass;
+                                    if (remarkLower == "failed" || remarkLower == "fail")
+                                    {
+                                        textClass = "text-red-700";
+                                        bgClass = "bg-red-100";
+                                    }
+                                    else if (remarkLower == "passed")
+                                    {
+                                        textClass = "text-green-700";
+                                        bgClass = "bg-green-100";
+                                    }
+                                    else
+                                    {
+                                        textClass = "text-orange-700";
+                                        bgClass = "bg-orange-100";
+                                    }
                                 }
-                                else
-                                {
-                                    <span class="px-2 py-1 text-orange-700 text-sm bg-orange-100 rounded-full">@student.Remark</span>
-                                }
+                                <span class="px-2 py-1 text-sm font-semibold rounded-full @textClass @bgClass">@student.Remark</span>
                             </td>
                         </tr>
                     }
@@ -88,34 +106,31 @@
             input.value = currentValue === '--' ? '' : currentValue;
             input.className = 'w-20 text-center border rounded py-1';
 
+            // store type for the blur handler
+            const type = button.dataset.type;
+
             input.addEventListener('blur', async function() {
                 const newValue = this.value.trim();
                 const row = cell.closest('tr');
                 const enrollmentId = parseInt(row.dataset.enrollmentId, 10);
-                const isMidterm = button.dataset.type === 'midterm';
+                const isMidterm = type === 'midterm';
                 const parsedValue = newValue === '' ? null : parseFloat(newValue);
 
-                // anti-forgery token value
                 const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
                 const token = tokenInput ? tokenInput.value : '';
 
-                // Build payload containing ONLY the field being edited and only when a value is present.
-                // IMPORTANT: omit the other grade property entirely (do not send explicit null)
+                // Build payload and include explicit null when user cleared the input
                 const payload = { enrollmentId: enrollmentId };
                 if (isMidterm) {
-                    if (parsedValue !== null) {
-                        payload.midtermGrade = Number(parsedValue.toFixed(2));
-                    }
+                    payload.midtermGrade = parsedValue === null ? null : Number(parsedValue.toFixed(2));
                 } else {
-                    if (parsedValue !== null) {
-                        payload.finalGrade = Number(parsedValue.toFixed(2));
-                    }
+                    payload.finalGrade = parsedValue === null ? null : Number(parsedValue.toFixed(2));
                 }
 
                 try {
                     const response = await fetch('/TeacherGrade/UpdateGrade', {
                         method: 'POST',
-                        credentials: 'same-origin', // send cookies for auth & antiforgery
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'RequestVerificationToken': token
@@ -126,18 +141,24 @@
                     if (response.ok) {
                         const data = await response.json();
 
-                        // Update displayed value (leave other column alone)
+                        // Update displayed value
                         display.textContent = parsedValue === null ? '--' : (parsedValue).toFixed(2);
 
-                        // put display back
+                        // replace input with display
                         cell.replaceChild(display, input);
                         button.classList.remove('hidden');
 
-                        // Update remark cell if server returned remark
+                        // Update remark cell using returned remark and color rules
                         if (data && data.remark) {
                             const remarkCell = row.querySelector('td.remark-cell');
                             if (remarkCell) {
-                                remarkCell.innerHTML = `<span class="px-2 py-1 text-green-700 text-sm bg-green-100 rounded-full">${data.remark}</span>`;
+                                const remark = (data.remark || '').toString();
+                                const lower = remark.toLowerCase();
+                                let textClass = 'text-orange-700', bgClass = 'bg-orange-100';
+                                if (lower === 'failed') { textClass = 'text-red-700'; bgClass = 'bg-red-100'; }
+                                else if (lower === 'passed') { textClass = 'text-green-700'; bgClass = 'bg-green-100'; }
+
+                                remarkCell.innerHTML = `<span class="px-2 py-1 text-sm font-semibold rounded-full ${textClass} ${bgClass}">${remark}</span>`;
                             }
                         }
                     } else {

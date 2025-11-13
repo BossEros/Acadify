@@ -157,7 +157,7 @@ namespace ASI.Basecode.Services.Implementation
             return roles.FirstOrDefault() switch
             {
                 "Admin" => "/AccountManagement/Index",
-                "Teacher" => "/TeacherGrade/ClassGrades",
+                "Teacher" => "/ClassManagement/TeacherDashboard",
                 "Student" => "/GradeManagement/GradeView",
                 _ => "/Register"
             };

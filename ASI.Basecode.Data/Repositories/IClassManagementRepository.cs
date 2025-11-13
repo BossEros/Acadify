@@ -13,6 +13,12 @@ public interface IClassManagementRepository
     Task UpdateAsync(Class classEntity);
     Task<bool> HasEnrolledStudentsAsync(int classId);
     Task DeleteAsync(int id);
+
+    // Enrollment methods
+    Task<IEnumerable<Enrollment>> GetEnrollmentsByStudentIdAsync(int studentId);
+    Task<bool> IsStudentEnrolledAsync(int studentId, int classId);
+    Task EnrollStudentAsync(int studentId, int classId);
+    Task UnenrollStudentAsync(int studentId, int classId);
 }
 
 

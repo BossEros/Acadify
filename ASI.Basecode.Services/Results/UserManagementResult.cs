@@ -20,11 +20,13 @@ public class UserManagementResult
 
     public static UserManagementResult Failure(IEnumerable<string> errors)
     {
-        return new UserManagementResult(false, errors);
+        var errorList = errors.ToList();
+        var message = errorList.Any() ? string.Join(", ", errorList) : null;
+        return new UserManagementResult(false, errorList, message);
     }
 
     public static UserManagementResult Failure(string error)
     {
-        return new UserManagementResult(false, new[] { error });
+        return new UserManagementResult(false, new[] { error }, error);
     }
 }

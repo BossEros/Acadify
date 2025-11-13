@@ -69,6 +69,47 @@ public class ClassManagementRepository : IClassManagementRepository
             await _dbContext.SaveChangesAsync();
         }
     }
+
+    // Enrollment methods
+    public async Task<IEnumerable<Enrollment>> GetEnrollmentsByStudentIdAsync(int studentId)
+    {
+        return await _dbContext.Enrollments
+            .Where(e => e.StudentId == studentId)
+            .Include(e => e.Class)
+                .ThenInclude(c => c.Course)
+            .ToListAsync();
+    }
+
+    public async Task<bool> IsStudentEnrolledAsync(int studentId, int classId)
+    {
+        return await _dbContext.Enrollments
+            .AnyAsync(e => e.StudentId == studentId && e.ClassId == classId);
+    }
+
+    public async Task EnrollStudentAsync(int studentId, int classId)
+    {
+        var enrollment = new Enrollment
+        {
+            StudentId = studentId,
+            ClassId = classId,
+            EnrolledAt = DateTime.UtcNow
+        };
+
+        await _dbContext.Enrollments.AddAsync(enrollment);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task UnenrollStudentAsync(int studentId, int classId)
+    {
+        var enrollment = await _dbContext.Enrollments
+            .FirstOrDefaultAsync(e => e.StudentId == studentId && e.ClassId == classId);
+
+        if (enrollment != null)
+        {
+            _dbContext.Enrollments.Remove(enrollment);
+            await _dbContext.SaveChangesAsync();
+        }
+    }
 }
 
 

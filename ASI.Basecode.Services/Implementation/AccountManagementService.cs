@@ -13,15 +13,18 @@ namespace ASI.Basecode.Services.Implementation
         private readonly IUserRepository _userRepository;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
+        private readonly IClassManagementRepository _classRepository;
 
         public AccountManagementService(
             IUserRepository userRepository,
             UserManager<User> userManager,
-            RoleManager<IdentityRole<int>> roleManager)
+            RoleManager<IdentityRole<int>> roleManager,
+            IClassManagementRepository classRepository)
         {
             _userRepository = userRepository;
             _userManager = userManager;
             _roleManager = roleManager;
+            _classRepository = classRepository;
         }
 
         public async Task<IEnumerable<UserManagementDto>> GetAllUsersAsync()
@@ -300,70 +303,118 @@ namespace ASI.Basecode.Services.Implementation
             return roles;
         }
 
-        // Placeholder business actions for EDP enroll/assign. Replace with real domain logic when available.
+        // Enroll student in a class
         public async Task<UserManagementResult> EnrollStudentAsync(int userId, string edpCode)
         {
-            var user = await _userRepository.FindByIdAsync(userId);
-            if (user == null)
+            try
             {
-                return UserManagementResult.Failure("User not found.");
+                var user = await _userRepository.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return UserManagementResult.Failure("User not found.");
+                }
+
+                if (string.IsNullOrWhiteSpace(edpCode))
+                {
+                    return UserManagementResult.Failure("EDP code is required.");
+                }
+
+                // Parse EDP code as Class ID
+                if (!int.TryParse(edpCode, out int classId))
+                {
+                    return UserManagementResult.Failure("Invalid EDP code format. Please enter a valid class ID.");
+                }
+
+                // Find the class by ID
+                var classEntity = await _classRepository.GetByIdAsync(classId);
+                if (classEntity == null)
+                {
+                    return UserManagementResult.Failure("Class not found with the provided EDP code.");
+                }
+
+                // Check if student is already enrolled
+                var isEnrolled = await _classRepository.IsStudentEnrolledAsync(userId, classEntity.Id);
+                if (isEnrolled)
+                {
+                    return UserManagementResult.Failure("Student is already enrolled in this class.");
+                }
+
+                // Enroll the student
+                await _classRepository.EnrollStudentAsync(userId, classEntity.Id);
+
+                return UserManagementResult.Success("Student enrolled successfully.");
             }
-            // No-op example: mark approved if not yet
-            if (!user.IsApproved)
+            catch (Exception ex)
             {
-                user.IsApproved = true;
-                var (ok, errors) = await _userRepository.UpdateUserAsync(user);
-                if (!ok) return UserManagementResult.Failure(errors);
+                return UserManagementResult.Failure($"Error enrolling student: {ex.Message}");
             }
-            return UserManagementResult.Success("Student enrolled to EDP successfully.");
         }
 
         public async Task<IEnumerable<EnrolledClassDto>> GetEnrolledClassesAsync(int userId)
         {
-            // TODO: Replace with actual implementation when enrollment data structure is available
-            // For now, return mock data or query from your actual enrollment/student-class relationship table
-
             var user = await _userRepository.FindByIdAsync(userId);
             if (user == null)
             {
                 return Enumerable.Empty<EnrolledClassDto>();
             }
 
-            // Placeholder: Return empty list for now
-            // In a real implementation, you would query the StudentClass or Enrollment table
-            // Example:
-            // var enrollments = await _context.StudentClasses
-            //     .Where(sc => sc.UserId == userId)
-            //     .Select(sc => new EnrolledClassDto
-            //     {
-            //         EdpCode = sc.EdpCode,
-            //         ClassName = sc.Class.Name
-            //     })
-            //     .ToListAsync();
+            var enrollments = await _classRepository.GetEnrollmentsByStudentIdAsync(userId);
 
-            return Enumerable.Empty<EnrolledClassDto>();
+            var enrolledClasses = enrollments.Select(e => new EnrolledClassDto
+            {
+                EdpCode = e.Class.Id.ToString(),
+                ClassName = e.Class.Course != null
+                    ? $"{e.Class.Course.CourseName} (Sem {e.Class.Semester}, Year {e.Class.YearLevel})"
+                    : $"Class {e.ClassId} (Sem {e.Class.Semester}, Year {e.Class.YearLevel})"
+            }).ToList();
+
+            return enrolledClasses;
         }
 
         public async Task<UserManagementResult> UnenrollStudentAsync(int userId, string edpCode)
         {
-            var user = await _userRepository.FindByIdAsync(userId);
-            if (user == null)
+            try
             {
-                return UserManagementResult.Failure("User not found.");
+                var user = await _userRepository.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return UserManagementResult.Failure("User not found.");
+                }
+
+                if (string.IsNullOrWhiteSpace(edpCode))
+                {
+                    return UserManagementResult.Failure("EDP code is required.");
+                }
+
+                // Parse EDP code as Class ID
+                if (!int.TryParse(edpCode, out int classId))
+                {
+                    return UserManagementResult.Failure("Invalid EDP code format. Please enter a valid class ID.");
+                }
+
+                // Find the class by ID
+                var classEntity = await _classRepository.GetByIdAsync(classId);
+                if (classEntity == null)
+                {
+                    return UserManagementResult.Failure("Class not found with the provided EDP code.");
+                }
+
+                // Check if student is enrolled
+                var isEnrolled = await _classRepository.IsStudentEnrolledAsync(userId, classEntity.Id);
+                if (!isEnrolled)
+                {
+                    return UserManagementResult.Failure("Student is not enrolled in this class.");
+                }
+
+                // Unenroll the student (Grade will be cascade deleted if exists)
+                await _classRepository.UnenrollStudentAsync(userId, classEntity.Id);
+
+                return UserManagementResult.Success("Student unenrolled from class successfully.");
             }
-
-            // TODO: Replace with actual implementation when enrollment data structure is available
-            // In a real implementation, you would delete the enrollment record
-            // Example:
-            // var enrollment = await _context.StudentClasses
-            //     .FirstOrDefaultAsync(sc => sc.UserId == userId && sc.EdpCode == edpCode);
-            // if (enrollment != null)
-            // {
-            //     _context.StudentClasses.Remove(enrollment);
-            //     await _context.SaveChangesAsync();
-            // }
-
-            return UserManagementResult.Success("Student unenrolled from class successfully.");
+            catch (Exception ex)
+            {
+                return UserManagementResult.Failure($"Error unenrolling student: {ex.Message}");
+            }
         }
 
         public async Task<UserManagementResult> AssignTeacherAsync(int userId, string edpCode)

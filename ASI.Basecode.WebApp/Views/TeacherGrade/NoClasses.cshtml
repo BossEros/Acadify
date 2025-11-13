@@ -1,0 +1,26 @@
+@{
+    Layout = "_TeacherLayout";
+    ViewData["Title"] = "No Classes Assigned";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5 text-center">
+                    <h2 class="card-title mb-3">No Classes Assigned Yet</h2>
+                    <p class="lead text-muted">
+                        It looks like you don’t have any classes assigned to you at the moment.
+                    </p>
+                    <p class="text-muted">
+                        Once an administrator assigns you to a class, you’ll be able to view and manage student grades here.
+                    </p>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary mt-3">
+                        Return to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

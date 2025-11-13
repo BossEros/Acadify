@@ -24,19 +24,45 @@ namespace ASI.Basecode.WebApp.Controllers
             _userManager = userManager;
         }
 
-        // GET: TeacherGrade/ClassGrades/2
-        public async Task<IActionResult> ClassGrades(int id = 43) // Default class id
+        // GET: TeacherGrade/ClassGrades/{id?}
+        public async Task<IActionResult> ClassGrades(int? id = null)
         {
-            var classWithDetails = await _context.Classes
+            var currentTeacher = await _userManager.GetUserAsync(User);
+            if (currentTeacher == null)
+            {
+                return Challenge();
+            }
+
+            var teacherClassesQuery = _context.Classes
+                .Where(c => c.TeacherId == currentTeacher.Id)
                 .Include(c => c.Course)
                 .Include(c => c.Enrollments)
                     .ThenInclude(e => e.Student)
                 .Include(c => c.Enrollments)
                     .ThenInclude(e => e.Grade)
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .OrderBy(c => c.Course.CourseName);
+
+            Class? classWithDetails = null;
+
+            if (id.HasValue)
+            {
+                classWithDetails = await teacherClassesQuery.FirstOrDefaultAsync(c => c.Id == id.Value);
+            }
+            else
+            {
+                classWithDetails = await teacherClassesQuery.FirstOrDefaultAsync();
+            }
 
             if (classWithDetails == null)
+            {
+                var hasAnyClasses = await teacherClassesQuery.AnyAsync();
+                if (!hasAnyClasses)
+                {
+                    return View("NoClasses");
+                }
+
                 return NotFound();
+            }
 
             var viewModel = new TeacherGradeViewModel
             {

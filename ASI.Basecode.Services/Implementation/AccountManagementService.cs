@@ -1,3 +1,4 @@
+using ASI.Basecode.Data.Data;
 using ASI.Basecode.Data.Models;
 using ASI.Basecode.Data.Repositories;
 using ASI.Basecode.Services.DTOs;
@@ -11,17 +12,20 @@ namespace ASI.Basecode.Services.Implementation
     public class AccountManagementService : IAccountManagementService
     {
         private readonly IUserRepository _userRepository;
+        private readonly AppDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
 
         public AccountManagementService(
             IUserRepository userRepository,
             UserManager<User> userManager,
-            RoleManager<IdentityRole<int>> roleManager)
+            RoleManager<IdentityRole<int>> roleManager,
+            AppDbContext context)
         {
             _userRepository = userRepository;
             _userManager = userManager;
             _roleManager = roleManager;
+            _context = context;
         }
 
         public async Task<IEnumerable<UserManagementDto>> GetAllUsersAsync()
@@ -225,38 +229,124 @@ namespace ASI.Basecode.Services.Implementation
             return roles;
         }
 
-        // Placeholder business actions for EDP enroll/assign. Replace with real domain logic when available.
         public async Task<UserManagementResult> EnrollStudentAsync(int userId, string edpCode)
         {
+            if (string.IsNullOrWhiteSpace(edpCode))
+            {
+                return UserManagementResult.Failure("EDP code is required.");
+            }
+
             var user = await _userRepository.FindByIdAsync(userId);
             if (user == null)
             {
                 return UserManagementResult.Failure("User not found.");
             }
-            // No-op example: mark approved if not yet
+
+            var normalizedEdp = edpCode.Trim().ToUpperInvariant();
+
+            var classEntity = await _context.Classes
+                .Include(c => c.Course)
+                .FirstOrDefaultAsync(c =>
+                    (c.JoinCode != null && c.JoinCode.ToUpper() == normalizedEdp) ||
+                    (c.Course != null && c.Course.CourseCode.ToUpper() == normalizedEdp));
+
+            if (classEntity == null)
+            {
+                var availableCodes = await _context.Classes
+                    .Select(c => c.JoinCode ?? c.Course.CourseCode)
+                    .Where(code => code != null)
+                    .Distinct()
+                    .ToListAsync();
+                var hint = availableCodes.Any()
+                    ? $" Available codes: {string.Join(", ", availableCodes)}."
+                    : " No classes are currently available. Please create a class first.";
+                return UserManagementResult.Failure("Class not found for the supplied EDP code." + hint);
+            }
+
+            var roles = await _userRepository.GetRolesAsync(user);
+            if (!roles.Contains("Student"))
+            {
+                await _userRepository.AddToRoleAsync(user, "Student");
+            }
+
             if (!user.IsApproved)
             {
                 user.IsApproved = true;
-                var (ok, errors) = await _userRepository.UpdateUserAsync(user);
-                if (!ok) return UserManagementResult.Failure(errors);
+                await _userRepository.UpdateUserAsync(user);
             }
-            return UserManagementResult.Success("Student enrolled to EDP successfully.");
+
+            var alreadyEnrolled = await _context.Enrollments
+                .AnyAsync(e => e.ClassId == classEntity.Id && e.StudentId == user.Id);
+            if (alreadyEnrolled)
+            {
+                return UserManagementResult.Failure("Student is already enrolled in this class.");
+            }
+
+            _context.Enrollments.Add(new Enrollment
+            {
+                ClassId = classEntity.Id,
+                StudentId = user.Id,
+                EnrolledAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+
+            var courseLabel = classEntity.Course?.CourseCode ?? classEntity.JoinCode ?? "class";
+            return UserManagementResult.Success($"Student enrolled in {courseLabel} successfully.");
         }
 
         public async Task<UserManagementResult> AssignTeacherAsync(int userId, string edpCode)
         {
+            if (string.IsNullOrWhiteSpace(edpCode))
+            {
+                return UserManagementResult.Failure("EDP code is required.");
+            }
+
             var user = await _userRepository.FindByIdAsync(userId);
             if (user == null)
             {
                 return UserManagementResult.Failure("User not found.");
             }
-            // Ensure role Teacher
+
+            var normalizedEdp = edpCode.Trim().ToUpperInvariant();
+
+            var classEntity = await _context.Classes
+                .Include(c => c.Course)
+                .FirstOrDefaultAsync(c =>
+                    (c.JoinCode != null && c.JoinCode.ToUpper() == normalizedEdp) ||
+                    (c.Course != null && c.Course.CourseCode.ToUpper() == normalizedEdp));
+
+            if (classEntity == null)
+            {
+                var availableCodes = await _context.Classes
+                    .Select(c => c.JoinCode ?? c.Course.CourseCode)
+                    .Where(code => code != null)
+                    .Distinct()
+                    .ToListAsync();
+                var hint = availableCodes.Any()
+                    ? $" Available codes: {string.Join(", ", availableCodes)}."
+                    : " No classes are currently available. Please create a class first.";
+                return UserManagementResult.Failure("Class not found for the supplied EDP code." + hint);
+            }
+
             var roles = await _userRepository.GetRolesAsync(user);
             if (!roles.Contains("Teacher"))
             {
                 await _userRepository.AddToRoleAsync(user, "Teacher");
             }
-            return UserManagementResult.Success("Teacher assigned to EDP successfully.");
+
+            if (!user.IsApproved)
+            {
+                user.IsApproved = true;
+                await _userRepository.UpdateUserAsync(user);
+            }
+
+            classEntity.TeacherId = user.Id;
+            classEntity.IsActive = true;
+            await _context.SaveChangesAsync();
+
+            var courseLabel = classEntity.Course?.CourseCode ?? classEntity.JoinCode ?? "class";
+            return UserManagementResult.Success($"Teacher assigned to {courseLabel} successfully.");
         }
     }
 }

@@ -41,7 +41,7 @@ public class SendGridEmailService : IEmailService
                 new
                 {
                     to = new[] { new { email = email, name = userName } },
-                    subject = "Password Reset - Student Performance Tracker"
+                    subject = "Reset Your ACADIFY Password"
                 }
             },
             from = new { email = fromEmail, name = fromName },

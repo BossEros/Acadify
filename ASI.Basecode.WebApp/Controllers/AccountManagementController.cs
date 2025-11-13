@@ -102,6 +102,40 @@ namespace ASI.Basecode.WebApp.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetEnrolledClasses(int userId)
+        {
+            try
+            {
+                var classes = await _accountManagementService.GetEnrolledClassesAsync(userId);
+                if (classes == null || !classes.Any())
+                {
+                    return JsonResponse(false, "No enrolled classes found for this student.");
+                }
+
+                return JsonResponse(true, "Enrolled classes retrieved successfully", classes);
+            }
+            catch (Exception ex)
+            {
+                return JsonResponse(false, "Error retrieving enrolled classes: " + ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnenrollStudent([FromBody] SimpleUserCourseRequest request)
+        {
+            try
+            {
+                var result = await _accountManagementService.UnenrollStudentAsync(request.UserId, request.EdpCode);
+                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Student unenrolled successfully." : "Failed to unenroll student."));
+            }
+            catch (Exception ex)
+            {
+                return JsonResponse(false, "Error unenrolling student: " + ex.Message);
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignTeacher([FromBody] SimpleUserCourseRequest request)

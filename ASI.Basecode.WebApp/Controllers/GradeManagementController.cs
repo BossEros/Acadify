@@ -40,14 +40,15 @@ namespace ASI.Basecode.WebApp.Controllers
                 .ThenBy(g => g.Key.Semester)
                 .Select(g => new SemesterGradesViewModel
                 {
-                    YearLevel = g.Key.YearLevel,
-                    Semester = g.Key.Semester,
+                    YearLevel = (short)g.Key.YearLevel,
+                    Semester = (short)g.Key.Semester,
                     Grades = g.Select(e =>
                     {
+                        // Prefer the database remark if present; otherwise fall back to simple passed/incomplete logic.
                         var isPassed = e.Grade?.FinalGrade.HasValue == true || e.Grade?.MidtermGrade.HasValue == true;
-                        // Basic rule: if student has any grade recorded treat as "Passed" in this app's simplified logic.
-                        // You can replace this with your real passing rules (e.g. threshold checks) later.
-                        var remarkText = isPassed ? "Passed" : "Incomplete";
+                        var remarkText = !string.IsNullOrWhiteSpace(e.Grade?.Remarks)
+                            ? e.Grade!.Remarks!
+                            : (isPassed ? "Passed" : "Incomplete");
 
                         return new GradeViewModel
                         {

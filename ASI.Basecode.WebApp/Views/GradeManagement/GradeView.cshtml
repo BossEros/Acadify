@@ -1,18 +1,22 @@
 ﻿@using ASI.Basecode.Data.Models
+@using System.Text.Json
 @model List<ASI.Basecode.WebApp.ViewModels.SemesterGradesViewModel>
 @{
     ViewData["Title"] = "My Grades";
     Layout = "_Layout";
+    var sectionKeys = Model.Select(m => new { m.YearLevel, m.Semester })
+                           .Select(x => $"{x.YearLevel}_{x.Semester}")
+                           .Distinct()
+                           .ToList();
+    var firstSection = Model.FirstOrDefault();
 }
-
 <div class="container mx-auto px-4 py-6">
     <div class="bg-white rounded-lg shadow p-6">
         <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-2">
             <div>
                 <h2 class="text-2xl font-semibold text-gray-800">My Grades</h2>
             </div>
-            <!-- Button color updated to layout color (#3A4D75) -->
             <button class="bg-[#3A4D75] text-white px-4 py-2 rounded-lg flex items-center space-x-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -21,34 +25,34 @@
             </button>
         </div>
 
-        <!-- Year and Semester Navigation -->
+        <!-- Year + Semester Dropdowns (right under header) -->
         <div class="mb-6 border-b pb-4">
-            <div class="flex flex-wrap gap-4">
-                @for (var year = 1; year <= 4; year++)
-                {
-                    var currentYearGrades = Model.Where(s => s.YearLevel == year).ToList();
-                    if (currentYearGrades.Any())
-                    {
-                        <div class="relative group">
-                            <button onclick="toggleYearDropdown(@year)" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none">
-                                @year.ToString() Year
-                                <svg class="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div id="yearDropdown_@year" class="hidden absolute z-10 mt-2 w-48 bg-white rounded-lg shadow-lg">
-                                @foreach (var sem in currentYearGrades)
-                                {
-                                    <a href="#semester_@(year)_@(sem.Semester)" onclick="showSemester(@year, @sem.Semester)"
-                                       class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                                        @(sem.Semester == 1 ? "1st" : "2nd") Semester
-                                    </a>
-                                }
-                            </div>
-                        </div>
-                    }
-                }
+            <div class="flex flex-wrap gap-4 items-center">
+                <div>
+                    <label for="yearSelect" class="block text-sm text-gray-600 mb-1">Year Level</label>
+                    <select id="yearSelect" class="px-4 py-2 rounded-lg border bg-white" onchange="applyFilters()">
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="semesterSelect" class="block text-sm text-gray-600 mb-1">Semester</label>
+                    <select id="semesterSelect" class="px-4 py-2 rounded-lg border bg-white" onchange="applyFilters()">
+                        <option value="1">1st Semester</option>
+                        <option value="2">2nd Semester</option>
+                    </select>
+                </div>
+
+                <!-- View button removed: selection changes apply immediately -->
             </div>
+        </div>
+
+        <!-- Placeholder for "no grades found" -->
+        <div id="noGradesMessage" class="mb-6 bg-yellow-50 rounded-lg p-4 text-gray-700 hidden">
+            No grades available for the selected Year/Semester.
         </div>
 
         <!-- Grades Section -->
@@ -100,14 +104,33 @@
                                         <td class="py-3 px-4 text-center">@(grade.MidtermGrade?.ToString("0.00") ?? "--")</td>
                                         <td class="py-3 px-4 text-center">@(grade.FinalGrade?.ToString("0.00") ?? "--")</td>
                                         <td class="py-3 px-4 text-center">
-                                            @if (grade.IsPassed)
-                                            {
-                                                <span class="px-2 py-1 text-green-700 text-sm bg-green-100 rounded-full">@grade.Remark</span>
+                                            @{
+                                                var remarkText = (grade.Remark ?? string.Empty).Trim();
+                                                var remarkLower = remarkText.ToLowerInvariant();
+                                                var badgeText = string.IsNullOrEmpty(remarkText) ? "Incomplete" : remarkText;
+
+                                                string textClass;
+                                                string bgClass;
+                                                if (remarkLower == "failed" || remarkLower == "fail")
+                                                {
+                                                    textClass = "text-red-700";
+                                                    bgClass = "bg-red-100";
+                                                }
+                                                else if (remarkLower == "passed")
+                                                {
+                                                    textClass = "text-green-700";
+                                                    bgClass = "bg-green-100";
+                                                }
+                                                else
+                                                {
+                                                    // Incomplete or any other remark => orange badge
+                                                    textClass = "text-orange-700";
+                                                    bgClass = "bg-orange-100";
+                                                }
                                             }
-                                            else
-                                            {
-                                                <span class="px-2 py-1 text-orange-700 text-sm bg-orange-100 rounded-full">@grade.Remark</span>
-                                            }
+                                            <span class="px-3 py-1 text-sm font-semibold rounded-full @textClass @bgClass">
+                                                @badgeText
+                                            </span>
                                         </td>
                                     </tr>
                                 }
@@ -122,31 +145,44 @@
 
 @section Scripts {
     <script>
-        function toggleYearDropdown(year) {
-            const dropdown = document.getElementById(`yearDropdown_${year}`);
-            const allDropdowns = document.querySelectorAll('[id^="yearDropdown_"]');
-            allDropdowns.forEach(d => {
-                if (d.id !== `yearDropdown_${year}`) d.classList.add('hidden');
-            });
-            dropdown.classList.toggle('hidden');
+        const existingSections = @Html.Raw(JsonSerializer.Serialize(sectionKeys));
+
+        function applyFilters() {
+            const year = document.getElementById('yearSelect').value;
+            const sem = document.getElementById('semesterSelect').value;
+            showSelected(year, sem);
         }
 
-        function showSemester(year, semester) {
+        function showSelected(year, semester) {
             document.querySelectorAll('.semester-section').forEach(section => section.classList.add('hidden'));
-            const selectedSection = document.getElementById(`semester_${year}_${semester}`);
-            if (selectedSection) selectedSection.classList.remove('hidden');
-            document.getElementById(`yearDropdown_${year}`).classList.add('hidden');
+
+            const key = `${year}_${semester}`;
+            const target = document.getElementById(`semester_${year}_${semester}`);
+
+            if (existingSections.includes(key) && target) {
+                target.classList.remove('hidden');
+                document.getElementById('noGradesMessage').classList.add('hidden');
+            } else {
+                document.getElementById('noGradesMessage').classList.remove('hidden');
+            }
+
+            document.querySelectorAll('[id^="yearDropdown_"]').forEach(d => d.classList.add('hidden'));
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const firstSection = document.querySelector('.semester-section');
-            if (firstSection) firstSection.classList.remove('hidden');
-        });
-
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('button')) {
-                const allDropdowns = document.querySelectorAll('[id^="yearDropdown_"]');
-                allDropdowns.forEach(d => d.classList.add('hidden'));
+            @if (firstSection != null)
+            {
+                <text>
+                document.getElementById('yearSelect').value = '@firstSection.YearLevel';
+                document.getElementById('semesterSelect').value = '@firstSection.Semester';
+                applyFilters();
+                </text>
+            }
+            else
+            {
+                <text>
+                document.getElementById('noGradesMessage').classList.remove('hidden');
+                </text>
             }
         });
     </script>

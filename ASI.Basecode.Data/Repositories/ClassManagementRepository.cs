@@ -42,6 +42,18 @@ namespace ASI.Basecode.Data.Repositories
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
+        public async Task<Class?> GetByIdIncludeInactiveAsync(int id)
+        {
+            return await _dbContext.Classes
+                .Include(c => c.Course)
+                .Include(c => c.Teacher)
+                .Include(c => c.Enrollments)
+                    .ThenInclude(e => e.Student)
+                .Include(c => c.Enrollments)
+                    .ThenInclude(e => e.Grade)
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
         public async Task<int> GetNextClassIdAsync()
         {
             var lastId = await _dbContext.Classes

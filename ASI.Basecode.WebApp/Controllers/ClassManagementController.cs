@@ -408,4 +408,57 @@ public class ClassManagementController : Controller
 
         return View(viewModel);
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ActivateClass(ActivateClassViewModel viewModel)
+    {
+        // Get the currently logged-in user's ID from claims
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            return Json(new { success = false, message = "User not authenticated." });
+        }
+
+        int teacherId = int.Parse(userIdClaim);
+
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+
+            return Json(new { success = false, errors = errors });
+        }
+
+        // Parse EDP code as Class ID
+        if (!int.TryParse(viewModel.EdpCode, out int classId))
+        {
+            return Json(new { success = false, message = "Invalid EDP code format. Please enter a valid class ID." });
+        }
+
+        try
+        {
+            // Check if class already exists and is assigned to this teacher
+            var existingClass = await _classManagementService.GetClassByIdIncludeInactiveAsync(classId);
+            if (existingClass != null && existingClass.IsActive && existingClass.TeacherId == teacherId)
+            {
+                return Json(new { success = false, message = "You are already assigned to this active class." });
+            }
+
+            // Activate the class (this will also assign the teacher)
+            await _classManagementService.ActivateClassAsync(classId, teacherId);
+
+            return Json(new { success = true, message = "Class activated successfully." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Json(new { success = false, message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
 }

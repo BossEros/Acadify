@@ -126,3 +126,62 @@
         flex-direction: column;
     }
 </style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            $('#activateClassForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $(this);
+                var submitBtn = $('#activateBtn');
+                var messageDiv = $('#activateClassMessage');
+                var edpCodeInput = $('#edpCode');
+
+                // Clear previous messages
+                messageDiv.html('').removeClass('alert alert-success alert-danger');
+                edpCodeInput.removeClass('is-invalid');
+
+                // Disable button during submission
+                submitBtn.prop('disabled', true).text('Activating...');
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            messageDiv.html('<div class="alert alert-success small mb-0">' + response.message + '</div>');
+                            edpCodeInput.val('');
+
+                            // Reload the page after a short delay to show updated classes
+                            setTimeout(function () {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            var errorMsg = response.message || (response.errors && response.errors.join('<br>')) || 'An error occurred.';
+                            messageDiv.html('<div class="alert alert-danger small mb-0">' + errorMsg + '</div>');
+                            edpCodeInput.addClass('is-invalid');
+                        }
+                    },
+                    error: function (xhr) {
+                        var errorMsg = 'An error occurred while activating the class.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            errorMsg = xhr.responseJSON.errors.join('<br>');
+                        }
+                        messageDiv.html('<div class="alert alert-danger small mb-0">' + errorMsg + '</div>');
+                        edpCodeInput.addClass('is-invalid');
+                    },
+                    complete: function () {
+                        submitBtn.prop('disabled', false).text('Activate');
+                    }
+                });
+            });
+        });
+    </script>
+}

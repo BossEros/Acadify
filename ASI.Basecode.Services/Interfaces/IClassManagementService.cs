@@ -8,10 +8,12 @@ public interface IClassManagementService
 {
     Task<IEnumerable<Class>> GetAllClassesAsync();
     Task<Class?> GetClassByIdAsync(int id);
+    Task<Class?> GetClassByIdIncludeInactiveAsync(int id);
     Task<int> GetNextClassIdAsync();
     Task CreateClassAsync(Class classEntity);
     Task UpdateClassAsync(Class classEntity);
     Task<bool> DeleteClassAsync(int id);
+    Task<bool> ActivateClassAsync(int classId, int teacherId);
 }
 
 

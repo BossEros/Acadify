@@ -8,6 +8,7 @@ public interface IClassManagementRepository
 {
     Task<IEnumerable<Class>> GetAllAsync();
     Task<Class?> GetByIdAsync(int id);
+    Task<Class?> GetByIdIncludeInactiveAsync(int id);
     Task<int> GetNextClassIdAsync();
     Task AddAsync(Class classEntity);
     Task UpdateAsync(Class classEntity);

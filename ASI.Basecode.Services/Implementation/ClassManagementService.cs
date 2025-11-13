@@ -29,6 +29,11 @@ namespace ASI.Basecode.Services.Implementation
         {
             return await _classManagementRepository.GetByIdAsync(id);
         }
+
+        public async Task<Class?> GetClassByIdIncludeInactiveAsync(int id)
+        {
+            return await _classManagementRepository.GetByIdIncludeInactiveAsync(id);
+        }
         
         public async Task<int> GetNextClassIdAsync()
         {
@@ -104,6 +109,26 @@ namespace ASI.Basecode.Services.Implementation
                 throw new InvalidOperationException("Cannot delete a class with enrolled students.");
 
             await _classManagementRepository.DeleteAsync(classEntity.Id);
+            return true;
+        }
+
+        public async Task<bool> ActivateClassAsync(int classId, int teacherId)
+        {
+            var classEntity = await _classManagementRepository.GetByIdIncludeInactiveAsync(classId);
+            if (classEntity == null)
+                throw new Exception("Class not found with the provided EDP code.");
+
+            // Check if class is already active and assigned to a different teacher
+            if (classEntity.IsActive && classEntity.TeacherId.HasValue && classEntity.TeacherId.Value != teacherId)
+            {
+                throw new InvalidOperationException("This class is already active and assigned to another teacher.");
+            }
+
+            // Assign teacher and activate the class
+            classEntity.TeacherId = teacherId;
+            classEntity.IsActive = true;
+
+            await _classManagementRepository.UpdateAsync(classEntity);
             return true;
         }
     }

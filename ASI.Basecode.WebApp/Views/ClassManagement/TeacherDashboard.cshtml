@@ -5,36 +5,124 @@
     Layout = "_TeacherLayout";
 }
 
-<div class="container mt-4">
-    <h2 class="fw-bold mb-4">Welcome back, @Model.TeacherName</h2>
+<div class="container-fluid py-4" style="background:#F7F7F2; min-height:100vh;">
+    <div class="mx-auto" style="max-width:1100px;">
 
-    <h5 class="text-muted mb-3">Active Classes (@Model.Classes.Count)</h5>
+        <!-- Header -->
+        <div class="mb-4">
+            <h2 class="fw-bold text-dark mb-1">Dashboard</h2>
+            <p class="text-muted mb-0">Welcome back, @Model.TeacherName</p>
+        </div>
 
-    @if (!Model.Classes.Any())
-    {
-        <div class="alert alert-info">You don’t have any active classes yet.</div>
-    }
-    else
-    {
-        <div class="row">
-            @foreach (var c in Model.Classes)
-            {
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card border-0 shadow-sm rounded-3">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold">@c.CourseCode</h5>
-                            <p class="mb-1">@c.CourseName</p>
-                            <p class="text-muted small mb-1">@c.Schedule</p>
-                            <p class="text-muted small mb-2">@c.Room</p>
-                            <span class="badge bg-primary">@c.YearLevel Yr | Sem @c.Semester</span>
-                            <div class="mt-3">
-                                <!-- Link now navigates to TeacherGradeController.ClassGrades passing the class id -->
-                                <a asp-controller="TeacherGrade" asp-action="ClassGrades" asp-route-id="@c.Id" class="btn btn-outline-dark w-100">View Grades</a>
+        <!-- Activate a Class Section -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:12px; background:#FFFFFF;">
+            <div class="card-body p-4">
+                <h6 class="mb-1 fw-semibold text-dark">+ Activate a Class</h6>
+                <p class="text-muted small mb-3">Enter a class code to activate a new course</p>
+                <div class="d-flex gap-2">
+                    <input type="text"
+                           class="form-control"
+                           placeholder="Enter class code (e.g., IT101, PE101)"
+                           style="border-radius:8px; border:1px solid #dee2e6; flex:1;">
+                    <button class="btn text-white px-4"
+                            style="background:#3A4D75; border:none; border-radius:8px; white-space:nowrap;">
+                        Activate
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Classes -->
+        <h5 class="fw-semibold text-dark mb-3">Active Classes (@Model.Classes.Count)</h5>
+
+        @if (!Model.Classes.Any())
+        {
+            <div class="alert alert-info shadow-sm border-0 rounded-3">
+                You don't have any active classes yet.
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var c in Model.Classes)
+                {
+                    // Try to read Units property if present on the class model
+                    var unitsProp = c.GetType().GetProperty("Units");
+                    var unitsVal = unitsProp != null ? unitsProp.GetValue(c)?.ToString() : null;
+
+                    <div class="col-12 col-md-6">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius:12px; background:#FFFFFF;">
+                            <div class="card-body p-4 position-relative">
+                                <!-- Units badge (top-right) -->
+                                @if (!string.IsNullOrEmpty(unitsVal))
+                                {
+                                    <span class="badge text-dark small px-3 py-1 position-absolute"
+                                          style="top:16px; right:16px; border-radius:6px; background:#F5F5F5; font-weight:500;">
+                                        @unitsVal units
+                                    </span>
+                                }
+
+                                <!-- Code + Name -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-dark mb-1" style="font-size:1.1rem;">@c.CourseCode</h6>
+                                    <p class="text-muted mb-0" style="font-size:0.9rem;">@c.CourseName</p>
+                                </div>
+
+                                <!-- Schedule + Room -->
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center text-muted mb-2" style="font-size:0.875rem;">
+                                        <i class="bi bi-clock me-2"></i>
+                                        <span>@c.Schedule</span>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(c.Room))
+                                    {
+                                        <div class="d-flex align-items-center text-muted" style="font-size:0.875rem;">
+                                            <i class="bi bi-geo-alt me-2"></i>
+                                            <span>@c.Room</span>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- View Button -->
+                                <div class="d-flex justify-content-end">
+                                    <a asp-controller="TeacherGrade"
+                                       asp-action="ClassGrades"
+                                       asp-route-id="@c.Id"
+                                       class="btn btn-outline-dark btn-sm d-flex align-items-center gap-1"
+                                       style="border-radius:8px; padding:0.4rem 1rem; border-color:#dee2e6;">
+                                        <i class="bi bi-eye"></i>
+                                        <span>View</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
-    }
+                }
+            </div>
+        }
+    </div>
 </div>
+
+<style>
+    .card {
+        transition: all 0.2s ease-in-out;
+    }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+        }
+
+    .btn-outline-dark:hover {
+        background-color: #3A4D75;
+        border-color: #3A4D75;
+        color: white;
+    }
+
+    /* Ensure consistent card heights */
+    .card .card-body {
+        display: flex;
+        flex-direction: column;
+    }
+</style>

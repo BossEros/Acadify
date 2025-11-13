@@ -12,20 +12,16 @@
 }
 <div class="container mx-auto px-4 py-6">
     <div class="bg-white rounded-lg shadow p-6">
-        <!-- Header -->
         <div class="flex justify-between items-center mb-2">
             <div>
                 <h2 class="text-2xl font-semibold text-gray-800">My Grades</h2>
             </div>
-            <button class="bg-[#3A4D75] text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
+            
+            <a id="printReportBtn" href="#" target="_blank" class="bg-[#3A4D75] text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:opacity-90 transition">
                 <span>Semester Report</span>
-            </button>
-        </div>
+            </a>
+            </div>
 
-        <!-- Year + Semester Dropdowns (right under header) -->
         <div class="mb-6 border-b pb-4">
             <div class="flex flex-wrap gap-4 items-center">
                 <div>
@@ -45,17 +41,13 @@
                         <option value="2">2nd Semester</option>
                     </select>
                 </div>
-
-                <!-- View button removed: selection changes apply immediately -->
             </div>
         </div>
 
-        <!-- Placeholder for "no grades found" -->
         <div id="noGradesMessage" class="mb-6 bg-yellow-50 rounded-lg p-4 text-gray-700 hidden">
             No grades available for the selected Year/Semester.
         </div>
 
-        <!-- Grades Section -->
         @foreach (var semester in Model)
         {
             <div id="semester_@(semester.YearLevel)_@(semester.Semester)" class="mb-8 semester-section hidden">
@@ -63,11 +55,7 @@
                     @{
                         var yearOrdinal = semester.YearLevel switch
                         {
-                            1 => "1st",
-                            2 => "2nd",
-                            3 => "3rd",
-                            4 => "4th",
-                            _ => semester.YearLevel + "th"
+                            1 => "1st", 2 => "2nd", 3 => "3rd", 4 => "4th", _ => semester.YearLevel + "th"
                         };
                         var semesterOrdinal = semester.Semester == 1 ? "1st" : "2nd";
                     }
@@ -109,8 +97,7 @@
                                                 var remarkLower = remarkText.ToLowerInvariant();
                                                 var badgeText = string.IsNullOrEmpty(remarkText) ? "Incomplete" : remarkText;
 
-                                                string textClass;
-                                                string bgClass;
+                                                string textClass, bgClass;
                                                 if (remarkLower == "failed" || remarkLower == "fail")
                                                 {
                                                     textClass = "text-red-700";
@@ -123,7 +110,6 @@
                                                 }
                                                 else
                                                 {
-                                                    // Incomplete or any other remark => orange badge
                                                     textClass = "text-orange-700";
                                                     bgClass = "bg-orange-100";
                                                 }
@@ -150,7 +136,12 @@
         function applyFilters() {
             const year = document.getElementById('yearSelect').value;
             const sem = document.getElementById('semesterSelect').value;
+            
+            // Show correct table
             showSelected(year, sem);
+            
+            // --- UPDATE BUTTON LINK ---
+            updatePrintButton(year, sem);
         }
 
         function showSelected(year, semester) {
@@ -165,8 +156,16 @@
             } else {
                 document.getElementById('noGradesMessage').classList.remove('hidden');
             }
+        }
 
-            document.querySelectorAll('[id^="yearDropdown_"]').forEach(d => d.classList.add('hidden'));
+        // --- FUNCTION TO UPDATE REPORT LINK ---
+        function updatePrintButton(year, semester) {
+            const btn = document.getElementById('printReportBtn');
+            if (btn) {
+                // Uses Razor helper to get base URL, then appends params
+                const baseUrl = '@Url.Action("Index", "SemesterReport")';
+                btn.href = `${baseUrl}?semester=${semester}&yearLevel=${year}`;
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -182,6 +181,7 @@
             {
                 <text>
                 document.getElementById('noGradesMessage').classList.remove('hidden');
+                updatePrintButton(1, 1); // Default link
                 </text>
             }
         });

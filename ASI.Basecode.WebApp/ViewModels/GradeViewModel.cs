@@ -21,4 +21,20 @@ namespace ASI.Basecode.WebApp.ViewModels
         public short Semester { get; set; }
         public List<GradeViewModel> Grades { get; set; } = new();
     }
+
+    public class SemesterReportViewModel
+    {
+        public string StudentName { get; set; } = string.Empty;
+        public string StudentIdNumber { get; set; } = string.Empty;
+        public short Semester { get; set; }
+        public short YearLevel { get; set; }
+
+        public double GPA { get; set; }
+        public int TotalUnits { get; set; }
+        public int SubjectsPassed { get; set; }
+        public int SubjectsFailed { get; set; }
+        public int SubjectsIncomplete { get; set; }
+
+        public List<GradeViewModel> Grades { get; set; } = new List<GradeViewModel>();
+    }
 }

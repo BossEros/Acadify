@@ -15,6 +15,8 @@ namespace ASI.Basecode.Services.Interfaces
         Task<UserManagementResult> DeleteUserAsync(int id);
         Task<IEnumerable<string>> GetAvailableRolesAsync();
         Task<UserManagementResult> EnrollStudentAsync(int userId, string edpCode);
+        Task<IEnumerable<EnrolledClassDto>> GetEnrolledClassesAsync(int userId);
+        Task<UserManagementResult> UnenrollStudentAsync(int userId, string edpCode);
         Task<UserManagementResult> AssignTeacherAsync(int userId, string edpCode);
     }
 }

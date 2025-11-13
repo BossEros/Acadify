@@ -318,6 +318,54 @@ namespace ASI.Basecode.Services.Implementation
             return UserManagementResult.Success("Student enrolled to EDP successfully.");
         }
 
+        public async Task<IEnumerable<EnrolledClassDto>> GetEnrolledClassesAsync(int userId)
+        {
+            // TODO: Replace with actual implementation when enrollment data structure is available
+            // For now, return mock data or query from your actual enrollment/student-class relationship table
+
+            var user = await _userRepository.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Enumerable.Empty<EnrolledClassDto>();
+            }
+
+            // Placeholder: Return empty list for now
+            // In a real implementation, you would query the StudentClass or Enrollment table
+            // Example:
+            // var enrollments = await _context.StudentClasses
+            //     .Where(sc => sc.UserId == userId)
+            //     .Select(sc => new EnrolledClassDto
+            //     {
+            //         EdpCode = sc.EdpCode,
+            //         ClassName = sc.Class.Name
+            //     })
+            //     .ToListAsync();
+
+            return Enumerable.Empty<EnrolledClassDto>();
+        }
+
+        public async Task<UserManagementResult> UnenrollStudentAsync(int userId, string edpCode)
+        {
+            var user = await _userRepository.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return UserManagementResult.Failure("User not found.");
+            }
+
+            // TODO: Replace with actual implementation when enrollment data structure is available
+            // In a real implementation, you would delete the enrollment record
+            // Example:
+            // var enrollment = await _context.StudentClasses
+            //     .FirstOrDefaultAsync(sc => sc.UserId == userId && sc.EdpCode == edpCode);
+            // if (enrollment != null)
+            // {
+            //     _context.StudentClasses.Remove(enrollment);
+            //     await _context.SaveChangesAsync();
+            // }
+
+            return UserManagementResult.Success("Student unenrolled from class successfully.");
+        }
+
         public async Task<UserManagementResult> AssignTeacherAsync(int userId, string edpCode)
         {
             var user = await _userRepository.FindByIdAsync(userId);

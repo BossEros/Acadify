@@ -30,6 +30,7 @@
 
     <div class="flex items-center space-x-3">
         <button type="button" id="openEnroll" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Enroll Student</button>
+        <button type="button" id="openUnenroll" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Unenroll Student</button>
         <button type="button" id="openAssign" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Assign Teacher</button>
         <button type="button" id="openEdit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Edit User</button>
     </div>
@@ -89,6 +90,32 @@
                 <div class="flex justify-end space-x-2 pt-2">
                     <button type="button" data-close="modalEnroll" class="px-4 py-2 rounded border">Cancel</button>
                     <button type="submit" class="px-4 py-2 rounded bg-green-600 text-white">Enroll Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Unenroll Student Modal -->
+    <div id="modalUnenroll" class="hidden fixed inset-0 z-50 items-center justify-center bg-gray-900/50 backdrop-blur">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow p-6">
+            <h3 class="text-xl font-semibold mb-4">Unenroll Student</h3>
+            <form id="formUnenroll" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">User ID</label>
+                    <div class="flex space-x-2">
+                        <input id="unenrollUserId" name="UserId" type="number" class="flex-1 rounded border border-gray-300 px-3 py-2" placeholder="Enter User ID" required />
+                        <button type="button" id="btnLoadClasses" class="px-3 py-2 rounded bg-gray-800 text-white">Load Classes</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Enrolled Classes</label>
+                    <select name="EdpCode" id="enrolledClassesDropdown" class="w-full rounded border border-gray-300 px-3 py-2" required disabled>
+                        <option value="">Enter User ID and click Load Classes</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" data-close="modalUnenroll" class="px-4 py-2 rounded border">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded bg-red-600 text-white">Unenroll Student</button>
                 </div>
             </form>
         </div>
@@ -172,6 +199,7 @@
         function close(id) { const el = qs('#' + id); el.classList.add('hidden'); el.classList.remove('flex'); }
 
         qs('#openEnroll').addEventListener('click', () => open('modalEnroll'));
+        qs('#openUnenroll').addEventListener('click', () => open('modalUnenroll'));
         qs('#openAssign').addEventListener('click', () => open('modalAssign'));
         qs('#openEdit').addEventListener('click', () => open('modalEdit'));
 
@@ -196,6 +224,47 @@
             e.preventDefault();
             const data = Object.fromEntries(new FormData(e.target).entries());
             const result = await postForm('@Url.Action("EnrollStudent")', data);
+            alert(result.message);
+            if (result.success) { location.reload(); }
+        });
+
+        // Unenroll - Load Classes
+        qs('#btnLoadClasses').addEventListener('click', async () => {
+            const userId = qs('#unenrollUserId').value;
+            if (!userId) {
+                alert('Please enter a User ID');
+                return;
+            }
+
+            // Fetch enrolled classes for the student
+            const res = await fetch(`@Url.Action("GetEnrolledClasses")?userId=${encodeURIComponent(userId)}`);
+            const result = await res.json();
+
+            const dropdown = qs('#enrolledClassesDropdown');
+            dropdown.innerHTML = '';
+
+            if (!result.success || !result.data || result.data.length === 0) {
+                dropdown.innerHTML = '<option value="">No enrolled classes found</option>';
+                dropdown.disabled = true;
+                alert(result.message || 'No enrolled classes found for this student');
+                return;
+            }
+
+            dropdown.disabled = false;
+            dropdown.innerHTML = '<option value="">Select a class to unenroll</option>';
+            result.data.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.edpCode;
+                option.textContent = `${cls.edpCode} - ${cls.className || ''}`;
+                dropdown.appendChild(option);
+            });
+        });
+
+        // Unenroll - Submit
+        qs('#formUnenroll').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target).entries());
+            const result = await postForm('@Url.Action("UnenrollStudent")', data);
             alert(result.message);
             if (result.success) { location.reload(); }
         });

@@ -1,0 +1,39 @@
+﻿@model ASI.Basecode.WebApp.ViewModels.ClassManagement.TeacherDashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_TeacherLayout";
+}
+
+<div class="container mt-4">
+    <h2 class="fw-bold mb-4">Welcome back, @Model.TeacherName</h2>
+
+    <h5 class="text-muted mb-3">Active Classes (@Model.Classes.Count)</h5>
+
+    @if (!Model.Classes.Any())
+    {
+        <div class="alert alert-info">You don’t have any active classes yet.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var c in Model.Classes)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card border-0 shadow-sm rounded-3">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">@c.CourseCode</h5>
+                            <p class="mb-1">@c.CourseName</p>
+                            <p class="text-muted small mb-1">@c.Schedule</p>
+                            <p class="text-muted small mb-2">@c.Room</p>
+                            <span class="badge bg-primary">@c.YearLevel Yr | Sem @c.Semester</span>
+                            <div class="mt-3">
+                                <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-outline-dark w-100">View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

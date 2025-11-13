@@ -1,398 +1,64 @@
-﻿@model ASI.Basecode.WebApp.ViewModels.SettingsViewModel
-@{
+﻿@{
     ViewData["Title"] = "Settings";
+    Layout = "_TeacherLayout";
 }
 
-<div class="min-h-screen bg-gray-50">
-    <!-- Main Content -->
-    <div class="p-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">Settings</h1>
-            <p class="text-gray-600 mt-2">Manage your account settings and preferences</p>
+<div class="container mt-4">
+    <h2 class="fw-bold mb-4">Account Settings</h2>
+
+    <div class="row">
+        <!-- User Details -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">User Details</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Name</label>
+                        <input type="text" class="form-control" value="@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">User ID</label>
+                        <input type="text" class="form-control" value="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" readonly />
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Display Messages -->
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 animate-fade-in">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-green-500 text-lg"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-green-800">
-                            Success!
-                        </h3>
-                        <div class="mt-1 text-sm text-green-700">
-                            <p>@TempData["SuccessMessage"]</p>
+        <!-- Change Password -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Change Password</h5>
+                    <form asp-controller="Settings" asp-action="ChangePassword" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" name="CurrentPassword" class="form-control" required />
                         </div>
-                    </div>
-                    <div class="ml-auto pl-3">
-                        <div class="-mx-1.5 -my-1.5">
-                            <button type="button" class="inline-flex bg-green-50 rounded-md p-1.5 text-green-500 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-green-50 focus:ring-green-600" onclick="this.parentElement.parentElement.parentElement.style.display='none'">
-                                <span class="sr-only">Dismiss</span>
-                                <i class="fas fa-times h-3 w-3"></i>
-                            </button>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" name="NewPassword" class="form-control" minlength="8" required />
                         </div>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" name="ConfirmNewPassword" class="form-control" minlength="8" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-2">Change Password</button>
+                    </form>
                 </div>
-            </div>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 animate-fade-in">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-circle text-red-500 text-lg"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">
-                            Error
-                        </h3>
-                        <div class="mt-1 text-sm text-red-700">
-                            <p>@TempData["ErrorMessage"]</p>
-                        </div>
-                    </div>
-                    <div class="ml-auto pl-3">
-                        <div class="-mx-1.5 -my-1.5">
-                            <button type="button" class="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600" onclick="this.parentElement.parentElement.parentElement.style.display='none'">
-                                <span class="sr-only">Dismiss</span>
-                                <i class="fas fa-times h-3 w-3"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-
-        @if (!ViewData.ModelState.IsValid)
-        {
-            <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 animate-fade-in">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle text-yellow-500 text-lg"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-yellow-800">
-                            Please correct the following errors
-                        </h3>
-                        <div class="mt-1 text-sm text-yellow-700">
-                            <ul class="list-disc list-inside space-y-1">
-                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                                {
-                                    <li>@error.ErrorMessage</li>
-                                }
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="ml-auto pl-3">
-                        <div class="-mx-1.5 -my-1.5">
-                            <button type="button" class="inline-flex bg-yellow-50 rounded-md p-1.5 text-yellow-500 hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-yellow-50 focus:ring-yellow-600" onclick="this.parentElement.parentElement.parentElement.style.display='none'">
-                                <span class="sr-only">Dismiss</span>
-                                <i class="fas fa-times h-3 w-3"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-        <div class="max-w-4xl mx-auto space-y-8">
-            <!-- User Details Section -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center mb-4">
-                    <div class="w-2 h-6 bg-blue-600 rounded-full mr-3"></div>
-                    <h2 class="text-xl font-semibold text-gray-800">User Details</h2>
-                </div>
-                <p class="text-gray-600 mb-6">Your account information</p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                        <div class="p-3 bg-gray-50 rounded-md border border-gray-200 text-gray-800 font-medium">
-                            @Model.UserDetails.Name
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">User ID</label>
-                        <div class="p-3 bg-gray-50 rounded-md border border-gray-200 text-gray-800 font-medium">
-                            @Model.UserDetails.UserId
-                        </div>
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                        <div class="p-3 bg-gray-50 rounded-md border border-gray-200 text-gray-800 font-medium">
-                            @Model.UserDetails.Email
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Change Password Section -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center mb-4">
-                    <div class="w-2 h-6 bg-blue-600 rounded-full mr-3"></div>
-                    <h2 class="text-xl font-semibold text-gray-800">Change Password</h2>
-                </div>
-                <p class="text-gray-600 mb-6">Update your password to keep your account secure</p>
-
-                <form asp-controller="Settings" asp-action="ChangePassword" method="post" id="changePasswordForm" class="space-y-6">
-                    @Html.AntiForgeryToken()
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="md:col-span-2">
-                            <label asp-for="ChangePasswordModel.CurrentPassword" class="block text-sm font-medium text-gray-700 mb-2">
-                                Current Password
-                            </label>
-                            <div class="relative">
-                                <input asp-for="ChangePasswordModel.CurrentPassword"
-                                       type="password"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @(ViewData.ModelState["ChangePasswordModel.CurrentPassword"]?.Errors.Count > 0 ? "border-red-300 ring-2 ring-red-200" : "")"
-                                       placeholder="Enter your current password">
-                                <button type="button"
-                                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors toggle-password"
-                                        data-target="ChangePasswordModel_CurrentPassword">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <span asp-validation-for="ChangePasswordModel.CurrentPassword" class="text-red-600 text-sm mt-2 block"></span>
-                        </div>
-
-                        <div>
-                            <label asp-for="ChangePasswordModel.NewPassword" class="block text-sm font-medium text-gray-700 mb-2">
-                                New Password
-                            </label>
-                            <div class="relative">
-                                <input asp-for="ChangePasswordModel.NewPassword"
-                                       type="password"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @(ViewData.ModelState["ChangePasswordModel.NewPassword"]?.Errors.Count > 0 ? "border-red-300 ring-2 ring-red-200" : "")"
-                                       placeholder="Enter new password">
-                                <button type="button"
-                                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors toggle-password"
-                                        data-target="ChangePasswordModel_NewPassword">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <span asp-validation-for="ChangePasswordModel.NewPassword" class="text-red-600 text-sm mt-2 block"></span>
-                        </div>
-
-                        <div>
-                            <label asp-for="ChangePasswordModel.ConfirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
-                                Confirm Password
-                            </label>
-                            <div class="relative">
-                                <input asp-for="ChangePasswordModel.ConfirmPassword"
-                                       type="password"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 @(ViewData.ModelState["ChangePasswordModel.ConfirmPassword"]?.Errors.Count > 0 ? "border-red-300 ring-2 ring-red-200" : "")"
-                                       placeholder="Confirm new password">
-                                <button type="button"
-                                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors toggle-password"
-                                        data-target="ChangePasswordModel_ConfirmPassword">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <span asp-validation-for="ChangePasswordModel.ConfirmPassword" class="text-red-600 text-sm mt-2 block"></span>
-                        </div>
-                    </div>
-
-                    <!-- Password Requirements -->
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                        <h4 class="text-sm font-semibold text-blue-800 mb-3 flex items-center">
-                            <i class="fas fa-shield-alt mr-2"></i>
-                            Password Requirements
-                        </h4>
-                        <ul class="text-sm text-blue-700 space-y-2">
-                            <li class="flex items-center transition-all duration-200 hover:text-blue-800">
-                                <i class="fas fa-check-circle mr-3 text-green-500"></i>
-                                Minimum 8 characters in length
-                            </li>
-                            <li class="flex items-center transition-all duration-200 hover:text-blue-800">
-                                <i class="fas fa-check-circle mr-3 text-green-500"></i>
-                                At least one uppercase letter (A-Z)
-                            </li>
-                            <li class="flex items-center transition-all duration-200 hover:text-blue-800">
-                                <i class="fas fa-check-circle mr-3 text-green-500"></i>
-                                At least one lowercase letter (a-z)
-                            </li>
-                            <li class="flex items-center transition-all duration-200 hover:text-blue-800">
-                                <i class="fas fa-check-circle mr-3 text-green-500"></i>
-                                At least one number (0-9)
-                            </li>
-                            <li class="flex items-center transition-all duration-200 hover:text-blue-800">
-                                <i class="fas fa-check-circle mr-3 text-green-500"></i>
-                                At least one special character (!@@#$% etc.)
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="flex justify-end pt-4">
-                        <button type="submit"
-                                class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-200 transform hover:scale-105 focus:scale-105 shadow-lg hover:shadow-xl">
-                            <i class="fas fa-key mr-2"></i>
-                            Update Password
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Delete Account Section -->
-            <div class="bg-white rounded-lg shadow-sm border border-red-200 p-6">
-                <div class="flex items-center mb-4">
-                    <div class="w-2 h-6 bg-red-600 rounded-full mr-3"></div>
-                    <h2 class="text-xl font-semibold text-gray-800">Delete Account</h2>
-                </div>
-                <p class="text-gray-600 mb-6">Permanently delete your account and all associated data</p>
-
-                <div class="bg-red-50 border-l-4 border-red-400 rounded-r-lg p-4 mb-6">
-                    <div class="flex items-start">
-                        <i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-3 text-lg"></i>
-                        <div>
-                            <h4 class="text-sm font-semibold text-red-800 mb-1">Irreversible Action</h4>
-                            <p class="text-sm text-red-700">
-                                Once you delete your account, there is no going back. All your data, including classes, enrollments, and personal information will be permanently removed from our systems.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <form asp-controller="Settings" asp-action="DeleteAccount" method="post" id="deleteAccountForm">
-                    @Html.AntiForgeryToken()
-                    <div class="flex justify-end">
-                        <button type="button"
-                                id="deleteAccountBtn"
-                                class="px-8 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-200 transition-all duration-200 transform hover:scale-105 focus:scale-105 shadow-lg hover:shadow-xl">
-                            <i class="fas fa-trash-alt mr-2"></i>
-                            Delete Account
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
-</div>
-<!-- Delete Account Confirmation Modal -->
-<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 transition-opacity duration-300">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-2xl rounded-xl bg-white transform transition-transform duration-300">
-        <div class="mt-3 text-center">
-            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Confirm Account Deletion</h3>
-            <div class="mt-2 px-2 py-3">
-                <p class="text-sm text-gray-600 leading-relaxed">
-                    This action <span class="font-semibold text-red-600">cannot be undone</span>. All your data will be permanently deleted. Are you absolutely sure?
-                </p>
-            </div>
-            <div class="flex justify-center space-x-3 mt-6">
-                <button type="button" id="cancelDelete"
-                        class="px-6 py-2.5 bg-gray-100 text-gray-700 text-base font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200">
-                    <i class="fas fa-times mr-2"></i>
-                    Cancel
-                </button>
-                <button type="button" id="confirmDelete"
-                        class="px-6 py-2.5 bg-red-600 text-white text-base font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-200">
-                    <i class="fas fa-trash-alt mr-2"></i>
-                    Yes, Delete Account
-                </button>
-            </div>
+
+    <!-- Delete Account -->
+    <div class="card border-0 shadow-sm rounded-3 mt-3">
+        <div class="card-body">
+            <h5 class="fw-semibold mb-3 text-danger">Delete Account</h5>
+            <p class="text-muted mb-3">This will permanently delete your account and all associated data. This action cannot be undone.</p>
+            <form asp-controller="Settings" asp-action="DeleteAccount" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger">Delete Account</button>
+            </form>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Toggle password visibility
-            document.querySelectorAll('.toggle-password').forEach(button => {
-                button.addEventListener('click', function() {
-                    const target = this.getAttribute('data-target');
-                    const input = document.getElementById(target);
-                    const icon = this.querySelector('i');
-
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        icon.classList.remove('fa-eye');
-                        icon.classList.add('fa-eye-slash');
-                        this.classList.add('text-blue-600');
-                    } else {
-                        input.type = 'password';
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                        this.classList.remove('text-blue-600');
-                    }
-                });
-            });
-
-            // Delete account modal
-            const deleteAccountBtn = document.getElementById('deleteAccountBtn');
-            const deleteModal = document.getElementById('deleteModal');
-            const confirmDelete = document.getElementById('confirmDelete');
-            const cancelDelete = document.getElementById('cancelDelete');
-            const deleteAccountForm = document.getElementById('deleteAccountForm');
-
-            if (deleteAccountBtn) {
-                deleteAccountBtn.addEventListener('click', function() {
-                    deleteModal.classList.remove('hidden');
-                    setTimeout(() => {
-                        deleteModal.classList.add('opacity-100');
-                    }, 10);
-                });
-            }
-
-            if (cancelDelete) {
-                cancelDelete.addEventListener('click', function() {
-                    deleteModal.classList.add('hidden');
-                    deleteModal.classList.remove('opacity-100');
-                });
-            }
-
-            if (confirmDelete) {
-                confirmDelete.addEventListener('click', function() {
-                    // Show loading state
-                    const btn = this;
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Deleting...';
-                    btn.disabled = true;
-                    btn.classList.add('opacity-75');
-
-                    // Submit the form
-                    setTimeout(() => {
-                        deleteAccountForm.submit();
-                    }, 1000);
-                });
-            }
-
-            // Close modal when clicking outside
-            window.addEventListener('click', function(e) {
-                if (e.target === deleteModal) {
-                    deleteModal.classList.add('hidden');
-                    deleteModal.classList.remove('opacity-100');
-                }
-            });
-
-            // Real-time password validation
-            const newPasswordInput = document.getElementById('ChangePasswordModel_NewPassword');
-            const confirmPasswordInput = document.getElementById('ChangePasswordModel_ConfirmPassword');
-
-            function validatePasswords() {
-                const newPassword = newPasswordInput.value;
-                const confirmPassword = confirmPasswordInput.value;
-
-                if (confirmPassword && newPassword !== confirmPassword) {
-                    confirmPasswordInput.classList.add('border-red-300', 'ring-2', 'ring-red-200');
-                } else {
-                    confirmPasswordInput.classList.remove('border-red-300', 'ring-2', 'ring-red-200');
-                }
-            }
-
-            if (newPasswordInput && confirmPasswordInput) {
-                newPasswordInput.addEventListener('input', validatePasswords);
-                confirmPasswordInput.addEventListener('input', validatePasswords);
-            }
-        });
-    </script>
-}

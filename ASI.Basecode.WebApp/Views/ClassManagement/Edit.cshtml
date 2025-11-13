@@ -15,7 +15,6 @@
     <div>
         <label class="block text-sm text-gray-700 mb-1">EDP Code</label>
         <input asp-for="Id" readonly
-               placeholder="Enter EDP Code"
                class="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none" />
     </div>
 
@@ -24,13 +23,13 @@
         <div>
             <label class="block text-sm text-gray-700 mb-1">Course Code</label>
             <select id="courseSelectEdit" asp-for="CourseId" asp-items="ViewBag.Courses"
-                    class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
-                <option disabled value="">Select a course</option>
+                    class="w-full rounded border border-gray-300 bg-gray-100 px-3 py-2 text-gray-500 cursor-not-allowed"
+                    disabled>
             </select>
         </div>
         <div>
             <label class="block text-sm text-gray-700 mb-1">Description</label>
-            <input id="courseNameEdit" readonly placeholder="e.g., College Algebra"
+            <input id="courseNameEdit" readonly
                    class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" />
         </div>
     </div>
@@ -38,13 +37,13 @@
     <!-- Units -->
     <div>
         <label class="block text-sm text-gray-700 mb-1">Units</label>
-        <input id="courseUnitEdit" readonly placeholder="e.g., 3"
+        <input id="courseUnitEdit" readonly
                class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" />
     </div>
 
-    <!-- Days -->
+    <!-- Schedule (Editable) -->
     <div>
-        <label class="block text-sm text-gray-700 mb-1">Days</label>
+        <label class="block text-sm text-gray-700 mb-1 font-semibold">Schedule</label>
         <div class="flex flex-wrap gap-4">
             @foreach (var day in new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" })
             {
@@ -56,12 +55,8 @@
                 </label>
             }
         </div>
-    </div>
 
-    <!-- Time -->
-    <div>
-        <label class="block text-sm text-gray-700 mb-1">Time</label>
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2 mt-2">
             <input type="time" id="startTimeEdit" asp-for="StartTime"
                    class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none" />
             <span class="text-gray-500">-</span>
@@ -70,34 +65,26 @@
         </div>
     </div>
 
-    <!-- Teacher -->
+    <!-- Teacher (Editable) -->
     <div>
-        <label class="block text-sm text-gray-700 mb-1">Teacher</label>
+        <label class="block text-sm text-gray-700 mb-1 font-semibold">Teacher</label>
         <select id="teacherSelectEdit" asp-for="TeacherId" asp-items="ViewBag.Teachers"
                 class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
             <option disabled value="">Select a teacher</option>
         </select>
     </div>
 
-    <!-- Year & Semester -->
+    <!-- Year & Semester (Read-only) -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
             <label class="block text-sm text-gray-700 mb-1">Year</label>
-            <select asp-for="YearLevel"
-                    class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
-                <option>1</option>
-                <option>2</option>
-                <option>3</option>
-                <option>4</option>
-            </select>
+            <input value="@Model.YearLevel" readonly
+                   class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" />
         </div>
         <div>
             <label class="block text-sm text-gray-700 mb-1">Semester</label>
-            <select asp-for="Semester"
-                    class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
-                <option>1</option>
-                <option>2</option>
-            </select>
+            <input value="@Model.Semester" readonly
+                   class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" />
         </div>
     </div>
 
@@ -113,19 +100,16 @@
 </form>
 
 <script>
-    const coursesEdit = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        ViewBag.CourseList ?? new List<object>()
-    ));
-    const courseSelectEdit = document.getElementById('courseSelectEdit');
-    const courseNameEdit = document.getElementById('courseNameEdit');
+    const coursesEdit = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.CourseList ?? new List<object>()));
+    const courseNameEdit = document.getElementById('courseNameEdit');   // Description readonly
     const courseUnitEdit = document.getElementById('courseUnitEdit');
 
     function updateCourseDetailsEdit() {
-        const selected = coursesEdit.find(c => c.id == courseSelectEdit.value);
-        courseNameEdit.value = selected ? selected.courseName : '';
+        const selected = coursesEdit.find(c => c.id == @Model.CourseId);
+        courseNameEdit.value = selected ? (selected.courseDescription ?? selected.courseName) : '';
         courseUnitEdit.value = selected ? selected.courseUnit : '';
     }
 
-    courseSelectEdit?.addEventListener('change', updateCourseDetailsEdit);
     updateCourseDetailsEdit();
 </script>
+

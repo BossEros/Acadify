@@ -58,6 +58,7 @@ builder.Services.AddScoped<IAccountManagementService, AccountManagementService>(
 builder.Services.AddScoped<IClassManagementService, ClassManagementService>();
 builder.Services.AddHttpClient<IEmailService, SendGridEmailService>();
 builder.Services.AddScoped<ICourseManagementService, CourseManagementService>();
+builder.Services.AddScoped<IClassReportService, ClassReportService>();
 
 // Repositories (Data layer)
 builder.Services.AddScoped<IUserRepository, UserRepository>();

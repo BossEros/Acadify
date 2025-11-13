@@ -1,0 +1,124 @@
+@model ASI.Basecode.WebApp.ViewModels.TeacherGradeViewModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Model.CourseCode Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        @@media print {
+            .print-btn { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100% !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+
+    <div class="container mx-auto bg-white shadow-lg rounded-lg p-8 max-w-5xl">
+        
+        <div class="flex justify-between items-start mb-8 border-b pb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">@Model.CourseCode</h1>
+                <h2 class="text-xl text-gray-600 mt-1">@Model.CourseName</h2>
+                
+                <div class="mt-4 text-sm text-gray-700 space-y-1">
+                    <p><span class="font-bold text-gray-900">Class ID:</span> @Model.ClassId</p>
+                    <p><span class="font-bold text-gray-900">Instructor:</span> @Model.TeacherName</p>
+                    <p><span class="font-bold text-gray-900">Schedule:</span> @Model.Schedule</p>
+                    <p><span class="font-bold text-gray-900">Total Students:</span> @Model.StudentGrades.Count</p>
+                </div>
+
+                <p class="text-xs text-gray-400 mt-4">Generated on: @DateTime.Now.ToString("MMMM dd, yyyy hh:mm tt")</p>
+            </div>
+            
+            <button onclick="window.print()" class="print-btn bg-[#3A4D75] text-white px-6 py-2 rounded hover:opacity-90 flex items-center gap-2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm7-8V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Print Report
+            </button>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4 mb-8">
+            <div class="bg-gray-50 p-4 rounded border border-gray-200 text-center">
+                <p class="text-sm text-gray-500 uppercase tracking-wider font-bold">Average</p>
+                <p class="text-3xl font-bold text-gray-800">@Model.ClassAverage.ToString("N2")</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded border border-green-100 text-center">
+                <p class="text-sm text-green-600 uppercase tracking-wider font-bold">Passed</p>
+                <p class="text-3xl font-bold text-green-700">@Model.PassingRate.ToString("N1")%</p>
+            </div>
+            <div class="bg-red-50 p-4 rounded border border-red-100 text-center">
+                <p class="text-sm text-red-600 uppercase tracking-wider font-bold">Failed</p>
+                <p class="text-3xl font-bold text-red-700">@Model.FailingRate.ToString("N1")%</p>
+            </div>
+            <div class="bg-orange-50 p-4 rounded border border-orange-100 text-center">
+                <p class="text-sm text-orange-600 uppercase tracking-wider font-bold">Incomplete</p>
+                <p class="text-3xl font-bold text-orange-700">@Model.IncompleteRate.ToString("N1")%</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b-2 border-gray-200">
+                        <th class="py-3 px-4 text-sm font-bold text-gray-600 uppercase">Student No.</th>
+                        <th class="py-3 px-4 text-sm font-bold text-gray-600 uppercase">Student Name</th>
+                        <th class="py-3 px-4 text-sm font-bold text-gray-600 uppercase text-center">Midterm</th>
+                        <th class="py-3 px-4 text-sm font-bold text-gray-600 uppercase text-center">Final</th>
+                        <th class="py-3 px-4 text-sm font-bold text-gray-600 uppercase text-center">Remark</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in Model.StudentGrades)
+                    {
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="py-3 px-4 text-gray-700">@student.StudentId</td>
+                            <td class="py-3 px-4 text-gray-900 font-medium">@student.StudentName</td>
+                            <td class="py-3 px-4 text-center text-gray-700">
+                                @(student.MidtermGrade?.ToString("0.00") ?? "--")
+                            </td>
+                            <td class="py-3 px-4 text-center text-gray-700">
+                                @(student.FinalGrade?.ToString("0.00") ?? "--")
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                @{
+                                    var remarkLower = (student.Remark ?? string.Empty).Trim().ToLowerInvariant();
+                                    string textClass, bgClass;
+                                    
+                                    if (remarkLower == "failed" || remarkLower == "fail")
+                                    {
+                                        textClass = "text-red-800";
+                                        bgClass = "bg-red-100";
+                                    }
+                                    else if (remarkLower == "passed")
+                                    {
+                                        textClass = "text-green-800";
+                                        bgClass = "bg-green-100";
+                                    }
+                                    else
+                                    {
+                                        textClass = "text-orange-800";
+                                        bgClass = "bg-orange-100";
+                                    }
+                                }
+                                <span class="px-3 py-1 text-xs font-bold rounded-full @textClass @bgClass">
+                                    @student.Remark.ToUpper()
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</body>
+</html>

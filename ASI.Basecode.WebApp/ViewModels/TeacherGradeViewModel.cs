@@ -8,6 +8,12 @@ namespace ASI.Basecode.WebApp.ViewModels
         public string Schedule { get; set; } = null!;
         public int Units { get; set; }
         public List<StudentGradeViewModel> StudentGrades { get; set; } = new();
+
+        public double PassingRate { get; set; }
+        public double FailingRate { get; set; }
+        public double ClassAverage { get; set; }
+        public double IncompleteRate { get; set; }
+        public string TeacherName { get; set; } = string.Empty;
     }
 
     public class StudentGradeViewModel

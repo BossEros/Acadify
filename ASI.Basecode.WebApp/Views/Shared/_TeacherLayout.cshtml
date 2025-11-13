@@ -1,17 +1,44 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using ASI.Basecode.Data.Models
+@inject UserManager<User> UserManager
+
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ACADIFY</title>
+    <title>@ViewData["Title"] - Student_Performance_Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Student_Performance_Tracker.styles.css" asp-append-version="true" />
     <style>
+        /* Custom Active State for Sidebar */
         .sidebar-active {
-            background-color: #f9fafb;
-            border-left: 4px solid #3A4D75;
+            background-color: #3A4D75 !important; /* Navy Blue */
+            color: white !important;               /* White Text */
+            border-radius: 0.5rem;
+        }
+
+        /* Force white icon in active state */
+        .sidebar-active i {
+            color: white !important;
+        }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .submenu.open {
+            max-height: 200px;
+        }
+
+        .rotate-90 {
+            transform: rotate(90deg);
         }
 
         .logout-btn {
@@ -19,103 +46,32 @@
             color: white;
         }
 
-            .logout-btn:hover {
-                background-color: #2d3a5a;
-            }
-
-        .class-card {
-            background: #FFFFFF;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid #3A4D75;
+        .logout-btn:hover {
+            background-color: #2d3a5a;
         }
-
-        .welcome-card {
-            background: linear-gradient(135deg, #3A4D75, #5a6b95);
-            color: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .activate-class {
-            background: #FFFFFF;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .btn-primary-custom {
-            background-color: #3A4D75;
-            border-color: #3A4D75;
-            color: white;
-        }
-
-            .btn-primary-custom:hover {
-                background-color: #2d3a5a;
-                border-color: #2d3a5a;
-                color: white;
-            }
     </style>
 </head>
-<body class="bg-[#F9FAFB]">
+
+<body class="bg-gray-50">
     <div class="flex h-screen">
-        <!-- Sidebar -->
         <div class="w-64 bg-white shadow-md">
-            <!-- Logo -->
-            <div class="p-6 border-b">
+            <div class="h-16 flex items-center px-6 border-b">
                 <h1 class="text-xl font-bold text-gray-800">ACADIFY</h1>
             </div>
 
-            <!-- User Info at Top -->
-            <div class="px-4 py-3 border-b bg-gray-50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-[#3A4D75] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                            @if (User.Identity.IsAuthenticated)
-                            {
-                                <text>@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value?[0]</text>
-                            }
-                            else
-                            {
-                                <text>U</text>
-                            }
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-gray-900">
-                                @if (User.Identity.IsAuthenticated)
-                                {
-                                    <text>@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</text>
-                                }
-                                else
-                                {
-                                    <text>User</text>
-                                }
-                            </p>
-                            <p class="text-xs text-gray-500">Teacher</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Navigation - Only Dashboard and Settings -->
-            <nav class="mt-4">
-                <!-- Dashboard -->
-                <div class="mb-4">
+            <nav class="mt-4 px-2">
+                
+                <div class="mb-2">
                     <a asp-controller="ClassManagement" asp-action="TeacherDashboard"
-                       class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-[#F9FAFB] cursor-pointer sidebar-item transition-colors duration-200">
+                       class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200 rounded-lg">
                         <i class="fas fa-tachometer-alt mr-3 text-gray-500"></i>
                         Dashboard
                     </a>
                 </div>
 
-                <!-- Settings -->
-                <div class="mb-4">
+                <div class="mb-2">
                     <a asp-controller="Settings" asp-action="Index"
-                       class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-[#F9FAFB] cursor-pointer sidebar-item transition-colors duration-200">
+                       class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer sidebar-item transition-colors duration-200 rounded-lg">
                         <i class="fas fa-cog mr-3 text-gray-500"></i>
                         Settings
                     </a>
@@ -123,44 +79,63 @@
             </nav>
         </div>
 
-        <!-- Main Content Area -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             <header>
-                <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-                    <div class="container-fluid">
-                        <div class="flex items-center justify-between w-full">
-                            <div class="flex items-center">
-                                <a class="navbar-brand font-bold text-gray-800" asp-area="" asp-controller="Teacher" asp-action="Dashboard">
-                                    <i class="fas fa-chalkboard-teacher mr-2 text-[#3A4D75]"></i>
-                                    Teacher Portal
-                                </a>
-                            </div>
-
+                <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3 h-16 px-6 flex items-center">
+                    <div class="container-fluid p-0">
+                        <div class="flex items-center justify-end w-full"> 
+                            
                             <div class="flex items-center space-x-4">
-                                <!-- User Welcome Message -->
-                                <div class="hidden sm:flex items-center text-sm text-gray-700">
-                                    <i class="fas fa-user-circle mr-2 text-gray-400"></i>
-                                    <span class="font-semibold ml-1 text-gray-900">
-                                        @if (User.Identity.IsAuthenticated)
-                                        {
-                                            <text>@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</text>
-                                        }
-                                        else
-                                        {
-                                            <text>Guest Teacher</text>
-                                        }
-                                    </span>
+                                @{
+                                    var currentUser = await UserManager.GetUserAsync(User);
+                                    var displayName = currentUser != null 
+                                        ? $"{currentUser.FirstName} {currentUser.LastName}" 
+                                        : User.Identity?.Name;
+                                }
+                                <div class="hidden sm:flex items-center text-sm text-gray-700 border-r pr-4 border-gray-300">
+                                    <i class="fas fa-user-circle mr-2 text-gray-400 text-lg"></i>
+                                    <span class="font-semibold text-gray-900">@displayName</span>
                                 </div>
 
-                                <!-- Desktop Logout Button -->
-                                <form asp-controller="Account" asp-action="Login" method="post" class="hidden sm:block">
+                                <form asp-controller="Settings" asp-action="Logout" method="post"
+                                    class="hidden sm:block">
                                     @Html.AntiForgeryToken()
                                     <button type="submit"
-                                            class="logout-btn flex items-center px-4 py-2 text-sm rounded-lg transition-colors duration-200">
+                                        class="logout-btn flex items-center px-4 py-2 text-sm rounded-lg transition-colors duration-200">
                                         <i class="fas fa-sign-out-alt mr-2"></i>
                                         Log Out
                                     </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                            data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+
+                        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                            <ul class="navbar-nav flex-grow-1">
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Home"
+                                        asp-action="Index">Home</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Home"
+                                        asp-action="Privacy">Privacy</a>
+                                </li>
+                            </ul>
+
+                            <div class="sm:hidden mt-2">
+                                <form asp-controller="Settings" asp-action="Logout" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                        class="logout-btn w-full flex items-center justify-center px-4 py-2 text-sm rounded-lg transition-colors duration-200">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>
+                                        Log Out
+                                    </button>
+                                </button>
                                 </form>
                             </div>
                         </div>
@@ -168,19 +143,18 @@
                 </nav>
             </header>
 
-            <!-- Main Content -->
             <div class="flex-1 overflow-y-auto">
-                <div class="container-fluid p-6">
-                    <main role="main">
+                <div class="container">
+                    <main role="main" class="pb-3">
                         @RenderBody()
                     </main>
                 </div>
             </div>
 
-            <!-- Footer -->
-            <footer class="border-top footer text-muted bg-white">
+            <footer class="border-top footer text-muted">
                 <div class="container">
-                    &copy; 2025 - ACADIFY - Teacher Portal
+                    &copy; 2025 - Student_Performance_Tracker - <a asp-area="" asp-controller="Home"
+                        asp-action="Privacy">Privacy</a>
                 </div>
             </footer>
         </div>
@@ -191,56 +165,46 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Active state for sidebar items
+        document.addEventListener('DOMContentLoaded', function () {
+            // Toggle year submenus
+            const yearToggles = document.querySelectorAll('.year-toggle');
+            yearToggles.forEach(toggle => {
+                toggle.addEventListener('click', function () {
+                    const submenu = this.nextElementSibling;
+                    const chevron = this.querySelector('.chevron');
+                    submenu.classList.toggle('open');
+                    chevron.classList.toggle('rotate-90');
+                });
+            });
+
+            // Sidebar Active State Logic
             const sidebarItems = document.querySelectorAll('.sidebar-item');
             const currentPath = window.location.pathname.toLowerCase();
 
-            sidebarItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    // Remove active class from all items
-                    sidebarItems.forEach(i => {
-                        i.classList.remove('sidebar-active');
-                        i.classList.remove('bg-[#F9FAFB]');
-                        i.classList.remove('border-l-4');
-                        i.classList.remove('border-[#3A4D75]');
-                    });
-
-                    // Add active class to clicked item
-                    this.classList.add('sidebar-active');
-                    this.classList.add('bg-[#F9FAFB]');
-                    this.classList.add('border-l-4');
-                    this.classList.add('border-[#3A4D75]');
+            function setActiveState(element) {
+                // 1. Reset all items to default state
+                sidebarItems.forEach(i => {
+                    i.classList.remove('sidebar-active');
+                    i.classList.add('text-gray-700', 'hover:bg-gray-100');
                 });
 
-                // Set active state based on current URL
-                const href = item.getAttribute('href') || '';
-                const itemPath = href.toLowerCase().replace('~', '');
-
-                if (currentPath.includes(itemPath) && href !== '' && itemPath !== '') {
-                    item.classList.add('sidebar-active');
-                    item.classList.add('bg-[#F9FAFB]');
-                    item.classList.add('border-l-4');
-                    item.classList.add('border-[#3A4D75]');
-                }
-            });
-
-            // Set initial active state based on current page
-            function setInitialActiveState() {
-                const currentPage = window.location.pathname.toLowerCase();
-                sidebarItems.forEach(item => {
-                    const href = item.getAttribute('href')?.toLowerCase().replace('~', '') || '';
-
-                    if (currentPage.includes(href) && href !== '') {
-                        item.classList.add('sidebar-active');
-                        item.classList.add('bg-[#F9FAFB]');
-                        item.classList.add('border-l-4');
-                        item.classList.add('border-[#3A4D75]');
-                    }
-                });
+                // 2. Set active state for clicked/current element
+                element.classList.add('sidebar-active');
+                element.classList.remove('text-gray-700', 'hover:bg-gray-100');
             }
 
-            setInitialActiveState();
+            sidebarItems.forEach(item => {
+                // Click Listener
+                item.addEventListener('click', function (e) {
+                    setActiveState(this);
+                });
+
+                // Initial Load Listener
+                const href = item.getAttribute('href') || '';
+                if (href.length > 1 && currentPath.includes(href.toLowerCase().replace('~', ''))) {
+                    setActiveState(item);
+                }
+            });
         });
     </script>
 

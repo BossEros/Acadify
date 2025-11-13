@@ -46,6 +46,11 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
+// Configure token lifespan for password reset tokens
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromMinutes(30); // Password reset tokens expire in 30 minutes
+});
 
 // Services
 builder.Services.AddScoped<IAccountService, AccountService>();

@@ -66,6 +66,13 @@ namespace ASI.Basecode.Services.Implementation
                 return SignInAuthResult.Failed(AccountMessages.InvalidLoginAttempt);
             }
 
+            // Check if account is approved
+            if (!user.IsApproved)
+            {
+                _logger.LogWarning("Login attempt for unapproved account: {Email}", request.Email);
+                return SignInAuthResult.Failed("Your account is pending approval. Please contact an administrator.");
+            }
+
             var (succeeded, isLockedOut) = await _authRepository.PasswordSignInAsync(
                 user,
                 request.Password,

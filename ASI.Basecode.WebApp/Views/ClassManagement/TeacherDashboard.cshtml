@@ -19,16 +19,29 @@
             <div class="card-body p-4">
                 <h6 class="mb-1 fw-semibold text-dark">+ Activate a Class</h6>
                 <p class="text-muted small mb-3">Enter EDP Code to activate a new course</p>
-                <div class="d-flex gap-2">
-                    <input type="text"
-                           class="form-control"
-                           placeholder="Enter EDP Code"
-                           style="border-radius:8px; border:1px solid #dee2e6; flex:1;">
-                    <button class="btn text-white px-4"
-                            style="background:#3A4D75; border:none; border-radius:8px; white-space:nowrap;">
-                        Activate
-                    </button>
-                </div>
+                <form id="activateClassForm" asp-controller="ClassManagement" asp-action="ActivateClass" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="d-flex gap-2">
+                        <input type="text"
+                               id="edpCode"
+                               name="EdpCode"
+                               asp-for="EdpCode"
+                               class="form-control @(ViewData.ModelState["EdpCode"]?.Errors.Count > 0 ? "is-invalid" : "")"
+                               placeholder="Enter EDP Code"
+                               style="border-radius:8px; border:1px solid #dee2e6; flex:1;"
+                               required>
+                        <button type="submit"
+                                id="activateBtn"
+                                class="btn text-white px-4"
+                                style="background:#3A4D75; border:none; border-radius:8px; white-space:nowrap;">
+                            Activate
+                        </button>
+                    </div>
+                    <div class="invalid-feedback d-block mt-1">
+                        <span asp-validation-for="EdpCode" class="text-danger small"></span>
+                    </div>
+                    <div id="activateClassMessage" class="mt-2"></div>
+                </form>
             </div>
         </div>
 

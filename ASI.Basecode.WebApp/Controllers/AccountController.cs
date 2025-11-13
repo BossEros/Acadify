@@ -144,6 +144,7 @@ public class AccountController : Controller
 
     // POST: /Account/ForgotPassword
     [HttpPost] 
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
     {
         if (!ModelState.IsValid)
@@ -178,7 +179,15 @@ public class AccountController : Controller
 
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError("", error);
+                // Check if token expired
+                if (error.Contains("Invalid token") || error.Contains("invalid"))
+                {
+                    ModelState.AddModelError("", "The password reset link has expired or is invalid. Please request a new password + reset link.");
+                }
+                else
+                {
+                    ModelState.AddModelError("", error);
+                }      
             }
         }
         catch (Exception)

@@ -63,7 +63,7 @@ yarn-error.log*
 .env.production.local
 
 # Configuration files with sensitive data
-appsettings.Development.json
+appsettings.json
 
 # OS generated files
 .DS_Store

@@ -43,8 +43,9 @@ public class ClassManagementController : Controller
             id = c.Id,
             courseCode = c.CourseCode,
             courseName = c.CourseName,
-            courseDescription = c.Description,   // add this
-            courseUnit = c.Units
+            courseUnit = c.Units,
+            courseYear = c.YearLevel,
+            courseSem = c.AvailableSemester
         }).ToList();
 
         ViewBag.Teachers = teachers.Select(t => new SelectListItem
@@ -150,13 +151,24 @@ public class ClassManagementController : Controller
             })
             .ToList();
 
+        ViewBag.CourseInfo = courses
+            .Select(c => new
+            {
+                Id = c.Id,
+                Description = c.CourseName,
+                Unit = c.Units
+            })
+            .FirstOrDefault();
+
+
         ViewBag.CourseList = courses.Select(c => new
         {
             id = c.Id,
             courseCode = c.CourseCode,
             courseName = c.CourseName,
-            courseDescription = c.Description,   // add this
-            courseUnit = c.Units
+            courseUnit = c.Units,
+            courseYear = c.YearLevel,
+            courseSem = c.AvailableSemester
         }).ToList();
 
         ViewBag.Teachers = teachers.Select(t => new SelectListItem

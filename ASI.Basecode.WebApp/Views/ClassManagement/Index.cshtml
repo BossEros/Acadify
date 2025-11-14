@@ -191,7 +191,24 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         qs(target).innerHTML = '<div class="py-8 text-center text-gray-500">Loading...</div>';
-        fetch(url).then(r => r.text()).then(html => qs(target).innerHTML = html);
+        
+        fetch(url)
+            .then(r => r.text())
+            .then(html => {
+                const container = qs(target);
+                container.innerHTML = html;
+                
+                const scripts = container.querySelectorAll('script');
+                scripts.forEach(script => {
+                    const newScript = document.createElement('script');
+                    if (script.src) {
+                        newScript.src = script.src;
+                    } else {
+                        newScript.textContent = script.textContent;
+                    }
+                    script.parentNode.replaceChild(newScript, script);
+                });
+            });
     }
 
     function closeModal(id) {
@@ -202,6 +219,24 @@
 
     // Expose closeModal globally (for partials)
     window.closeModal = closeModal;
+
+    document.addEventListener('change', function(e) {
+        if (e.target.id === 'courseSelect') {
+            const courses = window.currentCourses;
+            const courseSelect = e.target;
+            const form = courseSelect.closest('form');
+            const courseName = form.querySelector('#courseName');
+            const courseUnit = form.querySelector('#courseUnit');
+            const courseYear = form.querySelector('#courseYear');
+            const courseSem = form.querySelector('#courseSem');
+            
+            const selectedCourse = courses.find(c => c.id == parseInt(courseSelect.value));
+            courseName.value = selectedCourse ? selectedCourse.courseName : '';
+            courseUnit.value = selectedCourse ? selectedCourse.courseUnit : '';
+            courseYear.value = selectedCourse ? selectedCourse.courseYear : '';
+            courseSem.value = selectedCourse ? selectedCourse.courseSem : '';
+        }
+    });
 
     // Handle form submission for Create and Edit modals
     document.addEventListener('submit', function(e) {

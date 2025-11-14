@@ -46,7 +46,6 @@ namespace ASI.Basecode.Services.Implementation
             classEntity.JoinCode = "TEMP";
             classEntity.JoinCodeGeneratedAt = DateTime.UtcNow;
 
-            // ⭐ FETCH COURSE FIRST (before insert)
             Course? course = null;
 
             if (classEntity.Course != null)
@@ -58,17 +57,14 @@ namespace ASI.Basecode.Services.Implementation
                 course = await _courseManagementRepository.GetByIdAsync(classEntity.CourseId.Value);
             }
 
-            // ⭐ POPULATE Year and Semester BEFORE insert
             if (course != null)
             {
                 classEntity.YearLevel = course.YearLevel;
                 classEntity.Semester = course.AvailableSemester;
             }
 
-            // NOW insert with correct Year and Semester already set
             await _classManagementRepository.AddAsync(classEntity);
 
-            // Generate JoinCode using the now-available ID
             if (course != null)
             {
                 classEntity.JoinCode = $"{course.CourseCode}-{classEntity.Id}";

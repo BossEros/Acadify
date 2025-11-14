@@ -86,16 +86,13 @@ namespace ASI.Basecode.Services.Implementation
             var existingClass = await _classManagementRepository.GetByIdAsync(updatedClass.Id);
             if (existingClass == null)
                 throw new Exception("Class not found.");
-
-            existingClass.CourseId = updatedClass.CourseId;
+                
             existingClass.TeacherId = updatedClass.TeacherId;
-            existingClass.Semester = updatedClass.Semester;
-            existingClass.YearLevel = updatedClass.YearLevel;
             existingClass.Schedule = updatedClass.Schedule;
             existingClass.Room = updatedClass.Room;
             existingClass.IsActive = updatedClass.IsActive;
 
-            existingClass.JoinCode ??= "TEMP"; // just in case, safety line 
+            existingClass.JoinCode ??= "TEMP"; // safety line 
 
             await _classManagementRepository.UpdateAsync(existingClass);
         }

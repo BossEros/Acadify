@@ -153,6 +153,7 @@ public class ClassManagementController : Controller
             .Select(c => new
             {
                 Id = c.Id,
+                CourseCode = c.CourseCode,
                 Description = c.CourseName,
                 Unit = c.Units
             })
@@ -297,10 +298,7 @@ public class ClassManagementController : Controller
         var classEntity = new Class
         {
             Id = viewModel.Id,
-            CourseId = viewModel.CourseId,
             TeacherId = viewModel.TeacherId,
-            Semester = viewModel.Semester,
-            YearLevel = viewModel.YearLevel
         };
 
         // Build schedule string

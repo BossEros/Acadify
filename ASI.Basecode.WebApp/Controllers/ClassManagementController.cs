@@ -103,8 +103,6 @@ public class ClassManagementController : Controller
             if (parts.Length > 0)
             {
                 var dayAbbreviations = parts[0].Trim();
-                // Convert abbreviations back to full day names
-                // Check in order and remove matched patterns to avoid conflicts
                 if (dayAbbreviations.Contains("TH"))
                 {
                     days.Add("Thursday");

@@ -19,7 +19,6 @@ namespace ASI.Basecode.Data.Repositories
         public async Task<IEnumerable<Class>> GetAllAsync()
         {
             return await _dbContext.Classes
-                .Where(c => c.IsActive)  // ONLY ACTIVE CLASSES
                 .Include(c => c.Course)
                 .Include(c => c.Teacher)
                 .Include(c => c.Enrollments)
@@ -32,7 +31,6 @@ namespace ASI.Basecode.Data.Repositories
         public async Task<Class?> GetByIdAsync(int id)
         {
             return await _dbContext.Classes
-                .Where(c => c.IsActive)  // ONLY ACTIVE CLASSES
                 .Include(c => c.Course)
                 .Include(c => c.Teacher)
                 .Include(c => c.Enrollments)

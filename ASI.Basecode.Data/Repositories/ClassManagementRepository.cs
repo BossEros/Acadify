@@ -150,5 +150,55 @@ namespace ASI.Basecode.Data.Repositories
                 await _dbContext.SaveChangesAsync();
             }
         }
+
+        // Grade methods
+        public async Task<Grade?> GetGradeByEnrollmentIdAsync(int enrollmentId)
+        {
+            return await _dbContext.Grades.FirstOrDefaultAsync(g => g.EnrollmentId == enrollmentId);
+        }
+
+        public async Task<Grade?> UpsertGradeAsync(int enrollmentId, decimal? midtermGrade, decimal? finalGrade, bool midtermProvided, bool finalProvided)
+        {
+            // Ensure enrollment exists
+            var enrollmentExists = await _dbContext.Enrollments.AnyAsync(e => e.Id == enrollmentId);
+            if (!enrollmentExists) return null;
+
+            var grade = await _dbContext.Grades.FirstOrDefaultAsync(g => g.EnrollmentId == enrollmentId);
+            var created = false;
+            if (grade == null)
+            {
+                grade = new Grade
+                {
+                    EnrollmentId = enrollmentId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _dbContext.Grades.AddAsync(grade);
+                created = true;
+            }
+
+            if (midtermProvided)
+            {
+                grade.MidtermGrade = midtermGrade;
+            }
+
+            if (finalProvided)
+            {
+                grade.FinalGrade = finalGrade;
+            }
+
+            var effectiveFinal = finalProvided ? finalGrade : grade.FinalGrade;
+            grade.Remarks = ComputeRemark(effectiveFinal);
+            grade.UpdatedAt = DateTime.UtcNow;
+
+            await _dbContext.SaveChangesAsync();
+            return grade;
+        }
+
+        private static string ComputeRemark(decimal? final)
+        {
+            if (!final.HasValue) return "Incomplete";
+            if (final.Value > 3.0m) return "Failed";
+            return "Passed";
+        }
     }
 }

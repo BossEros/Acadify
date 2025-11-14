@@ -61,6 +61,8 @@ builder.Services.AddScoped<ICourseManagementService, CourseManagementService>();
 builder.Services.AddScoped<IClassReportService, ClassReportService>();
 builder.Services.AddScoped<IStudentPerformanceService, StudentPerformanceService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<ITeacherGradeService, TeacherGradeService>();
+builder.Services.AddScoped<IGradeManagementService, GradeManagementService>();
 
 // Repositories (Data layer)
 builder.Services.AddScoped<IUserRepository, UserRepository>();

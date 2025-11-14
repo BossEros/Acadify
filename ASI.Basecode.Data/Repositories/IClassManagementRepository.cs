@@ -24,6 +24,10 @@ public interface IClassManagementRepository
     // Teacher assignment methods
     Task<IEnumerable<Class>> GetClassesByTeacherIdAsync(int teacherId);
     Task UnassignTeacherFromClassAsync(int classId);
+
+    // Grade methods
+    Task<Grade?> GetGradeByEnrollmentIdAsync(int enrollmentId);
+    Task<Grade?> UpsertGradeAsync(int enrollmentId, decimal? midtermGrade, decimal? finalGrade, bool midtermProvided, bool finalProvided);
 }
 
 

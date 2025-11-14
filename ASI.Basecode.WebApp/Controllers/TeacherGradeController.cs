@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using ASI.Basecode.Data.Models;
-using ASI.Basecode.Data.Data;
+using ASI.Basecode.Data.Repositories;
+using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.WebApp.ViewModels;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System;
 using System.Linq;
 
 namespace ASI.Basecode.WebApp.Controllers
@@ -15,12 +14,14 @@ namespace ASI.Basecode.WebApp.Controllers
     [Authorize(Roles = "Teacher")]
     public class TeacherGradeController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IClassManagementRepository _repo;
+        private readonly ITeacherGradeService _teacherGradeService;
         private readonly UserManager<User> _userManager;
 
-        public TeacherGradeController(AppDbContext context, UserManager<User> userManager)
+        public TeacherGradeController(IClassManagementRepository repo, ITeacherGradeService teacherGradeService, UserManager<User> userManager)
         {
-            _context = context;
+            _repo = repo;
+            _teacherGradeService = teacherGradeService;
             _userManager = userManager;
         }
 
@@ -29,13 +30,7 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             if (id <= 0) return BadRequest("Invalid class id.");
 
-            var classWithDetails = await _context.Classes
-                .Include(c => c.Course)
-                .Include(c => c.Enrollments)
-                    .ThenInclude(e => e.Student)
-                .Include(c => c.Enrollments)
-                    .ThenInclude(e => e.Grade)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var classWithDetails = await _repo.GetByIdIncludeInactiveAsync(id);
 
             if (classWithDetails == null)
                 return NotFound();
@@ -43,11 +38,11 @@ namespace ASI.Basecode.WebApp.Controllers
             var viewModel = new TeacherGradeViewModel
             {
                 ClassId = classWithDetails.Id,
-                CourseCode = classWithDetails.Course.CourseCode,
+                CourseCode = classWithDetails.Course!.CourseCode,
                 CourseName = classWithDetails.Course.CourseName,
-                Schedule = classWithDetails.Schedule,
+                Schedule = classWithDetails.Schedule ?? string.Empty,
                 Units = (int)classWithDetails.Course.Units,
-                StudentGrades = classWithDetails.Enrollments.Select(e =>
+                StudentGrades = classWithDetails.Enrollments!.Select(e =>
                 {
                     var final = e.Grade?.FinalGrade;
                     string remark;
@@ -95,61 +90,45 @@ namespace ASI.Basecode.WebApp.Controllers
 
             var enrollmentId = enrollmentProp.GetInt32();
 
-            var enrollmentExists = await _context.Enrollments.AnyAsync(e => e.Id == enrollmentId);
-            if (!enrollmentExists)
-                return NotFound("Enrollment not found.");
-
-            var grade = await _context.Grades.FirstOrDefaultAsync(g => g.EnrollmentId == enrollmentId);
-            if (grade == null)
-            {
-                grade = new Grade
-                {
-                    EnrollmentId = enrollmentId,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.Grades.Add(grade);
-            }
-
-            if (payload.TryGetProperty("midtermGrade", out var midElem))
+            // Detect presence of properties so we don't overwrite unchanged fields.
+            var midtermProvided = payload.TryGetProperty("midtermGrade", out var midElem);
+            decimal? midterm = null;
+            if (midtermProvided)
             {
                 if (midElem.ValueKind == JsonValueKind.Null)
-                    grade.MidtermGrade = null;
+                    midterm = null;
                 else if (midElem.ValueKind == JsonValueKind.Number)
-                    grade.MidtermGrade = midElem.GetDecimal();
-                else if (midElem.ValueKind == JsonValueKind.String && decimal.TryParse(midElem.GetString(), out var midVal))
-                    grade.MidtermGrade = midVal;
+                    midterm = midElem.GetDecimal();
+                else if (midElem.ValueKind == JsonValueKind.String && decimal.TryParse(midElem.GetString(), out var mv))
+                    midterm = mv;
             }
 
-            if (payload.TryGetProperty("finalGrade", out var finElem))
+            var finalProvided = payload.TryGetProperty("finalGrade", out var finElem);
+            decimal? final = null;
+            if (finalProvided)
             {
                 if (finElem.ValueKind == JsonValueKind.Null)
-                    grade.FinalGrade = null;
+                    final = null;
                 else if (finElem.ValueKind == JsonValueKind.Number)
-                    grade.FinalGrade = finElem.GetDecimal();
-                else if (finElem.ValueKind == JsonValueKind.String && decimal.TryParse(finElem.GetString(), out var finVal))
-                    grade.FinalGrade = finVal;
+                    final = finElem.GetDecimal();
+                else if (finElem.ValueKind == JsonValueKind.String && decimal.TryParse(finElem.GetString(), out var fv))
+                    final = fv;
             }
 
-            // Compute remark using requested rule:
-            grade.Remarks = ComputeRemark(grade.FinalGrade);
-            grade.UpdatedAt = DateTime.UtcNow;
+            var result = await _teacherGradeService.UpdateGradeAsync(enrollmentId, midterm, final, midtermProvided, finalProvided);
 
-            await _context.SaveChangesAsync();
+            if (!result.Success)
+            {
+                return NotFound(result.ErrorMessage ?? "Failed to update grade.");
+            }
 
             return Ok(new
             {
                 success = true,
-                remark = grade.Remarks,
-                midterm = grade.MidtermGrade,
-                final = grade.FinalGrade
+                remark = result.Remark,
+                midterm = result.Midterm,
+                final = result.Final
             });
-        }
-
-        private static string ComputeRemark(decimal? final)
-        {
-            if (!final.HasValue) return "Incomplete";
-            if (final.Value > 3.0m) return "Failed";
-            return "Passed";
         }
     }
 }

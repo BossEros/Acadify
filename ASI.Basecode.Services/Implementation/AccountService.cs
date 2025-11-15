@@ -86,6 +86,13 @@ namespace ASI.Basecode.Services.Implementation
                 return SignInAuthResult.Failed(AccountMessages.InvalidLoginAttempt);
             }
 
+            // Check if account is deleted
+            if (user.IsDeleted)
+            {
+                _logger.LogWarning("Login attempt for deleted account: {Email}", request.Email);
+                return SignInAuthResult.Failed("Invalid login attempt. Please try again.");
+            }
+
             // Check if account is approved
             if (!user.IsApproved)
             {
@@ -270,11 +277,13 @@ namespace ASI.Basecode.Services.Implementation
                     return AuthResult.Failure(new[] { "User not found." });
                 }
 
-                var result = await _userRepository.DeleteUserAsync(user);
+                // Soft delete: Set IsDeleted to true instead of physically deleting
+                user.IsDeleted = true;
+                var result = await _userRepository.UpdateUserAsync(user);
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Account deleted successfully for user: {Username}", username);
+                    _logger.LogInformation("Account marked as deleted for user: {Username}", username);
                     return AuthResult.Success();
                 }
 

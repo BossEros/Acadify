@@ -36,6 +36,10 @@ namespace ASI.Basecode.Data.Data.Configurations
             builder.Property(u => u.IsApproved)
                 .HasColumnName("is_approved");
 
+            builder.Property(u => u.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
             builder.Property(u => u.CreatedAt)
                 .HasColumnName("created_at")
                 .HasColumnType("TIMESTAMPTZ")

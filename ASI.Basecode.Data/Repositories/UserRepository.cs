@@ -65,7 +65,7 @@ public class UserRepository : IUserRepository
 
     public async Task<IEnumerable<User>> GetAllUsersAsync()
     {
-        return await _userManager.Users.ToListAsync();
+        return await _userManager.Users.Where(u => !u.IsDeleted).ToListAsync();
     }
 
     public async Task<(bool Succeeded, IEnumerable<string> Errors)> ChangePasswordAsync(User user, string currentPassword, string newPassword)

@@ -10,6 +10,7 @@ namespace ASI.Basecode.Data.Models
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
         public bool IsApproved { get; set; }
+        public bool IsDeleted { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties

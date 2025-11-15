@@ -214,6 +214,7 @@ namespace ASI.Basecode.Services.Implementation
                 return AuthResult.Failure(new[] { "An error occurred while changing password." });
             }
         }
+        
         public async Task<AuthResult> DeleteAccountAsync(string username)
         {
             try

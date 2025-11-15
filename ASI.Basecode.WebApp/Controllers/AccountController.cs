@@ -134,7 +134,6 @@ public class AccountController : Controller
         }
         catch (Exception)
         {
-            // Log the exception (add logging service)
             ModelState.AddModelError("", "An unexpected error occurred during login. Please try again.");
         }
 

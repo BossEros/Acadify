@@ -91,7 +91,7 @@ public static class EmailTemplates
                                         <tr>
                                             <td>
                                                 <p style=""color: #92400e; font-size: 15px; font-weight: 600; margin: 0 0 12px 0;"">🔒 Security Notice</p>
-                                                <p style=""color: #78350f; font-size: 14px; line-height: 1.6; margin: 0 0 8px 0;"">• This link expires in <strong>24 hours</strong> for your security</p>
+                                                <p style=""color: #78350f; font-size: 14px; line-height: 1.6; margin: 0 0 8px 0;"">• This link expires in <strong>30 minutes</strong> for your security</p>
                                                 <p style=""color: #78350f; font-size: 14px; line-height: 1.6; margin: 0 0 8px 0;"">• Didn't request this? You can safely ignore this email</p>
                                                 <p style=""color: #78350f; font-size: 14px; line-height: 1.6; margin: 0;"">• Never share this link with anyone</p>
                                             </td>

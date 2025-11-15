@@ -73,6 +73,12 @@ public class UserRepository : IUserRepository
         var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
         return (result.Succeeded, result.Errors.Select(e => e.Description));
     }
+
+    public async Task<int> GetUserCountByRoleAsync(string roleName)
+    {
+        var usersInRole = await _userManager.GetUsersInRoleAsync(roleName);
+        return usersInRole.Count;
+    }
 }
 
 

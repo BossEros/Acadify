@@ -6,6 +6,7 @@ namespace ASI.Basecode.Data.Models
 {
     public class User : IdentityUser<int>
     {
+        public int IdNumber { get; set; }
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
         public string? ProfilePicture { get; set; }

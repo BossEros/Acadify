@@ -13,6 +13,10 @@ namespace ASI.Basecode.Data.Data.Configurations
             builder.Property(u => u.Id)
                 .HasColumnName("id");
 
+            builder.Property(u => u.IdNumber)
+                .HasColumnName("id_number")
+                .HasColumnType("INTEGER");
+
             builder.Property(u => u.Email)
                 .HasColumnName("email");
 

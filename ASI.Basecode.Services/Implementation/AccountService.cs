@@ -39,12 +39,18 @@ namespace ASI.Basecode.Services.Implementation
                 return AuthResult.Failure(new[] { "Email is already in use." });
             }
 
+            // Generate IdNumber before creating user: Students start at 2320001, Teachers start at 1047001
+            var roleCount = await _userRepository.GetUserCountByRoleAsync(request.Role);
+            var startingNumber = request.Role == "Student" ? 2320001 : 1047001;
+            var idNumber = startingNumber + roleCount;
+
             var user = new User
             {
                 UserName = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
+                IdNumber = idNumber,
                 IsApproved = request.Role == "Student" // Set IsApproved to true if the role is Student
             };
 

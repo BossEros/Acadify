@@ -36,7 +36,7 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 
     // User rules
     options.User.RequireUniqueEmail = true;
-    options.SignIn.RequireConfirmedEmail = false;
+    options.SignIn.RequireConfirmedEmail = true;
 
     // Lockout rules
     options.Lockout.MaxFailedAccessAttempts = 5;

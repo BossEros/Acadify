@@ -37,7 +37,7 @@ public class AccountController : Controller
     // GET: /Account/ResetPassword
     [HttpGet]
     public IActionResult ResetPassword(string email, string token)
-    {   
+    {
         // Return to login page if one is missing to prevent tampering
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
         {
@@ -46,6 +46,41 @@ public class AccountController : Controller
 
         return View(new ResetPasswordViewModel{Email = email, Token = token});
     }
+
+    // GET: /Account/ConfirmEmail
+    [HttpGet]
+    public async Task<IActionResult> ConfirmEmail(string email, string token)
+    {
+        // Return to login page if one is missing to prevent tampering
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+        {
+            return RedirectToAction("Login");
+        }
+
+        try
+        {
+            var result = await _accountService.ConfirmEmailAsync(email, token);
+
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = "Email verified successfully! You can now sign in with your credentials.";
+                return View("EmailConfirmed");
+            }
+
+            // If confirmation failed
+            TempData["ErrorMessage"] = result.Errors.FirstOrDefault() ?? "Email verification failed. The link may have expired or is invalid.";
+            return RedirectToAction("Login");
+        }
+        catch (Exception)
+        {
+            TempData["ErrorMessage"] = "An unexpected error occurred during email verification. Please try again.";
+            return RedirectToAction("Login");
+        }
+    }
+
+    // GET: /Account/RegisterConfirmation
+    [HttpGet]
+    public ViewResult RegisterConfirmation() => View();
 
 
     // POST: /Account/Register
@@ -71,8 +106,7 @@ public class AccountController : Controller
 
             if (result.Succeeded)
             {
-                TempData["SuccessMessage"] = "Account created successfully! Please sign in with your credentials.";
-                return RedirectToAction("Login", "Account");
+                return RedirectToAction("RegisterConfirmation", "Account");
             }
 
             // if registation is not successful, add errors to ModelState

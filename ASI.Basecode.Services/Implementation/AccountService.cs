@@ -45,7 +45,7 @@ namespace ASI.Basecode.Services.Implementation
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
-                IsApproved = request.Role == "Student" // Set IsApproved to true if the role is Student 
+                IsApproved = request.Role == "Student" // Set IsApproved to true if the role is Student
             };
 
             var (succeeded, errors) = await _userRepository.CreateUserAsync(user, request.Password);
@@ -55,6 +55,20 @@ namespace ASI.Basecode.Services.Implementation
             }
 
             await _userRepository.AddToRoleAsync(user, request.Role);
+
+            // Generate and send email verification token
+            try
+            {
+                var token = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
+                await _emailService.SendEmailVerificationAsync(user.Email!, $"{user.FirstName} {user.LastName}", token);
+                _logger.LogInformation("Email verification sent to: {Email}", user.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send email verification to: {Email}", user.Email);
+                // Continue with success even if email fails - user can request resend later
+            }
+
             return AuthResult.Success();
         }
 
@@ -71,6 +85,13 @@ namespace ASI.Basecode.Services.Implementation
             {
                 _logger.LogWarning("Login attempt for unapproved account: {Email}", request.Email);
                 return SignInAuthResult.Failed("Your account is pending approval. Please contact an administrator.");
+            }
+
+            // Check if email is confirmed
+            if (!user.EmailConfirmed)
+            {
+                _logger.LogWarning("Login attempt for unverified email: {Email}", request.Email);
+                return SignInAuthResult.Failed("Please verify your email address before logging in. Check your inbox for the verification link.");
             }
 
             var (succeeded, isLockedOut) = await _authRepository.PasswordSignInAsync(
@@ -138,6 +159,24 @@ namespace ASI.Basecode.Services.Implementation
             var (succeeded, errors) = await _userRepository.ResetPasswordAsync(user, token, newPassword);
             if (succeeded)
             {
+                return AuthResult.Success();
+            }
+
+            return AuthResult.Failure(errors);
+        }
+
+        public async Task<AuthResult> ConfirmEmailAsync(string email, string token)
+        {
+            var user = await _userRepository.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return AuthResult.Failure(new[] { "Invalid email confirmation request." });
+            }
+
+            var (succeeded, errors) = await _userRepository.ConfirmEmailAsync(user, token);
+            if (succeeded)
+            {
+                _logger.LogInformation("Email confirmed successfully for user: {Email}", email);
                 return AuthResult.Success();
             }
 

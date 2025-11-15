@@ -43,6 +43,14 @@ public class UserRepository : IUserRepository
         return (result.Succeeded, result.Errors.Select(e => e.Description));
     }
 
+    public Task<string> GenerateEmailConfirmationTokenAsync(User user) => _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+    public async Task<(bool Succeeded, IEnumerable<string> Errors)> ConfirmEmailAsync(User user, string token)
+    {
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        return (result.Succeeded, result.Errors.Select(e => e.Description));
+    }
+
     public async Task<(bool Succeeded, IEnumerable<string> Errors)> UpdateUserAsync(User user)
     {
         var result = await _userManager.UpdateAsync(user);

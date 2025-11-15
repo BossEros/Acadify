@@ -12,6 +12,7 @@ namespace ASI.Basecode.Services.Interfaces
         Task<IList<string>> GetUserRolesAsync(string email);
         Task<ForgotPasswordResult> SendPasswordResetTokenAsync(string email);
         Task<AuthResult> ResetPasswordAsync(string email, string token, string newPassword);
+        Task<AuthResult> ConfirmEmailAsync(string email, string token);
         Task<string> GetRedirectPathBasedOnRoleAsync(string email);
 
         // New methods for Settings

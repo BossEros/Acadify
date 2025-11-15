@@ -14,6 +14,8 @@ public interface IUserRepository
     Task<IList<string>> GetRolesAsync(User user);
     Task<string> GeneratePasswordResetTokenAsync(User user);
     Task<(bool Succeeded, IEnumerable<string> Errors)> ResetPasswordAsync(User user, string token, string newPassword);
+    Task<string> GenerateEmailConfirmationTokenAsync(User user);
+    Task<(bool Succeeded, IEnumerable<string> Errors)> ConfirmEmailAsync(User user, string token);
     Task<(bool Succeeded, IEnumerable<string> Errors)> UpdateUserAsync(User user);
     Task<(bool Succeeded, IEnumerable<string> Errors)> DeleteUserAsync(User user);
     Task<IEnumerable<User>> GetAllUsersAsync();

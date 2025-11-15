@@ -33,10 +33,6 @@ namespace ASI.Basecode.Data.Data.Configurations
                 .HasColumnType("VARCHAR(100)")
                 .IsRequired();
 
-            builder.Property(u => u.ProfilePicture)
-                .HasColumnName("profile_picture")
-                .HasColumnType("VARCHAR(255)");
-
             builder.Property(u => u.IsApproved)
                 .HasColumnName("is_approved");
 

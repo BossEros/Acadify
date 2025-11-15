@@ -9,7 +9,6 @@ namespace ASI.Basecode.Data.Models
         public int IdNumber { get; set; }
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
-        public string? ProfilePicture { get; set; }
         public bool IsApproved { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

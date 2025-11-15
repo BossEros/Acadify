@@ -7,7 +7,6 @@ namespace ASI.Basecode.WebApp.ViewModels.ClassManagement
         public string CourseCode { get; set; } = string.Empty;
         public string CourseName { get; set; } = string.Empty;
         public string Schedule { get; set; } = string.Empty;
-        public string Room { get; set; } = string.Empty;
         public int Units { get; set; }
         public List<StudentGradeItem> Students { get; set; } = new();
 

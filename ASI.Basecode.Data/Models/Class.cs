@@ -12,7 +12,6 @@ namespace ASI.Basecode.Data.Models
         public short YearLevel { get; set; }
         // public short Units { get; set; }
         public string? Schedule { get; set; }
-        public string? Room { get; set; }
         public string? JoinCode { get; set; }
         public DateTime JoinCodeGeneratedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = false;

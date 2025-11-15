@@ -358,7 +358,6 @@ public class ClassManagementController : Controller
             CourseCode = classEntity.Course?.CourseCode ?? "N/A",
             CourseName = classEntity.Course?.CourseName ?? "N/A",
             Schedule = classEntity.Schedule ?? "N/A",
-            Room = classEntity.Room ?? "N/A",
             Units = classEntity.Course?.Units ?? 0,
 
             Students = classEntity.Enrollments?.Select(e => new TeacherClassViewModel.StudentGradeItem
@@ -401,7 +400,6 @@ public class ClassManagementController : Controller
                 CourseCode = c.Course?.CourseCode ?? "N/A",
                 CourseName = c.Course?.CourseName ?? "N/A",
                 Schedule = c.Schedule ?? "N/A",
-                Room = c.Room ?? "N/A",
                 Semester = c.Semester,
                 YearLevel = c.YearLevel,
                 IsActive = c.IsActive

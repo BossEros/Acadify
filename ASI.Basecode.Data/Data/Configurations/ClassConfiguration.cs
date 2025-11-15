@@ -41,10 +41,6 @@ namespace ASI.Basecode.Data.Data.Configurations
                 .HasColumnType("VARCHAR(100)")
                 .IsRequired();
 
-            builder.Property(c => c.Room)
-                .HasColumnName("room")
-                .HasColumnType("VARCHAR(50)");
-
             builder.Property(c => c.JoinCode)
                 .HasColumnName("join_code")
                 .HasColumnType("VARCHAR(50)")

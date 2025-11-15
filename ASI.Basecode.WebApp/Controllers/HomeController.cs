@@ -47,8 +47,7 @@ namespace Student_Performance_Tracker.Controllers
                     CourseName = c.Course?.CourseName ?? "N/A",
                     Units = c.Course?.Units ?? 0,
                     TeacherName = c.Teacher != null ? $"Prof. {c.Teacher.FirstName} {c.Teacher.LastName}" : "N/A",
-                    Schedule = c.Schedule ?? "N/A",
-                    Room = c.Room ?? "N/A"
+                    Schedule = c.Schedule ?? "N/A"
                 })
                 .ToList();
 

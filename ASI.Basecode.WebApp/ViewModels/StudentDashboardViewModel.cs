@@ -20,7 +20,6 @@ namespace ASI.Basecode.WebApp.ViewModels
             public int Units { get; set; }
             public string TeacherName { get; set; } = "";
             public string Schedule { get; set; } = "";
-            public string Room { get; set; } = "";
         }
     }
 }

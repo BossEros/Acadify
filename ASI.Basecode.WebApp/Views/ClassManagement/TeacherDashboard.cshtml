@@ -81,20 +81,12 @@
                                     <p class="text-muted mb-0" style="font-size:0.9rem;">@c.CourseName</p>
                                 </div>
 
-                                <!-- Schedule + Room -->
+                                <!-- Schedule -->
                                 <div class="mb-4">
                                     <div class="d-flex align-items-center text-muted mb-2" style="font-size:0.875rem;">
                                         <i class="bi bi-clock me-2"></i>
                                         <span>@c.Schedule</span>
                                     </div>
-
-                                    @if (!string.IsNullOrEmpty(c.Room))
-                                    {
-                                        <div class="d-flex align-items-center text-muted" style="font-size:0.875rem;">
-                                            <i class="bi bi-geo-alt me-2"></i>
-                                            <span>@c.Room</span>
-                                        </div>
-                                    }
                                 </div>
 
                                 <!-- View Button -->

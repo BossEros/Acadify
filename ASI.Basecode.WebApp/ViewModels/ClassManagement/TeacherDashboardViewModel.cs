@@ -19,7 +19,6 @@ namespace ASI.Basecode.WebApp.ViewModels.ClassManagement
             public string CourseCode { get; set; } = string.Empty;
             public string CourseName { get; set; } = string.Empty;
             public string Schedule { get; set; } = string.Empty;
-            public string Room { get; set; } = string.Empty;
             public short Semester { get; set; }
             public short YearLevel { get; set; }
             public bool IsActive { get; set; }

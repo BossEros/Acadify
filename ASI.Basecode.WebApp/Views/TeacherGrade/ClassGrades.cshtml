@@ -30,7 +30,7 @@
             <table class="min-w-full">
                 <thead>
                     <tr class="border-b">
-                        <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student No.</th>
+                        <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student ID No.</th>
                         <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student Name</th>
                         <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Midterm</th>
                         <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Final</th>
@@ -98,7 +98,7 @@
             const input = document.createElement('input');
 
             input.type = 'number';
-            input.step = '0.01';
+            input.step = '0.05';
             input.min = '0';
             input.max = '5';
             input.value = currentValue === '--' ? '' : currentValue;

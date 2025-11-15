@@ -21,16 +21,23 @@ namespace ASI.Basecode.WebApp.Controllers
             return Json(new { success, message, data });
         }
 
-        // READ: View all users from database
-        public async Task<IActionResult> Index()
+        // Main account management page
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        // Student Management View
+        public async Task<IActionResult> Students()
         {
             try
             {
                 var users = await _accountManagementService.GetAllUsersAsync();
-                
+                var students = users.Where(u => u.Role?.ToLower() == "student");
+
                 var viewModel = new UserListViewModel
                 {
-                    Users = users,
+                    Users = students,
                     Message = TempData["Message"]?.ToString(),
                     MessageType = TempData["MessageType"]?.ToString()
                 };
@@ -42,37 +49,88 @@ namespace ASI.Basecode.WebApp.Controllers
                 var viewModel = new UserListViewModel
                 {
                     Users = new List<UserManagementDto>(),
-                    Message = "Error loading users: " + ex.Message,
+                    Message = "Error loading students: " + ex.Message,
                     MessageType = "error"
                 };
                 return View(viewModel);
             }
         }
 
-        // Remove old MVC view-based CRUD actions; new UI uses AJAX endpoints below
-
-        // ==== AJAX ENDPOINTS FOR NEW UI ====
-
-        [HttpGet]
-        public async Task<IActionResult> FindUser(int userId)
+        // Teacher Management View
+        public async Task<IActionResult> Teachers()
         {
             try
             {
-                var user = await _accountManagementService.GetUserByIdAsync(userId);
-                if (user == null)
+                var users = await _accountManagementService.GetAllUsersAsync();
+                var teachers = users.Where(u => u.Role?.ToLower() == "teacher");
+
+                var viewModel = new UserListViewModel
                 {
-                    return JsonResponse(false, "User not found.");
+                    Users = teachers,
+                    Message = TempData["Message"]?.ToString(),
+                    MessageType = TempData["MessageType"]?.ToString()
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                var viewModel = new UserListViewModel
+                {
+                    Users = new List<UserManagementDto>(),
+                    Message = "Error loading teachers: " + ex.Message,
+                    MessageType = "error"
+                };
+                return View(viewModel);
+            }
+        }
+
+        // ==== AJAX ENDPOINTS ====
+
+        [HttpGet]
+        public async Task<IActionResult> FindUser(string searchTerm)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    return JsonResponse(false, "Please enter a user ID or email to search.");
                 }
 
-                return JsonResponse(true, "User found", new
+                // Try to parse as ID first
+                if (int.TryParse(searchTerm, out int userId))
                 {
-                    id = user.Id,
-                    firstName = user.FirstName,
-                    lastName = user.LastName,
-                    email = user.Email,
-                    role = user.Role,
-                    isActive = user.IsActive
-                });
+                    var user = await _accountManagementService.GetUserByIdAsync(userId);
+                    if (user != null)
+                    {
+                        return JsonResponse(true, "User found", new
+                        {
+                            id = user.Id,
+                            firstName = user.FirstName,
+                            lastName = user.LastName,
+                            email = user.Email,
+                            role = user.Role,
+                            isActive = user.IsActive
+                        });
+                    }
+                }
+
+                // Try as email
+                var userByEmail = await _accountManagementService.GetUserByEmailAsync(searchTerm);
+                if (userByEmail != null)
+                {
+                    return JsonResponse(true, "User found", new
+                    {
+                        id = userByEmail.Id,
+                        firstName = userByEmail.FirstName,
+                        lastName = userByEmail.LastName,
+                        email = userByEmail.Email,
+                        role = userByEmail.Role,
+                        isActive = userByEmail.IsActive
+                    });
+                }
+
+                return JsonResponse(false, "User not found.");
             }
             catch (Exception ex)
             {
@@ -92,9 +150,8 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
-                // This assumes service understands creating a student-class relation by EDP code.
                 var result = await _accountManagementService.EnrollStudentAsync(request.UserId, request.EdpCode);
-                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Student enrolled." : "Failed to enroll student."));
+                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Student enrolled successfully." : "Failed to enroll student."));
             }
             catch (Exception ex)
             {
@@ -108,12 +165,7 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var classes = await _accountManagementService.GetEnrolledClassesAsync(userId);
-                if (classes == null || !classes.Any())
-                {
-                    return JsonResponse(false, "No enrolled classes found for this student.");
-                }
-
-                return JsonResponse(true, "Enrolled classes retrieved successfully", classes);
+                return JsonResponse(true, "Enrolled classes retrieved successfully", classes ?? new List<EnrolledClassDto>());
             }
             catch (Exception ex)
             {
@@ -143,7 +195,7 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var result = await _accountManagementService.AssignTeacherAsync(request.UserId, request.EdpCode);
-                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Teacher assigned." : "Failed to assign teacher."));
+                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "Teacher assigned successfully." : "Failed to assign teacher."));
             }
             catch (Exception ex)
             {
@@ -157,12 +209,7 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var classes = await _accountManagementService.GetAssignedClassesAsync(userId);
-                if (classes == null || !classes.Any())
-                {
-                    return JsonResponse(false, "No assigned classes found for this teacher.");
-                }
-
-                return JsonResponse(true, "Assigned classes retrieved successfully", classes);
+                return JsonResponse(true, "Assigned classes retrieved successfully", classes ?? new List<AssignedClassDto>());
             }
             catch (Exception ex)
             {
@@ -198,15 +245,9 @@ namespace ASI.Basecode.WebApp.Controllers
         {
             try
             {
-                // Validate request
-                if (request == null)
+                if (request == null || request.UserId <= 0)
                 {
                     return JsonResponse(false, "Invalid request data.");
-                }
-
-                if (request.UserId <= 0)
-                {
-                    return JsonResponse(false, "Please search for a user first.");
                 }
 
                 if (string.IsNullOrWhiteSpace(request.Email))
@@ -214,7 +255,6 @@ namespace ASI.Basecode.WebApp.Controllers
                     return JsonResponse(false, "Email address is required.");
                 }
 
-                // Get user to retrieve current username
                 var user = await _accountManagementService.GetUserByIdAsync(request.UserId);
                 if (user == null)
                 {
@@ -222,9 +262,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 }
 
                 // Check if email is being changed and if new email already exists
-                if (!string.IsNullOrWhiteSpace(request.Email) &&
-                    !string.IsNullOrWhiteSpace(user.Email) &&
-                    !request.Email.Equals(user.Email, StringComparison.OrdinalIgnoreCase))
+                if (!request.Email.Equals(user.Email, StringComparison.OrdinalIgnoreCase))
                 {
                     var existingUser = await _accountManagementService.GetUserByEmailAsync(request.Email);
                     if (existingUser != null && existingUser.Id != request.UserId)
@@ -233,7 +271,6 @@ namespace ASI.Basecode.WebApp.Controllers
                     }
                 }
 
-                // Update user email and status
                 var updateResult = await _accountManagementService.UpdateUserEmailAndStatusAsync(new UpdateUserEmailAndStatusRequest
                 {
                     UserId = request.UserId,
@@ -250,7 +287,7 @@ namespace ASI.Basecode.WebApp.Controllers
             }
             catch (Exception ex)
             {
-                return JsonResponse(false, $"Error updating user: {ex.Message} | Stack: {ex.StackTrace}");
+                return JsonResponse(false, $"Error updating user: {ex.Message}");
             }
         }
 
@@ -263,7 +300,7 @@ namespace ASI.Basecode.WebApp.Controllers
             try
             {
                 var result = await _accountManagementService.DeleteUserAsync(request.UserId);
-                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "User deleted." : "Failed to delete user."));
+                return JsonResponse(result.Succeeded, result.Message ?? (result.Succeeded ? "User deleted successfully." : "Failed to delete user."));
             }
             catch (Exception ex)
             {

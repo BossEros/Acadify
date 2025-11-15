@@ -71,6 +71,33 @@
                 }
             </tbody>
         </table>
+
+        <!-- Pagination Controls -->
+        <div class="flex items-center justify-center gap-4 mt-4 py-3">
+            <button id="prevPage" class="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            
+            <div class="flex items-center gap-2">
+                <input 
+                    type="number" 
+                    id="pageInput" 
+                    min="1" 
+                    value="1" 
+                    class="w-16 text-center border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span class="text-gray-600">of</span>
+                <span id="totalPages" class="text-gray-600 font-medium">1</span>
+            </div>
+            
+            <button id="nextPage" class="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
     </div>
 
     @Html.AntiForgeryToken()
@@ -171,81 +198,183 @@
 
     <!-- Edit User Modal -->
     <div id="modalEdit" class="hidden fixed inset-0 z-50 items-center justify-center bg-gray-900/50 backdrop-blur">
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow p-6">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow p-6">
             <h3 class="text-xl font-semibold mb-4">Edit User</h3>
-            <div class="space-y-4">
-                <div class="flex space-x-2">
-                    <input id="editSearchUserId" type="number" placeholder="Enter User ID to search" class="flex-1 rounded border border-gray-300 px-3 py-2" />
-                    <button type="button" id="btnEditFind" class="px-3 py-2 rounded bg-gray-800 text-white">Search</button>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">First Name</label>
-                        <input id="editFirstName" class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" disabled />
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Last Name</label>
-                        <input id="editLastName" class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" disabled />
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Role</label>
-                        <input id="editRole" class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" disabled />
+            <form id="formEdit" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Find User by ID</label>
+                    <div class="flex space-x-2">
+                        <input id="editSearchUserId" type="number" class="flex-1 rounded border border-gray-300 px-3 py-2" placeholder="Enter User ID" />
+                        <button type="button" id="btnEditFind" class="px-3 py-2 rounded bg-gray-800 text-white">Find</button>
                     </div>
                 </div>
-                <form id="formEdit" class="space-y-4">
-                    <input type="hidden" name="UserId" id="editUserIdHidden" />
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Email Address</label>
-                        <input name="Email" id="editEmail" type="email" class="w-full rounded border border-gray-300 px-3 py-2" placeholder="Enter email address" required />
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Status</label>
-                        <select name="IsActive" id="editStatus" class="w-full rounded border border-gray-300 px-3 py-2" required>
-                            <option value="">Select Status</option>
-                            <option value="true">Active</option>
-                            <option value="false">Inactive</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end space-x-2 pt-2">
-                        <button type="button" data-close="modalEdit" class="px-4 py-2 rounded border">Cancel</button>
-                        <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white">Save</button>
-                    </div>
-                </form>
-            </div>
+                <hr />
+                <input type="hidden" name="UserId" id="editUserIdHidden" />
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">First Name</label>
+                    <input id="editFirstName" type="text" class="w-full rounded border border-gray-300 px-3 py-2" disabled />
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Last Name</label>
+                    <input id="editLastName" type="text" class="w-full rounded border border-gray-300 px-3 py-2" disabled />
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Email</label>
+                    <input name="Email" id="editEmail" type="email" class="w-full rounded border border-gray-300 px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Role</label>
+                    <input id="editRole" type="text" class="w-full rounded border border-gray-300 px-3 py-2" disabled />
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-700 mb-1">Status</label>
+                    <select name="IsActive" id="editStatus" class="w-full rounded border border-gray-300 px-3 py-2">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" data-close="modalEdit" class="px-4 py-2 rounded border">Cancel</button>
+                    <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
-
 </div>
 
 <script>
     (function () {
         const qs = (s) => document.querySelector(s);
-        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const qsa = (s) => document.querySelectorAll(s);
 
-        function open(id) { const el = qs('#' + id); el.classList.remove('hidden'); el.classList.add('flex'); }
-        function close(id) { const el = qs('#' + id); el.classList.add('hidden'); el.classList.remove('flex'); }
+        // Pagination variables
+        const PAGE_SIZE = 20;
+        let currentPage = 1;
+        let allRows = [];
+        let filteredRows = [];
 
-        qs('#openEnroll').addEventListener('click', () => open('modalEnroll'));
-        qs('#openUnenroll').addEventListener('click', () => open('modalUnenroll'));
-        qs('#openAssign').addEventListener('click', () => open('modalAssign'));
-        qs('#openUnassign').addEventListener('click', () => open('modalUnassign'));
-        qs('#openEdit').addEventListener('click', () => open('modalEdit'));
-
-        document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', (e) => close(e.target.getAttribute('data-close'))));
+        // Helper functions
+        function openModal(id) {
+            qs('#' + id).classList.remove('hidden');
+            qs('#' + id).classList.add('flex');
+        }
+        function closeModal(id) {
+            qs('#' + id).classList.add('hidden');
+            qs('#' + id).classList.remove('flex');
+        }
 
         async function postForm(url, data) {
+            const token = qs('input[name="__RequestVerificationToken"]').value;
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
                 body: JSON.stringify(data)
             });
-            return await res.json();
+            return res.json();
         }
 
         async function findUser(userId) {
             const res = await fetch(`@Url.Action("FindUser")?userId=${encodeURIComponent(userId)}`);
-            return await res.json();
+            return res.json();
         }
+
+        // Pagination functions
+        function initializePagination() {
+            const tbody = qs('#usersTbody');
+            allRows = Array.from(tbody.querySelectorAll('tr[data-user-id]'));
+            filteredRows = [...allRows];
+            renderPage();
+        }
+
+        function renderPage() {
+            const tbody = qs('#usersTbody');
+            const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+            
+            // Clear tbody
+            tbody.innerHTML = '';
+            
+            // Calculate start and end indices
+            const startIdx = (currentPage - 1) * PAGE_SIZE;
+            const endIdx = Math.min(startIdx + PAGE_SIZE, filteredRows.length);
+            
+            // Add rows for current page
+            if (filteredRows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-3">No users found.</td></tr>';
+            } else {
+                for (let i = startIdx; i < endIdx; i++) {
+                    tbody.appendChild(filteredRows[i].cloneNode(true));
+                }
+            }
+            
+            // Update pagination controls
+            updatePaginationControls(totalPages);
+        }
+
+        function updatePaginationControls(totalPages) {
+            const prevBtn = qs('#prevPage');
+            const nextBtn = qs('#nextPage');
+            const pageInput = qs('#pageInput');
+            const totalPagesSpan = qs('#totalPages');
+            
+            totalPagesSpan.textContent = totalPages;
+            pageInput.value = currentPage;
+            pageInput.max = totalPages;
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            if (totalPages === 0) page = 1;
+            
+            currentPage = page;
+            renderPage();
+        }
+
+        // Pagination event listeners
+        qs('#prevPage').addEventListener('click', () => {
+            goToPage(currentPage - 1);
+        });
+
+        qs('#nextPage').addEventListener('click', () => {
+            goToPage(currentPage + 1);
+        });
+
+        qs('#pageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const page = parseInt(e.target.value);
+                if (!isNaN(page)) {
+                    goToPage(page);
+                }
+            }
+        });
+
+        qs('#pageInput').addEventListener('blur', (e) => {
+            const page = parseInt(e.target.value);
+            if (!isNaN(page)) {
+                goToPage(page);
+            } else {
+                e.target.value = currentPage;
+            }
+        });
+
+        // Modal controls
+        qs('#openEnroll').addEventListener('click', () => openModal('modalEnroll'));
+        qs('#openUnenroll').addEventListener('click', () => openModal('modalUnenroll'));
+        qs('#openAssign').addEventListener('click', () => openModal('modalAssign'));
+        qs('#openUnassign').addEventListener('click', () => openModal('modalUnassign'));
+        qs('#openEdit').addEventListener('click', () => openModal('modalEdit'));
+
+        qsa('[data-close]').forEach(btn => {
+            btn.addEventListener('click', () => closeModal(btn.dataset.close));
+        });
+
+        qsa('[id^="modal"]').forEach(m => {
+            m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+        });
 
         // Enroll
         qs('#formEnroll').addEventListener('submit', async (e) => {
@@ -380,37 +509,40 @@
             if (result.success) { location.reload(); }
         });
 
-        // Global Search by User ID or Email - reorder and highlight
-        const tbody = qs('#usersTbody');
-        const originalRows = Array.from(tbody.children);
-        function resetTable() {
-            tbody.innerHTML = '';
-            originalRows.forEach(r => { r.classList.remove('ring-2','ring-blue-300'); tbody.appendChild(r); });
-        }
-        function reorderForSearch(term) {
-            if (!term) { resetTable(); return; }
-            const rows = Array.from(tbody.children);
-            const lowerTerm = term.toLowerCase();
-
-            // Try to find by User ID first (numeric search)
-            let match = rows.find(r => r.dataset.userId && r.dataset.userId.startsWith(term.padStart(6,'0')));
-
-            // If no match by User ID, try email search
-            if (!match) {
-                match = rows.find(r => r.dataset.email && r.dataset.email.includes(lowerTerm));
-            }
-
-            if (!match) return; // keep as-is if no match
-            tbody.prepend(match);
-            match.classList.add('ring-2','ring-blue-300');
-            setTimeout(() => match.classList.remove('ring-2','ring-blue-300'), 1200);
-        }
+        // Global Search by User ID or Email
         qs('#searchUserId').addEventListener('input', (e) => {
-            const value = e.target.value.trim();
-            if (!value) { resetTable(); return; }
-            // Ensure we always start from original order before applying
-            resetTable();
-            reorderForSearch(value);
+            const searchTerm = e.target.value.trim().toLowerCase();
+            
+            if (!searchTerm) {
+                // Reset to all rows
+                filteredRows = [...allRows];
+            } else {
+                // Filter rows based on User ID or Email
+                filteredRows = allRows.filter(row => {
+                    const userId = row.dataset.userId?.toLowerCase() || '';
+                    const email = row.dataset.email?.toLowerCase() || '';
+                    return userId.includes(searchTerm) || email.includes(searchTerm);
+                });
+            }
+            
+            // Reset to page 1 when searching
+            currentPage = 1;
+            renderPage();
         });
+
+        // Initialize pagination on page load
+        initializePagination();
     })();
 </script>
+
+<style>
+    /* Hide spinner arrows in number input */
+    #pageInput::-webkit-outer-spin-button,
+    #pageInput::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #pageInput[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>

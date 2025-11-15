@@ -133,6 +133,34 @@
         </table>
     </div>
 
+    <!-- Pagination Controls -->
+        <div class="flex items-center justify-center gap-4 mt-4 py-3">
+            <button id="prevPage" class="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            
+            <div class="flex items-center gap-2">
+                <input 
+                    type="number" 
+                    id="pageInput" 
+                    min="1" 
+                    value="1" 
+                    class="w-16 text-center border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span class="text-gray-600">of</span>
+                <span id="totalPages" class="text-gray-600 font-medium">1</span>
+            </div>
+            
+            <button id="nextPage" class="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
     @Html.AntiForgeryToken()
 
     <!-- Modals -->
@@ -171,6 +199,13 @@
     const qs = (s) => document.querySelector(s);
     const qsa = (s) => document.querySelectorAll(s);
 
+    // Pagination variables
+    const PAGE_SIZE = 20;
+    let currentPage = 1;
+    let allRows = [];
+    let filteredRows = [];
+    let currentPageBeforeModal = 1;
+
     // Check for success message from sessionStorage
     const successMsg = sessionStorage.getItem('successMessage');
     if (successMsg) {
@@ -187,6 +222,8 @@
     }
 
     function openModal(id, url, target) {
+        currentPageBeforeModal = currentPage;
+
         const modal = qs('#' + id);
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -361,28 +398,119 @@
         });
     };
 
-    // Search
-    const tbody = qs('#classTbody');
-    const originalRows = Array.from(tbody.children);
-    function resetTable() {
+    // Pagination functions
+    function initializePagination() {
+        const tbody = qs('#classTbody');
+        allRows = Array.from(tbody.querySelectorAll('tr[data-edp]'));
+        filteredRows = [...allRows];
+        
+        // Restore page from sessionStorage if exists
+        const savedPage = sessionStorage.getItem('currentPage');
+        if (savedPage) {
+            currentPage = parseInt(savedPage);
+            sessionStorage.removeItem('currentPage');
+        }
+        
+        renderPage();
+    }
+
+    function renderPage() {
+        const tbody = qs('#classTbody');
+        const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+        
+        // Clear tbody
         tbody.innerHTML = '';
-        originalRows.forEach(r => { r.classList.remove('ring-2','ring-blue-300'); tbody.appendChild(r); });
+        
+        // Calculate start and end indices
+        const startIdx = (currentPage - 1) * PAGE_SIZE;
+        const endIdx = Math.min(startIdx + PAGE_SIZE, filteredRows.length);
+        
+        // Add rows for current page
+        if (filteredRows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-gray-500 py-3">No classes found.</td></tr>';
+        } else {
+            for (let i = startIdx; i < endIdx; i++) {
+                tbody.appendChild(filteredRows[i].cloneNode(true));
+            }
+        }
+        
+        // Update pagination controls
+        updatePaginationControls(totalPages);
     }
-    function reorderForSearch(term) {
-        if (!term) { resetTable(); return; }
-        const rows = Array.from(tbody.children);
-        let match = rows.find(r => r.dataset.edp?.toLowerCase() === term.toLowerCase())
-                 || rows.find(r => r.dataset.edp?.toLowerCase().startsWith(term.toLowerCase()));
-        if (!match) return;
-        tbody.prepend(match);
-        match.classList.add('ring-2', 'ring-blue-300');
-        setTimeout(() => match.classList.remove('ring-2', 'ring-blue-300'), 1200);
+
+    function updatePaginationControls(totalPages) {
+        const prevBtn = qs('#prevPage');
+        const nextBtn = qs('#nextPage');
+        const pageInput = qs('#pageInput');
+        const totalPagesSpan = qs('#totalPages');
+        
+        totalPagesSpan.textContent = totalPages;
+        pageInput.value = currentPage;
+        pageInput.max = totalPages;
+        
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages || totalPages === 0;
     }
-    qs('#searchEdpCode').addEventListener('input', (e) => {
-        const value = e.target.value.trim();
-        resetTable();
-        reorderForSearch(value);
+
+    function goToPage(page) {
+        const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        if (totalPages === 0) page = 1;
+        
+        currentPage = page;
+        renderPage();
+    }
+
+    // Pagination event listeners
+    qs('#prevPage').addEventListener('click', () => {
+        goToPage(currentPage - 1);
     });
+
+    qs('#nextPage').addEventListener('click', () => {
+        goToPage(currentPage + 1);
+    });
+
+    qs('#pageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const page = parseInt(e.target.value);
+            if (!isNaN(page)) {
+                goToPage(page);
+            }
+        }
+    });
+
+    qs('#pageInput').addEventListener('blur', (e) => {
+        const page = parseInt(e.target.value);
+        if (!isNaN(page)) {
+            goToPage(page);
+        } else {
+            e.target.value = currentPage;
+        }
+    });
+
+    // Search functionality
+    qs('#searchEdpCode').addEventListener('input', (e) => {
+        const searchTerm = e.target.value.trim().toLowerCase();
+        
+        if (!searchTerm) {
+            // Reset to all rows
+            filteredRows = [...allRows];
+        } else {
+            // Filter rows based on EDP code
+            filteredRows = allRows.filter(row => {
+                const edpCode = row.dataset.edp?.toLowerCase() || '';
+                return edpCode.includes(searchTerm);
+            });
+        }
+        
+        // Reset to page 1 when searching
+        currentPage = 1;
+        renderPage();
+    });
+
+    // Initialize pagination on page load
+    initializePagination();
 })();
 </script>
 

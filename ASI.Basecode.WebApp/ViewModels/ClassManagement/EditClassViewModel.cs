@@ -22,6 +22,11 @@ namespace ASI.Basecode.WebApp.ViewModels.ClassManagement
         [Display(Name = "Year Level")]
         public short YearLevel { get; set; }
 
+        [Required(ErrorMessage = "Capacity is required")]
+        [Display(Name = "Capacity")]
+        [Range(1, int.MaxValue, ErrorMessage = "Capacity must be at least 1")]
+        public int Capacity { get; set; }
+
         [Required(ErrorMessage = "At least one day must be selected")]
         [MinLength(1, ErrorMessage = "At least one day must be selected")]
         public string[] Days { get; set; } = Array.Empty<string>();

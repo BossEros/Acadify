@@ -89,6 +89,7 @@ namespace ASI.Basecode.Services.Implementation
                 
             existingClass.TeacherId = updatedClass.TeacherId;
             existingClass.Schedule = updatedClass.Schedule;
+            existingClass.Capacity = updatedClass.Capacity;
             existingClass.IsActive = updatedClass.IsActive;
 
             existingClass.JoinCode ??= "TEMP"; // safety line 

@@ -229,7 +229,8 @@ public class ClassManagementController : Controller
             CourseId = viewModel.CourseId,
             TeacherId = viewModel.TeacherId,
             Semester = viewModel.Semester,
-            YearLevel = viewModel.YearLevel
+            YearLevel = viewModel.YearLevel,
+            Capacity = viewModel.Capacity
         };
 
         // Build schedule string
@@ -299,6 +300,7 @@ public class ClassManagementController : Controller
         {
             Id = viewModel.Id,
             TeacherId = viewModel.TeacherId,
+            Capacity = viewModel.Capacity
         };
 
         // Build schedule string

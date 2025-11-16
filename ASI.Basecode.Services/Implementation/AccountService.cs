@@ -62,18 +62,8 @@ namespace ASI.Basecode.Services.Implementation
 
             await _userRepository.AddToRoleAsync(user, request.Role);
 
-            // Generate and send email verification token
-            try
-            {
-                var token = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
-                await _emailService.SendEmailVerificationAsync(user.Email!, $"{user.FirstName} {user.LastName}", token);
-                _logger.LogInformation("Email verification sent to: {Email}", user.Email);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send email verification to: {Email}", user.Email);
-                // Continue with success even if email fails - user can request resend later
-            }
+            // Send email verification (non-blocking - continue even if it fails)
+            await SendEmailVerificationAsync(user.Email!);
 
             return AuthResult.Success();
         }
@@ -194,6 +184,37 @@ namespace ASI.Basecode.Services.Implementation
             }
 
             return AuthResult.Failure(errors);
+        }
+
+        public async Task<AuthResult> SendEmailVerificationAsync(string email)
+        {
+            try
+            {
+                var user = await _userRepository.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    // For security, don't reveal if email exists or not
+                    return AuthResult.Success();
+                }
+
+                // Check if email is already confirmed
+                if (user.EmailConfirmed)
+                {
+                    return AuthResult.Failure(new[] { "Email is already verified." });
+                }
+
+                // Generate and send email verification token
+                var token = await _userRepository.GenerateEmailConfirmationTokenAsync(user);
+                await _emailService.SendEmailVerificationAsync(user.Email!, $"{user.FirstName} {user.LastName}", token);
+                _logger.LogInformation("Email verification sent to: {Email}", user.Email);
+
+                return AuthResult.Success();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send email verification to: {Email}", email);
+                return AuthResult.Failure(new[] { "Failed to send verification email. Please try again later." });
+            }
         }
 
         public async Task<string> GetRedirectPathBasedOnRoleAsync(string email)

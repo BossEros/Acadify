@@ -82,6 +82,32 @@
                         </div>
                     }
 
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-start">
+                                <svg class="h-5 w-5 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-red-800">@TempData["ErrorMessage"]</p>
+                                    @if (TempData["ShowResendVerification"] != null && (bool)TempData["ShowResendVerification"] && TempData["ResendEmail"] != null)
+                                    {
+                                        <form method="post" asp-controller="Account" asp-action="ResendEmailVerification" class="mt-3">
+                                            <input type="hidden" name="email" value="@TempData["ResendEmail"]" />
+                                            <button type="submit" class="text-sm custom-blue-text font-semibold hover:underline inline-flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                </svg>
+                                                Resend Verification Email
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                     <!-- Tag Helpers -->
                     <form method="post" 
                           asp-controller="Account" 

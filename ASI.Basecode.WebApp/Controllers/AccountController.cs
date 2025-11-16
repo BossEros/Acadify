@@ -67,8 +67,18 @@ public class AccountController : Controller
                 return View("EmailConfirmed");
             }
 
-            // If confirmation failed
-            TempData["ErrorMessage"] = result.Errors.FirstOrDefault() ?? "Email verification failed. The link may have expired or is invalid.";
+            // If confirmation failed - provide user-friendly message and store email for resend option
+            var error = result.Errors.FirstOrDefault() ?? "";
+            if (error.Contains("Invalid token") || error.Contains("invalid"))
+            {
+                TempData["ErrorMessage"] = "The email verification link has expired or is invalid.";
+                TempData["ShowResendVerification"] = true;
+                TempData["ResendEmail"] = email;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Email verification failed. Please try again or contact support.";
+            }
             return RedirectToAction("Login");
         }
         catch (Exception)
@@ -81,6 +91,32 @@ public class AccountController : Controller
     // GET: /Account/RegisterConfirmation
     [HttpGet]
     public ViewResult RegisterConfirmation() => View();
+
+    // POST: /Account/ResendEmailVerification
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResendEmailVerification(string email)
+    {
+        if (string.IsNullOrEmpty(email))
+        {
+            TempData["ErrorMessage"] = "Invalid request. Please try again.";
+            return RedirectToAction("Login");
+        }
+
+        var result = await _accountService.SendEmailVerificationAsync(email);
+
+        if (result.Succeeded)
+        {
+            TempData["SuccessMessage"] = "A new verification email has been sent. Please check your inbox.";
+        }
+        else
+        {
+            var error = result.Errors.FirstOrDefault();
+            TempData["ErrorMessage"] = error ?? "Failed to resend verification email. Please try again.";
+        }
+
+        return RedirectToAction("Login");
+    }
 
 
     // POST: /Account/Register

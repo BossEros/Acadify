@@ -4,10 +4,19 @@
 @{
     ViewData["Title"] = "My Grades";
     Layout = "_Layout";
-    var sectionKeys = Model.Select(m => new { m.YearLevel, m.Semester })
-                           .Select(x => $"{x.YearLevel}_{x.Semester}")
-                           .Distinct()
-                           .ToList();
+
+    var sectionKeys = Model
+        .Select(m => new { m.SchoolYearStart, m.Semester })
+        .Select(x => $"{x.SchoolYearStart}_{x.Semester}")
+        .Distinct()
+        .ToList();
+
+    var schoolYears = Model
+        .Select(m => m.SchoolYearStart)
+        .Distinct()
+        .OrderByDescending(s => s)
+        .ToList();
+
     var firstSection = Model.FirstOrDefault();
 }
 <div class="container mx-auto px-4 py-6">
@@ -20,17 +29,24 @@
             <a id="printReportBtn" href="#" target="_blank" class="bg-[#3A4D75] text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:opacity-90 transition">
                 <span>Semester Report</span>
             </a>
-            </div>
+        </div>
 
         <div class="mb-6 border-b pb-4">
             <div class="flex flex-wrap gap-4 items-center">
                 <div>
-                    <label for="yearSelect" class="block text-sm text-gray-600 mb-1">Year Level</label>
-                    <select id="yearSelect" class="px-4 py-2 rounded-lg border bg-white" onchange="applyFilters()">
-                        <option value="1">1st Year</option>
-                        <option value="2">2nd Year</option>
-                        <option value="3">3rd Year</option>
-                        <option value="4">4th Year</option>
+                    <label for="schoolYearSelect" class="block text-sm text-gray-600 mb-1">School Year</label>
+                    <select id="schoolYearSelect" class="px-4 py-2 rounded-lg border bg-white" onchange="applyFilters()">
+                        @if (!schoolYears.Any())
+                        {
+                            <option value="">-- No school year --</option>
+                        }
+                        else
+                        {
+                            foreach (var sy in schoolYears)
+                            {
+                                <option value="@sy">S.Y. @sy-@(@sy + 1)</option>
+                            }
+                        }
                     </select>
                 </div>
 
@@ -45,24 +61,21 @@
         </div>
 
         <div id="noGradesMessage" class="mb-6 bg-yellow-50 rounded-lg p-4 text-gray-700 hidden">
-            No grades available for the selected Year/Semester.
+            No grades available for the selected School Year / Semester.
         </div>
 
-        @foreach (var semester in Model)
+        @foreach (var sem in Model)
         {
-            <div id="semester_@(semester.YearLevel)_@(semester.Semester)" class="mb-8 semester-section hidden">
+            <div id="semester_@(sem.SchoolYearStart)_@(sem.Semester)" class="mb-8 semester-section hidden">
                 <h3 class="text-xl font-semibold mb-4">
                     @{
-                        var yearOrdinal = semester.YearLevel switch
-                        {
-                            1 => "1st", 2 => "2nd", 3 => "3rd", 4 => "4th", _ => semester.YearLevel + "th"
-                        };
-                        var semesterOrdinal = semester.Semester == 1 ? "1st" : "2nd";
+                        var schoolYearDisplay = $"S.Y. {sem.SchoolYearStart}-{sem.SchoolYearStart + 1}";
+                        var semesterOrdinal = sem.Semester == 1 ? "1st" : "2nd";
                     }
-                    @yearOrdinal Year - @semesterOrdinal Semester
+                    @schoolYearDisplay - @semesterOrdinal Semester
                 </h3>
 
-                @if (!semester.Grades.Any())
+                @if (!sem.Grades.Any())
                 {
                     <div class="bg-gray-50 rounded-lg p-4 text-gray-600">
                         No grades available for this semester.
@@ -83,7 +96,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var grade in semester.Grades)
+                                @foreach (var grade in sem.Grades)
                                 {
                                     <tr class="border-b hover:bg-gray-50">
                                         <td class="py-3 px-4">@grade.CourseCode</td>
@@ -134,21 +147,18 @@
         const existingSections = @Html.Raw(JsonSerializer.Serialize(sectionKeys));
 
         function applyFilters() {
-            const year = document.getElementById('yearSelect').value;
+            const schoolYear = document.getElementById('schoolYearSelect').value;
             const sem = document.getElementById('semesterSelect').value;
             
-            // Show correct table
-            showSelected(year, sem);
-            
-            // --- UPDATE BUTTON LINK ---
-            updatePrintButton(year, sem);
+            showSelected(schoolYear, sem);
+            updatePrintButton(schoolYear, sem);
         }
 
-        function showSelected(year, semester) {
+        function showSelected(schoolYear, semester) {
             document.querySelectorAll('.semester-section').forEach(section => section.classList.add('hidden'));
 
-            const key = `${year}_${semester}`;
-            const target = document.getElementById(`semester_${year}_${semester}`);
+            const key = `${schoolYear}_${semester}`;
+            const target = document.getElementById(`semester_${schoolYear}_${semester}`);
 
             if (existingSections.includes(key) && target) {
                 target.classList.remove('hidden');
@@ -158,13 +168,12 @@
             }
         }
 
-        // --- FUNCTION TO UPDATE REPORT LINK ---
-        function updatePrintButton(year, semester) {
+        function updatePrintButton(schoolYear, semester) {
             const btn = document.getElementById('printReportBtn');
             if (btn) {
-                // Uses Razor helper to get base URL, then appends params
                 const baseUrl = '@Url.Action("Index", "SemesterReport")';
-                btn.href = `${baseUrl}?semester=${semester}&yearLevel=${year}`;
+                // Updated query param name to reflect school year start
+                btn.href = `${baseUrl}?semester=${semester}&schoolYearStart=${encodeURIComponent(schoolYear)}`;
             }
         }
 
@@ -172,7 +181,7 @@
             @if (firstSection != null)
             {
                 <text>
-                document.getElementById('yearSelect').value = '@firstSection.YearLevel';
+                document.getElementById('schoolYearSelect').value = '@firstSection.SchoolYearStart';
                 document.getElementById('semesterSelect').value = '@firstSection.Semester';
                 applyFilters();
                 </text>
@@ -181,7 +190,7 @@
             {
                 <text>
                 document.getElementById('noGradesMessage').classList.remove('hidden');
-                updatePrintButton(1, 1); // Default link
+                updatePrintButton('', 1);
                 </text>
             }
         });

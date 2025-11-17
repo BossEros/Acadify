@@ -31,7 +31,7 @@ namespace ASI.Basecode.WebApp.Controllers
 
             var semesterViewModels = semesterDtos.Select(s => new SemesterGradesViewModel
             {
-                YearLevel = s.YearLevel,
+                SchoolYearStart = s.SchoolYearStart,
                 Semester = s.Semester,
                 Grades = s.Grades.Select(g => new GradeViewModel
                 {

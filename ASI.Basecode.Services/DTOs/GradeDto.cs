@@ -19,9 +19,11 @@ namespace ASI.Basecode.Services.DTOs
 
     public class SemesterGradesDto
     {
-        public short YearLevel { get; set; }
+        public int SchoolYearStart { get; set; }
         public short Semester { get; set; }
         public List<GradeDto> Grades { get; set; } = new();
+
+        public string SchoolYearDisplay => $"{SchoolYearStart}-{SchoolYearStart + 1}";
     }
 
     public class GradeUpdateResult

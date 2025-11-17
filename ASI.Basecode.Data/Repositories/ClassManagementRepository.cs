@@ -96,6 +96,7 @@ namespace ASI.Basecode.Data.Repositories
                 .Where(e => e.StudentId == studentId)
                 .Include(e => e.Class)
                     .ThenInclude(c => c.Course)
+                .Include(e => e.Grade)
                 .ToListAsync();
         }
 

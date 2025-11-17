@@ -21,13 +21,19 @@ namespace ASI.Basecode.Services.Implementation
             var enrollments = await _repo.GetEnrollmentsByStudentIdAsync(studentId);
 
             var semesterGrades = enrollments
-                .GroupBy(e => new { e.Class.YearLevel, e.Class.Semester })
-                .OrderBy(g => g.Key.YearLevel)
+                .GroupBy(e =>
+                {
+                    var month = e.EnrolledAt.Month;
+                    var semester = (short)((month >= 6 && month <= 12) ? 1 : 2);
+                    var schoolYearStart = (month >= 6 && month <= 12) ? e.EnrolledAt.Year : e.EnrolledAt.Year - 1;
+                    return new { SchoolYearStart = schoolYearStart, Semester = semester };
+                })
+                .OrderByDescending(g => g.Key.SchoolYearStart)
                 .ThenBy(g => g.Key.Semester)
                 .Select(g => new SemesterGradesDto
                 {
-                    YearLevel = (short)g.Key.YearLevel,
-                    Semester = (short)g.Key.Semester,
+                    SchoolYearStart = g.Key.SchoolYearStart,
+                    Semester = g.Key.Semester,
                     Grades = g.Select(e =>
                     {
                         var isPassed = e.Grade?.FinalGrade.HasValue == true || e.Grade?.MidtermGrade.HasValue == true;

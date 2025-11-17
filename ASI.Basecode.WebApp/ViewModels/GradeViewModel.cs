@@ -17,7 +17,7 @@ namespace ASI.Basecode.WebApp.ViewModels
 
     public class SemesterGradesViewModel
     {
-        public short YearLevel { get; set; }
+        public int SchoolYearStart { get; set; }
         public short Semester { get; set; }
         public List<GradeViewModel> Grades { get; set; } = new();
     }

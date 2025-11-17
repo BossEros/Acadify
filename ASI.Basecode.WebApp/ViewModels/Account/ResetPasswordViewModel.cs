@@ -13,12 +13,12 @@ public class ResetPasswordViewModel
 
     [Required(ErrorMessage = "Password is required")]
     [StringLength(255, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters")]
-    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$", ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$", ErrorMessage = "Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = null!;
 
     [Required(ErrorMessage = "Confirm password is required")]
     [DataType(DataType.Password)]
-    [Compare("Password", ErrorMessage = "Password does not match")]
+    [Compare("Password", ErrorMessage = "Passwords do not match")]
     public string ConfirmPassword { get; set; } = null!;
 }

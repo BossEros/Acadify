@@ -26,8 +26,11 @@ namespace ASI.Basecode.WebApp.ViewModels
     {
         public string StudentName { get; set; } = string.Empty;
         public string StudentIdNumber { get; set; } = string.Empty;
+        public int SchoolYearStart { get; set; }
         public short Semester { get; set; }
         public short YearLevel { get; set; }
+        public string SchoolYearRange { get; set; } = string.Empty;
+        public string SemesterDescription { get; set; } = string.Empty;
 
         public double GPA { get; set; }
         public int TotalUnits { get; set; }

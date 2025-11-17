@@ -76,8 +76,8 @@
                     <th class="p-3 text-left text-xs font-semibold text-gray-600">UNITS</th>
                     <th class="p-3 text-left text-xs font-semibold text-gray-600">SCHEDULE</th>
                     <th class="p-3 text-left text-xs font-semibold text-gray-600">TEACHER</th>
-                    <th class="p-3 text-left text-xs font-semibold text-gray-600">YEAR</th>
-                    <th class="p-3 text-left text-xs font-semibold text-gray-600">SEMESTER</th>
+                    <!-- <th class="p-3 text-left text-xs font-semibold text-gray-600">YEAR</th>
+                    <th class="p-3 text-left text-xs font-semibold text-gray-600">SEMESTER</th> -->
                     <th class="p-3 text-left text-xs font-semibold text-gray-600">STATUS</th>
                     <th class="p-3 text-right text-xs font-semibold text-gray-600">ACTIONS</th>
                 </tr>
@@ -94,8 +94,8 @@
                             <td class="p-3">@item.Course?.Units</td>
                             <td class="p-3">@item.Schedule</td>
                             <td class="p-3">@($"{item.Teacher?.FirstName} {item.Teacher?.LastName}")</td>
-                            <td class="p-3">@item.YearLevel</td>
-                            <td class="p-3">@item.Semester</td>
+                            <!-- <td class="p-3">@item.YearLevel</td>
+                            <td class="p-3">@item.Semester</td> -->
                             <td class="p-3">
                                 @if (item.IsActive)
                                 {

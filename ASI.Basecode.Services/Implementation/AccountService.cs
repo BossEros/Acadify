@@ -168,6 +168,21 @@ namespace ASI.Basecode.Services.Implementation
             var (succeeded, errors) = await _userRepository.ResetPasswordAsync(user, token, newPassword);
             if (succeeded)
             {
+                _logger.LogInformation("Password reset successful for user: {Email}", email);
+
+                // Send password changed confirmation email
+                try
+                {
+                    var userName = $"{user.FirstName} {user.LastName}";
+                    await _emailService.SendPasswordChangedEmailAsync(user.Email!, userName);
+                    _logger.LogInformation("Password changed email sent successfully to {Email}", user.Email);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogWarning(emailEx, "Failed to send password changed email to {Email}, but password was reset successfully", user.Email);
+                    // Don't fail the password reset operation due to email failure
+                }
+
                 return AuthResult.Success();
             }
 
@@ -276,6 +291,20 @@ namespace ASI.Basecode.Services.Implementation
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("Password changed successfully for user: {Username}", username);
+
+                    // Send password changed confirmation email
+                    try
+                    {
+                        var userName = $"{user.FirstName} {user.LastName}";
+                        await _emailService.SendPasswordChangedEmailAsync(user.Email!, userName);
+                        _logger.LogInformation("Password changed email sent successfully to {Email}", user.Email);
+                    }
+                    catch (Exception emailEx)
+                    {
+                        _logger.LogWarning(emailEx, "Failed to send password changed email to {Email}, but password was changed successfully", user.Email);
+                        // Don't fail the password change operation due to email failure
+                    }
+
                     return AuthResult.Success();
                 }
 

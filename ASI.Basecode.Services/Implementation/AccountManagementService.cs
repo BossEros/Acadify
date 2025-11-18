@@ -5,6 +5,7 @@ using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.Results;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ASI.Basecode.Services.Implementation
 {
@@ -14,17 +15,23 @@ namespace ASI.Basecode.Services.Implementation
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
         private readonly IClassManagementRepository _classRepository;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<AccountManagementService> _logger;
 
         public AccountManagementService(
             IUserRepository userRepository,
             UserManager<User> userManager,
             RoleManager<IdentityRole<int>> roleManager,
-            IClassManagementRepository classRepository)
+            IClassManagementRepository classRepository,
+            IEmailService emailService,
+            ILogger<AccountManagementService> logger)
         {
             _userRepository = userRepository;
             _userManager = userManager;
             _roleManager = roleManager;
             _classRepository = classRepository;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<UserManagementDto>> GetAllUsersAsync()
@@ -255,6 +262,19 @@ namespace ASI.Basecode.Services.Implementation
                 var addPasswordResult = await _userManager.AddPasswordAsync(user, request.NewPassword);
                 if (addPasswordResult.Succeeded)
                 {
+                    // Send password changed confirmation email
+                    try
+                    {
+                        var userName = $"{user.FirstName} {user.LastName}";
+                        await _emailService.SendPasswordChangedEmailAsync(user.Email!, userName);
+                        _logger.LogInformation("Password changed email sent successfully to {Email}", user.Email);
+                    }
+                    catch (Exception emailEx)
+                    {
+                        _logger.LogWarning(emailEx, "Failed to send password changed email to {Email}, but password was changed successfully", user.Email);
+                        // Don't fail the password change operation due to email failure
+                    }
+
                     return UserManagementResult.Success($"Password for user '{user.FirstName} {user.LastName}' changed successfully!");
                 }
 

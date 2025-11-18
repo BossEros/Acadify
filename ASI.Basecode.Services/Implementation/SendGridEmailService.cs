@@ -124,6 +124,57 @@ public class SendGridEmailService : IEmailService
             throw new Exception($"Failed to send email via SendGrid: {response.StatusCode} - {errorContent}");
         }
     }
+
+    public async Task SendPasswordChangedEmailAsync(string email, string userName)
+    {
+        var apiKey = _configuration["EmailSettings:SendGridApiKey"];
+        var fromEmail = _configuration["EmailSettings:FromEmail"];
+        var fromName = _configuration["EmailSettings:FromName"];
+
+        if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(fromEmail))
+        {
+            throw new InvalidOperationException("SendGrid configuration is missing. Please check EmailSettings in appsettings.json");
+        }
+
+        _httpClient.DefaultRequestHeaders.Clear();
+        _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+
+        var emailData = new
+        {
+            personalizations = new[]
+            {
+                new
+                {
+                    to = new[] { new { email = email, name = userName } },
+                    subject = "Your ACADIFY Password Has Been Changed"
+                }
+            },
+            from = new { email = fromEmail, name = fromName },
+            content = new[]
+            {
+                new
+                {
+                    type = "text/html",
+                    value = EmailTemplates.GetPasswordChangedConfirmationTemplate(userName, email)
+                }
+            }
+        };
+
+        var json = JsonSerializer.Serialize(emailData, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync("https://api.sendgrid.com/v3/mail/send", content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to send email via SendGrid: {response.StatusCode} - {errorContent}");
+        }
+    }
 }
 
 

@@ -21,6 +21,7 @@ public interface IUserRepository
     Task<IEnumerable<User>> GetAllUsersAsync();
     Task<(bool Succeeded, IEnumerable<string> Errors)> ChangePasswordAsync(User user, string currentPassword, string newPassword);
     Task<int> GetUserCountByRoleAsync(string roleName);
+    Task<bool> CheckPasswordAsync(User user, string password);
    
 
 

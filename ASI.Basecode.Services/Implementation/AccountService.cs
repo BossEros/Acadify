@@ -33,17 +33,17 @@ namespace ASI.Basecode.Services.Implementation
 
         public async Task<AuthResult> RegisterAsync(RegisterRequest request)
         {
+            // Check if email is already taken
             bool emailExists = await _userRepository.FindByEmailAsync(request.Email) != null;
             if (emailExists)
             {
                 return AuthResult.Failure(new[] { "Email is already in use." });
             }
 
-            // Generate IdNumber before creating user: Students start at 2320001, Teachers start at 1047001
-            var roleCount = await _userRepository.GetUserCountByRoleAsync(request.Role);
-            var startingNumber = request.Role == "Student" ? 2320001 : 1047001;
-            var idNumber = startingNumber + roleCount;
+            // Generate unique ID number based on role
+            var idNumber = await GenerateUserIdNumberAsync(request.Role);
 
+            // Create user entity
             var user = new User
             {
                 UserName = request.Email,
@@ -51,15 +51,17 @@ namespace ASI.Basecode.Services.Implementation
                 LastName = request.LastName,
                 Email = request.Email,
                 IdNumber = idNumber,
-                IsApproved = request.Role == "Student" // Set IsApproved to true if the role is Student
+                IsApproved = IsUserAutoApproved(request.Role)
             };
 
+            // Save user to database
             var (succeeded, errors) = await _userRepository.CreateUserAsync(user, request.Password);
             if (!succeeded)
             {
                 return AuthResult.Failure(errors);
             }
 
+            // Assign role to user
             await _userRepository.AddToRoleAsync(user, request.Role);
 
             // Send email verification (non-blocking - continue even if it fails)
@@ -70,50 +72,52 @@ namespace ASI.Basecode.Services.Implementation
 
         public async Task<SignInAuthResult> LoginAsync(LoginRequest request)
         {
+            // Find user by email
             var user = await _userRepository.FindByEmailAsync(request.Email);
             if (user == null)
             {
-                return SignInAuthResult.Failed(AccountMessages.InvalidLoginAttempt);
+                // Return unified error message to prevent user enumeration
+                return SignInAuthResult.Failed(AccountMessages.IncorrectCredentials);
             }
 
-            // Check if account is deleted
-            if (user.IsDeleted)
-            {
-                _logger.LogWarning("Login attempt for deleted account: {Email}", request.Email);
-                return SignInAuthResult.Failed("Invalid login attempt. Please try again.");
-            }
-
-            // Check if account is approved
-            if (!user.IsApproved)
-            {
-                _logger.LogWarning("Login attempt for unapproved account: {Email}", request.Email);
-                return SignInAuthResult.Failed("Your account is pending approval. Please contact an administrator.");
-            }
-
-            // Check if email is confirmed
-            if (!user.EmailConfirmed)
-            {
-                _logger.LogWarning("Login attempt for unverified email: {Email}", request.Email);
-                return SignInAuthResult.Failed("Please verify your email address before logging in. Check your inbox for the verification link.");
-            }
-
-            var (succeeded, isLockedOut) = await _authRepository.PasswordSignInAsync(
+            // Attempt sign-in - this will track failed attempts for lockout
+            // We check password correctness after to determine the right error message
+            var (signInSucceeded, isLockedOut) = await _authRepository.PasswordSignInAsync(
                 user,
                 request.Password,
                 isPersistent: false,
                 lockoutOnFailure: true);
-
-            if (succeeded)
-            {
-                return SignInAuthResult.Success();
-            }
 
             if (isLockedOut)
             {
                 return SignInAuthResult.LockedOut();
             }
 
-            return SignInAuthResult.Failed(AccountMessages.InvalidLoginAttempt);
+            if (!signInSucceeded)
+            {
+                // Sign-in failed - check if it's due to wrong password
+                // Use unified error message for security (prevents user enumeration)
+                var isPasswordCorrect = await _userRepository.CheckPasswordAsync(user, request.Password);
+                
+                if (!isPasswordCorrect)
+                {
+                    // Password is incorrect - PasswordSignInAsync already tracked the failed attempt
+                    // Return unified error message instead of specific "incorrect password" message
+                    return SignInAuthResult.Failed(AccountMessages.IncorrectCredentials);
+                }
+            }
+
+            // Sign-in succeeded - verify account status is still valid before allowing access
+            var accountStatusResult = ValidateUserAccountStatus(user);
+            if (accountStatusResult != null)
+            {
+                // Sign out since account status is invalid
+                await _authRepository.SignOutAsync();
+                return accountStatusResult;
+            }
+
+            // All validations passed - sign-in was successful
+            return SignInAuthResult.Success();
         }
 
         public async Task SignOutAsync()
@@ -143,6 +147,8 @@ namespace ASI.Basecode.Services.Implementation
                     await _emailService.SendPasswordResetEmailAsync(user.Email!, user.UserName!, token);
                 }
 
+                // Always return success, even if user not found
+                // Security: Don't reveal whether an email exists in the system
                 return ForgotPasswordResult.Success();
             }
             catch (Exception)
@@ -193,7 +199,7 @@ namespace ASI.Basecode.Services.Implementation
                 var user = await _userRepository.FindByEmailAsync(email);
                 if (user == null)
                 {
-                    // For security, don't reveal if email exists or not
+                    // Security: Don't reveal if email exists or not
                     return AuthResult.Success();
                 }
 
@@ -316,5 +322,59 @@ namespace ASI.Basecode.Services.Implementation
                 return AuthResult.Failure(new[] { "An error occurred while deleting account." });
             }
         }
+
+        #region Private Helper Methods
+
+        /// <summary>
+        /// Generates a unique ID number for a user based on their role.
+        /// Students start at 2320001, Teachers start at 1047001.
+        /// </summary>
+        private async Task<int> GenerateUserIdNumberAsync(string role)
+        {
+            var roleCount = await _userRepository.GetUserCountByRoleAsync(role);
+            var startingNumber = role == "Student" ? 2320001 : 1047001;
+            return startingNumber + roleCount;
+        }
+
+        /// <summary>
+        /// Determines if a user should be auto-approved based on their role.
+        /// Students are auto-approved, Teachers and Admins require manual approval.
+        /// </summary>
+        private bool IsUserAutoApproved(string role)
+        {
+            return role == "Student";
+        }
+
+        /// <summary>
+        /// Validates user account status for login (checks deleted, approved, email confirmed).
+        /// Returns an error result if validation fails, null if validation passes.
+        /// </summary>
+        private SignInAuthResult? ValidateUserAccountStatus(User user)
+        {
+            // Check if account is deleted
+            if (user.IsDeleted)
+            {
+                _logger.LogWarning("Login attempt for deleted account: {Email}", user.Email);
+                return SignInAuthResult.Failed(AccountMessages.AccountDeactivated);
+            }
+
+            // Check if account is approved
+            if (!user.IsApproved)
+            {
+                _logger.LogWarning("Login attempt for unapproved account: {Email}", user.Email);
+                return SignInAuthResult.Failed(AccountMessages.AccountPendingApproval);
+            }
+
+            // Check if email is confirmed
+            if (!user.EmailConfirmed)
+            {
+                _logger.LogWarning("Login attempt for unverified email: {Email}", user.Email);
+                return SignInAuthResult.Failed(AccountMessages.EmailNotVerified);
+            }
+
+            return null; // All validations passed
+        }
+
+        #endregion
     }
 }

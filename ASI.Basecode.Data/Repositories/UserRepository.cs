@@ -79,6 +79,11 @@ public class UserRepository : IUserRepository
         var usersInRole = await _userManager.GetUsersInRoleAsync(roleName);
         return usersInRole.Count;
     }
+
+    public Task<bool> CheckPasswordAsync(User user, string password)
+    {
+        return _userManager.CheckPasswordAsync(user, password);
+    }
 }
 
 

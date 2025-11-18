@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Student_Performance_Tracker.ViewModels.Account;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.Services.DTOs;
+using ASI.Basecode.Services.Results;
 using ASI.Basecode.Resources.Messages;
 using System.Linq;
 
@@ -69,7 +70,7 @@ public class AccountController : Controller
 
             // If confirmation failed - provide user-friendly message and store email for resend option
             var error = result.Errors.FirstOrDefault() ?? "";
-            if (error.Contains("Invalid token") || error.Contains("invalid"))
+            if (IsTokenExpired(error))
             {
                 TempData["ErrorMessage"] = "The email verification link has expired or is invalid.";
                 TempData["ShowResendVerification"] = true;
@@ -145,18 +146,8 @@ public class AccountController : Controller
                 return RedirectToAction("RegisterConfirmation", "Account");
             }
 
-            // if registation is not successful, add errors to ModelState
-            foreach (var error in result.Errors)
-            {
-                if (error.Contains("Email"))
-                {
-                    ModelState.AddModelError(nameof(model.Email), error);
-                }
-                else
-                {
-                    ModelState.AddModelError("", error);
-                }
-            }
+            // Add errors to ModelState
+            AddAuthErrorsToModelState(result, nameof(model.Email));
         }
         catch (Exception)
         {
@@ -245,12 +236,12 @@ public class AccountController : Controller
                 return View("ResetPasswordConfirmation");
             }
 
+            // Add errors with special handling for token expiration
             foreach (var error in result.Errors)
             {
-                // Check if token expired
-                if (error.Contains("Invalid token") || error.Contains("invalid"))
+                if (IsTokenExpired(error))
                 {
-                    ModelState.AddModelError("", "The password reset link has expired or is invalid. Please request a new password + reset link.");
+                    ModelState.AddModelError("", "The password reset link has expired or is invalid. Please request a new password reset link.");
                 }
                 else
                 {
@@ -276,17 +267,52 @@ public class AccountController : Controller
     }
 
 
-    // Helper Methods
+    #region Helper Methods
 
+    /// <summary>
+    /// Returns a view with the returnUrl preserved in ViewData for login flows.
+    /// </summary>
     private ViewResult ViewWithReturnUrl<T>(T model, string? returnUrl)
     {
         ViewData[nameof(returnUrl)] = returnUrl;
         return View(model);
     }
 
+    /// <summary>
+    /// Redirects user to their role-specific dashboard (Admin, Teacher, or Student).
+    /// </summary>
     private async Task<IActionResult> RedirectBasedOnRoleAsync(string email)
     {
         var redirectPath = await _accountService.GetRedirectPathBasedOnRoleAsync(email);
         return Redirect(redirectPath);
     }
+
+    /// <summary>
+    /// Checks if an error message indicates a token has expired or is invalid.
+    /// Used for password reset and email verification tokens.
+    /// </summary>
+    private bool IsTokenExpired(string error)
+    {
+        return error.Contains("Invalid token") || error.Contains("invalid");
+    }
+
+    /// <summary>
+    /// Adds errors from AuthResult to ModelState, placing email-related errors on the email field.
+    /// </summary>
+    private void AddAuthErrorsToModelState(AuthResult result, string emailFieldName)
+    {
+        foreach (var error in result.Errors)
+        {
+            if (error.Contains("Email"))
+            {
+                ModelState.AddModelError(emailFieldName, error);
+            }
+            else
+            {
+                ModelState.AddModelError("", error);
+            }
+        }
+    }
+
+    #endregion
 }

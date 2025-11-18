@@ -30,6 +30,7 @@ namespace ASI.Basecode.Services.Implementation
         public async Task<IEnumerable<UserManagementDto>> GetAllUsersAsync()
         {
             var users = await _userManager.Users
+                .Where(u => u.IsDeleted == false)
                 .OrderBy(u => u.Id)
                 .ToListAsync();
 
@@ -59,7 +60,7 @@ namespace ASI.Basecode.Services.Implementation
         public async Task<UserManagementDto?> GetUserByIdAsync(int id)
         {
             var user = await _userManager.FindByIdAsync(id.ToString());
-            if (user == null) return null;
+            if (user == null || user.IsDeleted) return null;
 
             var roles = await _userManager.GetRolesAsync(user);
             var primaryRole = roles.FirstOrDefault() ?? "Student";
@@ -283,13 +284,13 @@ namespace ASI.Basecode.Services.Implementation
                 }
 
                 // Soft delete: mark inactive instead of removing
-                if (user.IsApproved)
+                if (!user.IsDeleted)
                 {
-                    user.IsApproved = false;
+                    user.IsDeleted = true;
                     var (ok, errs) = await _userRepository.UpdateUserAsync(user);
                     if (!ok) return UserManagementResult.Failure(errs);
                 }
-                return UserManagementResult.Success($"User '{user.FirstName} {user.LastName}' set to Inactive.");
+                return UserManagementResult.Success($"User '{user.FirstName} {user.LastName}' is Deleted.");
             }
             catch (Exception ex)
             {

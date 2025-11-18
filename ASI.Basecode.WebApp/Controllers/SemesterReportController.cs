@@ -23,50 +23,65 @@ namespace ASI.Basecode.WebApp.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(short semester = 1, short yearLevel = 1)
+        public async Task<IActionResult> Index(int schoolYearStart = 2025, short semester = 1)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            // 1. Fetch Data
-            var rawGrades = await _performanceService.GetStudentGradesForSemester(user.Id, semester, yearLevel);
-            var gpa = await _performanceService.GetGpaForSemester(user.Id, semester, yearLevel);
-            var totalUnits = await _performanceService.GetTotalEnrolledUnitsForSemester(user.Id, semester, yearLevel);
+            var rawEnrollments = await _performanceService.GetStudentGradesForSemester(user.Id, schoolYearStart, semester);
+            var gpa = await _performanceService.GetGpaForSemester(user.Id, schoolYearStart, semester);
+            var totalUnits = await _performanceService.GetTotalEnrolledUnitsForSemester(user.Id, schoolYearStart, semester);
 
-            // 2. Calculate Counts locally (More efficient than calling DB 3 times)
             int passedCount = 0;
             int failedCount = 0;
             int incompleteCount = 0;
 
-            foreach (var grade in rawGrades)
+            foreach (var enrollment in rawEnrollments)
             {
-                // Normalize string to handle potential spaces or case sensitivity
-                var remark = (grade.Remarks ?? "").Trim(); 
-                
-                if (remark == "Passed") passedCount++;
-                else if (remark == "Failed") failedCount++;
-                else incompleteCount++; // Handles "Incomplete", null, or empty
+                var grade = enrollment.Grade;
+
+                if (grade == null || grade.FinalGrade == null)
+                {
+                    incompleteCount++;
+                }
+                else
+                {
+                    var remark = (grade.Remarks ?? "").Trim();
+                    
+                    if (remark == "Passed") passedCount++;
+                    else if (remark == "Failed") failedCount++;
+                    else incompleteCount++; 
+                }
             }
 
-            // 3. Map to GradeViewModel
-            var gradeViewModels = rawGrades.Select(g => new GradeViewModel
+            var gradeViewModels = rawEnrollments.Select(e => new GradeViewModel
             {
-                CourseCode = g.Enrollment.Class.Course.CourseCode,
-                CourseName = g.Enrollment.Class.Course.CourseName,
-                Units = g.Enrollment.Class.Course.Units,
-                MidtermGrade = g.MidtermGrade,
-                FinalGrade = g.FinalGrade,
-                Remark = g.Remarks ?? "Incomplete",
-                IsPassed = g.Remarks == "Passed"
-            }).ToList();
+                CourseCode = e.Class.Course?.CourseCode ?? "N/A",
+                CourseName = e.Class.Course?.CourseName ?? "N/A",
+                Units = e.Class.Course?.Units ?? 0,
+                
+                MidtermGrade = e.Grade?.MidtermGrade,
+                FinalGrade = e.Grade?.FinalGrade,
+                
+                Remark = e.Grade?.Remarks ?? "Incomplete", 
+                
+                IsPassed = e.Grade?.Remarks == "Passed"
+            }).OrderBy(vm => vm.CourseCode).ToList();
 
-            // 4. Create Report ViewModel
+            var schoolYearRange = $"S.Y. {schoolYearStart}-{schoolYearStart + 1}";
+            var semesterDescription = semester == 1 ? "1st Semester" : "2nd Semester";
+
             var viewModel = new SemesterReportViewModel
             {
                 StudentName = $"{user.FirstName} {user.LastName}",
-                StudentIdNumber = user.Id.ToString(),
+
+                StudentIdNumber = user.IdNumber.ToString(), 
+                
+                SchoolYearStart = schoolYearStart, 
                 Semester = semester,
-                YearLevel = yearLevel,
+
+                SchoolYearRange = schoolYearRange,         
+                SemesterDescription = semesterDescription, 
                 
                 GPA = gpa,
                 TotalUnits = totalUnits,

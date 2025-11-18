@@ -24,9 +24,9 @@
         <div class="flex justify-between items-start mb-6 border-b pb-6">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">Semester Report</h1>
+                
                 <h2 class="text-xl text-gray-600 mt-1">
-                    @Model.YearLevel@(Model.YearLevel == 1 ? "st" : Model.YearLevel == 2 ? "nd" : Model.YearLevel == 3 ? "rd" : "th") Year, 
-                    @Model.Semester@(Model.Semester == 1 ? "st" : "nd") Semester
+                    @Model.SchoolYearRange - @Model.SemesterDescription
                 </h2>
                 
                 <div class="mt-4 text-sm text-gray-700 space-y-1">

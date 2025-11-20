@@ -19,7 +19,7 @@
             <div class="card-body p-4">
                 <h6 class="mb-1 fw-semibold text-dark">+ Activate a Class</h6>
                 <p class="text-muted small mb-3">Enter EDP Code to activate a new course</p>
-                <form id="activateClassForm" asp-controller="ClassManagement" asp-action="ActivateClass" method="post">
+                <form id="activateClassForm" asp-controller="TeacherClass" asp-action="ActivateClass" method="post">
                     @Html.AntiForgeryToken()
                     <div class="d-flex gap-2">
                         <input type="text"

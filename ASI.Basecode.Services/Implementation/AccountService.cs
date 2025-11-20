@@ -251,7 +251,7 @@ namespace ASI.Basecode.Services.Implementation
             return roles.FirstOrDefault() switch
             {
                 "Admin" => "/AdminDashboard/Index",
-                "Teacher" => "/ClassManagement/TeacherDashboard",
+                "Teacher" => "/TeacherClass/TeacherDashboard",
                 "Student" => "/Home/StudentDashboard",
                 _ => "/Register"
             };

@@ -43,7 +43,7 @@ namespace ASI.Basecode.Services.DTOs
         public ICollection<EnrolledStudentDTO>? Enrollments { get; set; }
     }
 
-    public class ClassEditCommandDTO
+    public class ClassEditCommandDTO : IValidatableObject
     {
         public int EDPCode { get; set; }
 
@@ -55,16 +55,69 @@ namespace ASI.Basecode.Services.DTOs
         [Range(1, 60, ErrorMessage = "Capacity must be between 1 and 60.")]
         public int Capacity { get; set; }
 
-        [Required(ErrorMessage = "Days are required.")]
+        [Required(ErrorMessage = "At least one day must be selected")]
+        [MinLength(1, ErrorMessage = "At least one day must be selected")]
         public required string[] SelectedDays { get; set; }
 
-        [Required(ErrorMessage = "Start Time is required.")]
+        [Required(ErrorMessage = "Start time is required")]
+        [Display(Name = "Start Time")]
         public required string StartTime { get; set; }
 
-        [Required(ErrorMessage = "End Time is required.")]
+        [Required(ErrorMessage = "End time is required")]
+        [Display(Name = "End Time")]
         public required string EndTime { get; set; }
 
         public bool Status { get; set; }
+
+        // Time Validation
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!TimeSpan.TryParse(StartTime, out var start))
+            {
+                yield return new ValidationResult(
+                    "Invalid start time format.",
+                    new[] { nameof(StartTime) });
+                yield break;
+            }
+
+            if (!TimeSpan.TryParse(EndTime, out var end))
+            {
+                yield return new ValidationResult(
+                    "Invalid end time format.",
+                    new[] { nameof(EndTime) });
+                yield break;
+            }
+
+            TimeSpan earliest = new TimeSpan(6, 0, 0);
+            TimeSpan latest = new TimeSpan(23, 0, 0);
+
+            if (start < earliest || start > latest)
+                yield return new ValidationResult(
+                    "Start time must be between 6:00 AM and 10:00 PM.",
+                    new[] { nameof(StartTime) });
+
+            if (end < earliest || end > latest)
+                yield return new ValidationResult(
+                    "End time must be between 7:00 AM and 11:00 PM.",
+                    new[] { nameof(EndTime) });
+
+            var duration = end - start;
+
+            if (duration < TimeSpan.FromMinutes(60))
+                yield return new ValidationResult(
+                    "Class must be at least 60 minutes long.",
+                    new[] { nameof(EndTime) });
+
+            if (duration > TimeSpan.FromHours(6))
+                yield return new ValidationResult(
+                    "Class cannot exceed 6 hours.",
+                    new[] { nameof(EndTime) });
+
+            if (end <= start)
+                yield return new ValidationResult(
+                    "End time must be later than start time.",
+                    new[] { nameof(EndTime) });
+        }
     }
 
     public class EnrolledStudentDTO

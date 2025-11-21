@@ -13,12 +13,12 @@ namespace ASI.Basecode.Services.Implementation
     {
         private readonly AppDbContext _dbContext;
 
-        // Helper to calculate the term parameters based on Enrollment date
+
         private static (short Semester, int SchoolYearStart) GetTermParameters(DateTime enrolledAt)
         {
             var month = enrolledAt.Month;
 
-            // Example Logic: Semester 1 = June to December, Semester 2 = January to May
+
             var semester = (short)((month >= 6 && month <= 12) ? 1 : 2);
             var schoolYearStart = (month >= 6 && month <= 12) ? enrolledAt.Year : enrolledAt.Year - 1;
 
@@ -32,13 +32,15 @@ namespace ASI.Basecode.Services.Implementation
 
         public async Task<int> GetTotalEnrolledUnitsForSemester(int studentId, int schoolYearStart, short semester)
         {
-            // 1. Fetch all enrollments for the student from the database
+
             var enrollments = await _dbContext.Enrollments
                 .Include(e => e.Class.Course)
-                .Where(e => e.StudentId == studentId && e.Class.Course != null)
+                .Where(e => e.StudentId == studentId &&
+                            e.Class != null &&
+                            e.Class.IsActive &&
+                            e.Class.Course != null)
                 .ToListAsync();
 
-            // 2. Filter in-memory using the date-based logic (calculates term once per record)
             var filteredEnrollments = enrollments
                 .Where(e =>
                 {
@@ -53,7 +55,7 @@ namespace ASI.Basecode.Services.Implementation
 
         public async Task<int> GetCompletedSubjectCount(int studentId)
         {
-            // This method remains historical/cumulative and doesn't require date filtering
+
             const string passedRemark = "Passed";
 
             var completedCount = await _dbContext.Grades
@@ -67,14 +69,16 @@ namespace ASI.Basecode.Services.Implementation
 
         public async Task<double> GetGpaForSemester(int studentId, int schoolYearStart, short semester)
         {
-            // 1. Fetch all relevant grades from the database
+
             var gradesForTerm = await _dbContext.Grades
                 .Include(g => g.Enrollment.Class.Course)
                 .Where(g => g.Enrollment.StudentId == studentId &&
-                             g.FinalGrade != null)
+                             g.FinalGrade != null &&
+                             g.Enrollment.Class != null &&
+                             g.Enrollment.Class.IsActive)
                 .ToListAsync();
 
-            // 2. Filter in-memory to only include grades for the specified semester/year
+
             var filteredGrades = gradesForTerm
                 .Where(g =>
                 {
@@ -106,19 +110,19 @@ namespace ASI.Basecode.Services.Implementation
             return gpa;
         }
 
-        // CRITICAL FIX: Changed method to fetch Enrollments, ensuring all classes show up.
+
         public async Task<IEnumerable<Enrollment>> GetStudentGradesForSemester(int studentId, int schoolYearStart, short semester)
         {
-            // 1. Fetch all ENROLLMENTS for the student from the database
+
             var enrollments = await _dbContext.Enrollments
-                // Eagerly load Class, Course, and Grade to provide all necessary report data
                 .Include(e => e.Grade)
                 .Include(e => e.Class)
                     .ThenInclude(c => c.Course)
-                .Where(e => e.StudentId == studentId)
+                .Where(e => e.StudentId == studentId &&
+                            e.Class != null &&
+                            e.Class.IsActive)
                 .ToListAsync();
 
-            // 2. Filter in-memory to only include enrollments for the specified semester/year
             var filteredEnrollments = enrollments
                 .Where(e =>
                 {
@@ -134,14 +138,14 @@ namespace ASI.Basecode.Services.Implementation
         {
             const string passedRemark = "Passed";
 
-            // 1. Fetch all passing grades for the student from the database
             var grades = await _dbContext.Grades
                 .Include(g => g.Enrollment.Class)
                 .Where(g => g.Enrollment.StudentId == studentId &&
-                             g.Remarks == passedRemark)
+                             g.Remarks == passedRemark &&
+                             g.Enrollment.Class != null &&
+                             g.Enrollment.Class.IsActive)
                 .ToListAsync();
 
-            // 2. Count in-memory, filtering by the date-based semester
             var count = grades
                 .Count(g =>
                 {

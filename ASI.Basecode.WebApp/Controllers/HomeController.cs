@@ -39,7 +39,7 @@ namespace Student_Performance_Tracker.Controllers
             // Get enrolled classes
             var allClasses = await _classService.GetAllClassesAsync();
             var enrolledClasses = allClasses
-                .Where(c => c.Enrollments != null && c.Enrollments.Any(e => e.StudentId == studentId))
+                .Where(c => c.Status && c.Enrollments != null && c.Enrollments.Any(e => e.StudentId == studentId))
                 .Select(c => new StudentDashboardViewModel.ClassCard
                 {
                     Id = c.EDPCode,

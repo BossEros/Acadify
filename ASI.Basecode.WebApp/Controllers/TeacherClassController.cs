@@ -64,7 +64,7 @@ public class TeacherClassController : Controller
         // Get classes taught by this teacher
         var allClasses = await _classManagementService.GetAllClassesAsync();
         var teacherClasses = allClasses
-            .Where(c => c.TeacherId == teacherId)
+            .Where(c => c.TeacherId == teacherId && c.Status)
             .Select(c => new TeacherDashboardViewModel.ClassCard
             {
                 Id = c.EDPCode,

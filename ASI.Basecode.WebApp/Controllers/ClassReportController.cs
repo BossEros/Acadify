@@ -54,6 +54,12 @@ namespace ASI.Basecode.WebApp.Controllers
             var course = classWithDetails.Course;
             var enrollments = classWithDetails.Enrollments ?? new List<Data.Models.Enrollment>();
 
+            var classDate = classWithDetails.CreatedAt;
+            var month = classDate.Month;
+            var schoolYearStart = (month >= 6 && month <= 12) ? classDate.Year : classDate.Year - 1;
+            var academicYear = $"S.Y. {schoolYearStart}-{schoolYearStart + 1}";
+            
+            var semesterOrdinal = classWithDetails.Semester == 1 ? "1st Semester" : "2nd Semester";
             var viewModel = new TeacherGradeViewModel
             {
                 ClassId = classWithDetails.Id,
@@ -81,7 +87,10 @@ namespace ASI.Basecode.WebApp.Controllers
                 PassingRate = passingRate,
                 FailingRate = failingRate,
                 ClassAverage = classAverage,
-                IncompleteRate = incompleteRate
+                IncompleteRate = incompleteRate,
+
+                AcademicYear = academicYear,
+                SemesterDescription = semesterOrdinal
             };
 
             return View(viewModel); 

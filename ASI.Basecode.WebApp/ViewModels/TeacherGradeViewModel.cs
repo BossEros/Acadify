@@ -14,6 +14,8 @@ namespace ASI.Basecode.WebApp.ViewModels
         public double ClassAverage { get; set; }
         public double IncompleteRate { get; set; }
         public string TeacherName { get; set; } = string.Empty;
+        public string AcademicYear { get; set; } = string.Empty;
+        public string SemesterDescription { get; set; } = string.Empty;
     }
 
     public class StudentGradeViewModel

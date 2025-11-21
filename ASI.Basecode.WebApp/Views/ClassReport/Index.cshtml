@@ -27,9 +27,10 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">@Model.CourseCode</h1>
                 <h2 class="text-xl text-gray-600 mt-1">@Model.CourseName</h2>
+                <p class="text-sm text-gray-500 mt-2">@Model.AcademicYear - @Model.SemesterDescription</p>
                 
                 <div class="mt-4 text-sm text-gray-700 space-y-1">
-                    <p><span class="font-bold text-gray-900">Class ID:</span> @Model.ClassId</p>
+                    <p><span class="font-bold text-gray-900">EDP Code:</span> @Model.ClassId</p>
                     <p><span class="font-bold text-gray-900">Instructor:</span> @Model.TeacherName</p>
                     <p><span class="font-bold text-gray-900">Schedule:</span> @Model.Schedule</p>
                     <p><span class="font-bold text-gray-900">Total Students:</span> @Model.StudentGrades.Count</p>

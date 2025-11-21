@@ -1,14 +1,15 @@
 namespace ASI.Basecode.WebApp.Controllers;
 
-using ASI.Basecode.Data.Models;
 using ASI.Basecode.Services.DTOs;
 using ASI.Basecode.Services.Interfaces;
-using ASI.Basecode.WebApp.ViewModels.ClassManagement;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
+[Authorize(Roles = "Admin")]
 public class ClassManagementController : Controller
 {
+    
+
     private readonly IClassManagementService _classManagementService;
     private readonly ICourseManagementService _courseManagementService;
     private readonly IAccountManagementService _userManagementService;

@@ -5,7 +5,7 @@ using ASI.Basecode.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-[Authorize(Roles = "Admin")]
+//[Authorize(Roles = "Admin")]
 public class ClassManagementController : Controller
 {
     

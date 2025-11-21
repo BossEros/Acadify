@@ -52,7 +52,7 @@ namespace ASI.Basecode.Services.DTOs
         public int TeacherId { get; set; }
 
         [Required(ErrorMessage = "Capacity is required.")]
-        [Range(1, 100, ErrorMessage = "Capacity must be between 1 and 100.")]
+        [Range(1, 60, ErrorMessage = "Capacity must be between 1 and 60.")]
         public int Capacity { get; set; }
 
         [Required(ErrorMessage = "Days are required.")]
@@ -128,7 +128,7 @@ namespace ASI.Basecode.Services.DTOs
         public int SelectedTeacherId { get; set; }
 
         [Required(ErrorMessage = "Capacity is required.")]
-        [Range(1, 100, ErrorMessage = "Capacity must be between 1 and 100.")]
+        [Range(1, 60, ErrorMessage = "Capacity must be between 1 and 60.")]
         public short Capacity { get; set; }
 
         [Required(ErrorMessage = "Days are required.")]

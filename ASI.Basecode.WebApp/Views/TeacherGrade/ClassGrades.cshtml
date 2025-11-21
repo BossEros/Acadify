@@ -1,180 +1,190 @@
-@model ASI.Basecode.WebApp.ViewModels.TeacherGradeViewModel
-@{
-    ViewData["Title"] = "Class Grades";
-    Layout = "_TeacherLayout";
-}
 
-@* Add anti-forgery token so JS can send it in header *@
-@Html.AntiForgeryToken()
+    @model ASI.Basecode.WebApp.ViewModels.TeacherGradeViewModel
+    @{
+        ViewData["Title"] = "Class Grades";
+        Layout = "_TeacherLayout";
+    }
 
-<div class="container mx-auto px-4 py-6">
-    <div class="mb-3">
-        <a asp-controller="TeacherClass" asp-action="TeacherDashboard" class="inline-flex items-center px-3 py-2 border rounded bg-white text-sm text-gray-700 mb-3">
-            <i class="fas fa-chevron-left me-2"></i> Back to Dashboard
-        </a>
-    </div>
+    @* Add anti-forgery token so JS can send it in header *@
+    @Html.AntiForgeryToken()
 
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h2 class="text-2xl font-semibold">@Model.CourseCode - @Model.CourseName</h2>
-                <p class="text-gray-600">@Model.Schedule  @Model.Units units  @Model.StudentGrades.Count students</p>
-            </div>
-            
-            <a href="@Url.Action("Index", "ClassReport", new { id = Model.ClassId })" target="_blank" class="bg-[#3A4D75] text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-                <span>Class Report</span>
+    <div class="container mx-auto px-4 py-6">
+        <div class="mb-3">
+            <a asp-controller="TeacherClass" asp-action="TeacherDashboard" class="inline-flex items-center px-3 py-2 border rounded bg-white text-sm text-gray-700 mb-3">
+                <i class="fas fa-chevron-left me-2"></i> Back to Dashboard
             </a>
-            </div>
+        </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full">
-                <thead>
-                    <tr class="border-b">
-                        <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student ID No.</th>
-                        <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student Name</th>
-                        <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Midterm</th>
-                        <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Final</th>
-                        <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Remark</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var student in Model.StudentGrades)
-                    {
-                        <tr class="border-b hover:bg-gray-50" data-enrollment-id="@student.EnrollmentId">
-                            <td class="py-3 px-4">@student.StudentId</td>
-                            <td class="py-3 px-4">@student.StudentName</td>
-                            <td class="py-3 px-4 text-center relative group">
-                                <span class="grade-display">@(student.MidtermGrade?.ToString("0.00") ?? "--")</span>
-                                <button data-type="midterm" onclick="editGrade(this)" class="hidden group-hover:block absolute top-1/2 -translate-y-1/2 right-2">
-                                    <svg class="w-4 h-4 text-gray-500 hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    </svg>
-                                </button>
-                            </td>
-                            <td class="py-3 px-4 text-center relative group">
-                                <span class="grade-display">@(student.FinalGrade?.ToString("0.00") ?? "--")</span>
-                                <button data-type="final" onclick="editGrade(this)" class="hidden group-hover:block absolute top-1/2 -translate-y-1/2 right-2">
-                                    <svg class="w-4 h-4 text-gray-500 hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    </svg>
-                                </button>
-                            </td>
-                            <td class="py-3 px-4 text-center remark-cell">
-                                @{
-                                    var remarkLower = (student.Remark ?? string.Empty).Trim().ToLowerInvariant();
-                                    string textClass, bgClass;
-                                    if (remarkLower == "failed" || remarkLower == "fail")
-                                    {
-                                        textClass = "text-red-700";
-                                        bgClass = "bg-red-100";
-                                    }
-                                    else if (remarkLower == "passed")
-                                    {
-                                        textClass = "text-green-700";
-                                        bgClass = "bg-green-100";
-                                    }
-                                    else
-                                    {
-                                        textClass = "text-orange-700";
-                                        bgClass = "bg-orange-100";
-                                    }
-                                }
-                                <span class="px-2 py-1 text-sm font-semibold rounded-full @textClass @bgClass">@student.Remark</span>
-                            </td>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-semibold">@Model.CourseCode - @Model.CourseName</h2>
+                    <p class="text-gray-600">@Model.Schedule  @Model.Units units  @Model.StudentGrades.Count students</p>
+                </div>
+                
+                <a href="@Url.Action("Index", "ClassReport", new { id = Model.ClassId })" target="_blank" class="bg-[#3A4D75] text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                    <span>Class Report</span>
+                </a>
+                </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student ID No.</th>
+                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student Name</th>
+                            <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Midterm</th>
+                            <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Final</th>
+                            <th class="text-center py-3 px-4 text-sm font-medium text-gray-600">Remark</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var student in Model.StudentGrades)
+                        {
+                            <tr class="border-b hover:bg-gray-50" data-enrollment-id="@student.EnrollmentId">
+                                <td class="py-3 px-4">@student.StudentId</td>
+                                <td class="py-3 px-4">@student.StudentName</td>
+                                <td class="py-3 px-4 text-center relative group">
+                                    <span class="grade-display">@(student.MidtermGrade?.ToString("0.00") ?? "--")</span>
+                                    <button data-type="midterm" onclick="editGrade(this)" class="hidden group-hover:block absolute top-1/2 -translate-y-1/2 right-2">
+                                        <svg class="w-4 h-4 text-gray-500 hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="py-3 px-4 text-center relative group">
+                                    <span class="grade-display">@(student.FinalGrade?.ToString("0.00") ?? "--")</span>
+                                    <button data-type="final" onclick="editGrade(this)" class="hidden group-hover:block absolute top-1/2 -translate-y-1/2 right-2">
+                                        <svg class="w-4 h-4 text-gray-500 hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td class="py-3 px-4 text-center remark-cell">
+                                    @{
+                                        var remarkLower = (student.Remark ?? string.Empty).Trim().ToLowerInvariant();
+                                        string textClass, bgClass;
+                                        if (remarkLower == "failed" || remarkLower == "fail")
+                                        {
+                                            textClass = "text-red-700";
+                                            bgClass = "bg-red-100";
+                                        }
+                                        else if (remarkLower == "passed")
+                                        {
+                                            textClass = "text-green-700";
+                                            bgClass = "bg-green-100";
+                                        }
+                                        else
+                                        {
+                                            textClass = "text-orange-700";
+                                            bgClass = "bg-orange-100";
+                                        }
+                                    }
+                                    <span class="px-2 py-1 text-sm font-semibold rounded-full @textClass @bgClass">@student.Remark</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 
-@section Scripts {
-    <script>
-        function editGrade(button) {
-            const cell = button.parentElement;
-            const display = cell.querySelector('.grade-display');
-            const currentValue = display.textContent.trim();
-            const input = document.createElement('input');
+    @section Scripts {
+        <script>
+            function editGrade(button) {
+                const cell = button.parentElement;
+                const display = cell.querySelector('.grade-display');
+                const currentValue = display.textContent.trim();
+                const input = document.createElement('input');
 
-            input.type = 'number';
-            input.step = '0.05';
-            input.min = '0';
-            input.max = '5';
-            input.value = currentValue === '--' ? '' : currentValue;
-            input.className = 'w-20 text-center border rounded py-1';
+                input.type = 'number';
+                input.step = '0.05';
+                input.min = '1';
+                input.max = '5';
+                input.value = currentValue === '--' ? '' : currentValue;
+                input.className = 'w-20 text-center border rounded py-1';
 
-            // store type for the blur handler
-            const type = button.dataset.type;
+                // store type for the blur handler
+                const type = button.dataset.type;
 
-            input.addEventListener('blur', async function() {
-                const newValue = this.value.trim();
-                const row = cell.closest('tr');
-                const enrollmentId = parseInt(row.dataset.enrollmentId, 10);
-                const isMidterm = type === 'midterm';
-                const parsedValue = newValue === '' ? null : parseFloat(newValue);
+                input.addEventListener('blur', async function() {
+                    const newValue = this.value.trim();
+                    const row = cell.closest('tr');
+                    const enrollmentId = parseInt(row.dataset.enrollmentId, 10);
+                    const isMidterm = type === 'midterm';
+                    const parsedValue = newValue === '' ? null : parseFloat(newValue);
 
-                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-                const token = tokenInput ? tokenInput.value : '';
-
-                // Build payload and include explicit null when user cleared the input
-                const payload = { enrollmentId: enrollmentId };
-                if (isMidterm) {
-                    payload.midtermGrade = parsedValue === null ? null : Number(parsedValue.toFixed(2));
-                } else {
-                    payload.finalGrade = parsedValue === null ? null : Number(parsedValue.toFixed(2));
-                }
-
-                try {
-                    const response = await fetch('/TeacherGrade/UpdateGrade', {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'RequestVerificationToken': token
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-
-                        // Update displayed value
-                        display.textContent = parsedValue === null ? '--' : (parsedValue).toFixed(2);
-
-                        // replace input with display
+                    // client-side range check
+                    if (parsedValue !== null && (parsedValue < 1.0 || parsedValue > 5.0)) {
+                        alert('Grade must be between 1.00 and 5.00');
                         cell.replaceChild(display, input);
                         button.classList.remove('hidden');
+                        return;
+                    }
 
-                        // Update remark cell using returned remark and color rules
-                        if (data && data.remark) {
-                            const remarkCell = row.querySelector('td.remark-cell');
-                            if (remarkCell) {
-                                const remark = (data.remark || '').toString();
-                                const lower = remark.toLowerCase();
-                                let textClass = 'text-orange-700', bgClass = 'bg-orange-100';
-                                if (lower === 'failed') { textClass = 'text-red-700'; bgClass = 'bg-red-100'; }
-                                else if (lower === 'passed') { textClass = 'text-green-700'; bgClass = 'bg-green-100'; }
+                    const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                    const token = tokenInput ? tokenInput.value : '';
 
-                                remarkCell.innerHTML = `<span class="px-2 py-1 text-sm font-semibold rounded-full ${textClass} ${bgClass}">${remark}</span>`;
-                            }
-                        }
+                    // Build payload and include explicit null when user cleared the input
+                    const payload = { enrollmentId: enrollmentId };
+                    if (isMidterm) {
+                        payload.midtermGrade = parsedValue === null ? null : Number(parsedValue.toFixed(2));
                     } else {
-                        const text = await response.text();
-                        alert('Failed to update grade: ' + text);
+                        payload.finalGrade = parsedValue === null ? null : Number(parsedValue.toFixed(2));
+                    }
+
+                    try {
+                        const response = await fetch('/TeacherGrade/UpdateGrade', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': token
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+
+                            // Update displayed value
+                            display.textContent = parsedValue === null ? '--' : (parsedValue).toFixed(2);
+
+                            // replace input with display
+                            cell.replaceChild(display, input);
+                            button.classList.remove('hidden');
+
+                            // Update remark cell using returned remark and color rules
+                            if (data && data.remark) {
+                                const remarkCell = row.querySelector('td.remark-cell');
+                                if (remarkCell) {
+                                    const remark = (data.remark || '').toString();
+                                    const lower = remark.toLowerCase();
+                                    let textClass = 'text-orange-700', bgClass = 'bg-orange-100';
+                                    if (lower === 'failed') { textClass = 'text-red-700'; bgClass = 'bg-red-100'; }
+                                    else if (lower === 'passed') { textClass = 'text-green-700'; bgClass = 'bg-green-100'; }
+
+                                    remarkCell.innerHTML = `<span class="px-2 py-1 text-sm font-semibold rounded-full ${textClass} ${bgClass}">${remark}</span>`;
+                                }
+                            }
+                        } else {
+                            const text = await response.text();
+                            alert('Failed to update grade: ' + text);
+                            cell.replaceChild(display, input);
+                            button.classList.remove('hidden');
+                        }
+                    } catch (error) {
+                        alert('Error updating grade');
                         cell.replaceChild(display, input);
                         button.classList.remove('hidden');
                     }
-                } catch (error) {
-                    alert('Error updating grade');
-                    cell.replaceChild(display, input);
-                    button.classList.remove('hidden');
-                }
-            });
+                });
 
-            display.replaceWith(input);
-            button.classList.add('hidden');
-            input.focus();
-        }
-    </script>
+                display.replaceWith(input);
+                button.classList.add('hidden');
+                input.focus();
+            }
+        </script>
+    }
 }

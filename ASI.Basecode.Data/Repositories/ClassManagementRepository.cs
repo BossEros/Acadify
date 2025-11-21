@@ -100,6 +100,15 @@ namespace ASI.Basecode.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Enrollment?> GetEnrollmentByIdAsync(int enrollmentId)
+        {
+            return await _dbContext.Enrollments
+                .Include(e => e.Class)
+                .Include(e => e.Grade)
+                .Include(e => e.Student)
+                .FirstOrDefaultAsync(e => e.Id == enrollmentId);
+        }
+
         public async Task<bool> IsStudentEnrolledAsync(int studentId, int classId)
         {
             return await _dbContext.Enrollments

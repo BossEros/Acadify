@@ -35,6 +35,13 @@ namespace ASI.Basecode.WebApp.Controllers
             if (classWithDetails == null)
                 return NotFound();
 
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            // Only the teacher assigned to this class can view it
+            if (classWithDetails.TeacherId != user.Id)
+                return Forbid();
+
             var viewModel = new TeacherGradeViewModel
             {
                 ClassId = classWithDetails.Id,
@@ -90,6 +97,16 @@ namespace ASI.Basecode.WebApp.Controllers
 
             var enrollmentId = enrollmentProp.GetInt32();
 
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var enrollment = await _repo.GetEnrollmentByIdAsync(enrollmentId);
+            if (enrollment == null) return NotFound("Enrollment not found.");
+
+            // Only the teacher assigned to the class can update grades
+            if (enrollment.Class?.TeacherId != user.Id)
+                return Forbid();
+
             // Detect presence of properties so we don't overwrite unchanged fields.
             var midtermProvided = payload.TryGetProperty("midtermGrade", out var midElem);
             decimal? midterm = null;
@@ -114,6 +131,13 @@ namespace ASI.Basecode.WebApp.Controllers
                 else if (finElem.ValueKind == JsonValueKind.String && decimal.TryParse(finElem.GetString(), out var fv))
                     final = fv;
             }
+
+            // Server-side range validation
+            if (midtermProvided && midterm.HasValue && (midterm < 1.00m || midterm > 5.00m))
+                return BadRequest("Midterm grade must be between 1.00 and 5.00.");
+
+            if (finalProvided && final.HasValue && (final < 1.00m || final > 5.00m))
+                return BadRequest("Final grade must be between 1.00 and 5.00.");
 
             var result = await _teacherGradeService.UpdateGradeAsync(enrollmentId, midterm, final, midtermProvided, finalProvided);
 

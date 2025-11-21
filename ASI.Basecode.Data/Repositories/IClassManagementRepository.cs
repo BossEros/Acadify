@@ -28,6 +28,9 @@ public interface IClassManagementRepository
     // Grade methods
     Task<Grade?> GetGradeByEnrollmentIdAsync(int enrollmentId);
     Task<Grade?> UpsertGradeAsync(int enrollmentId, decimal? midtermGrade, decimal? finalGrade, bool midtermProvided, bool finalProvided);
+
+    // Get enrollment (includes Class) for authorization checks
+    Task<Enrollment?> GetEnrollmentByIdAsync(int enrollmentId);
 }
 
 

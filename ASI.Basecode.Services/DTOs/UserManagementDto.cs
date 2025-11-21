@@ -3,6 +3,7 @@ namespace ASI.Basecode.Services.DTOs;
 public class UserManagementDto
 {
     public int Id { get; set; }
+    public int IdNumber { get; set; } = 0; 
     public string UserName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;

@@ -154,6 +154,8 @@ namespace ASI.Basecode.Services.DTOs
         public required string CourseCode { get; set; }
         public required string CourseName { get; set; }
         public int CourseUnit { get; set; }
+        public short YearLevel { get; set; }
+        public short AvailableSemester { get; set; }
     }
 
     public class OperationResultDTO

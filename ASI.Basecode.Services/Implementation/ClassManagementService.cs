@@ -232,6 +232,8 @@ namespace ASI.Basecode.Services.Implementation
                     CourseCode = c.CourseCode,
                     CourseName = c.CourseName,
                     CourseUnit = c.Units,
+                    YearLevel = c.YearLevel,
+                    AvailableSemester  = c.AvailableSemester
                 }).ToList()
             };
 

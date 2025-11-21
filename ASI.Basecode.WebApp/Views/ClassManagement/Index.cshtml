@@ -193,327 +193,358 @@
     </div>
 </div>
 
-<script>
-(function () { 
-    const qs = (s) => document.querySelector(s);
-    const qsa = (s) => document.querySelectorAll(s);
 
-    // Pagination variables
-    const PAGE_SIZE = 25;
-    let currentPage = 1;
-    let allRows = [];
-    let filteredRows = [];
-    let currentPageBeforeModal = 1;
+    <script>
+    (function () { 
+        const qs = (s) => document.querySelector(s);
+        const qsa = (s) => document.querySelectorAll(s);
 
-    // Check for success message from sessionStorage
-    const successMsg = sessionStorage.getItem('successMessage');
-    if (successMsg) {
-        const msgDiv = qs('#successMessage');
-        const msgText = qs('#successMessageText');
-        msgText.textContent = successMsg;
-        msgDiv.classList.remove('hidden');
-        sessionStorage.removeItem('successMessage');
+        // Pagination variables
+        const PAGE_SIZE = 25;
+        let currentPage = 1;
+        let allRows = [];
+        let filteredRows = [];
+        let currentPageBeforeModal = 1;
 
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            msgDiv.classList.add('hidden');
-        }, 5000);
-    }
+        // Check for success message from sessionStorage
+        const successMsg = sessionStorage.getItem('successMessage');
+        if (successMsg) {
+            const msgDiv = qs('#successMessage');
+            const msgText = qs('#successMessageText');
+            msgText.textContent = successMsg;
+            msgDiv.classList.remove('hidden');
+            sessionStorage.removeItem('successMessage');
 
-    function openModal(id, url, target) {
-        currentPageBeforeModal = currentPage;
-
-        const modal = qs('#' + id);
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        qs(target).innerHTML = '<div class="py-8 text-center text-gray-500">Loading...</div>';
-        
-        fetch(url)
-            .then(r => r.text())
-            .then(html => {
-                const container = qs(target);
-                container.innerHTML = html;
-                
-                const scripts = container.querySelectorAll('script');
-                scripts.forEach(script => {
-                    const newScript = document.createElement('script');
-                    if (script.src) {
-                        newScript.src = script.src;
-                    } else {
-                        newScript.textContent = script.textContent;
-                    }
-                    script.parentNode.replaceChild(newScript, script);
-                });
-            });
-    }
-
-    function closeModal(id) {
-        const modal = qs('#' + id);
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
-    // Expose closeModal globally (for partials)
-    window.closeModal = closeModal;
-
-    document.addEventListener('change', function(e) {
-        if (e.target.id === 'courseSelect') {
-            const courses = window.currentCourses;
-            const courseSelect = e.target;
-            const form = courseSelect.closest('form');
-            const courseName = form.querySelector('#courseName');
-            const courseUnit = form.querySelector('#courseUnit');
-            const courseYear = form.querySelector('#courseYear');
-            const courseSem = form.querySelector('#courseSem');
-            
-            const selectedCourse = courses.find(c => c.id == parseInt(courseSelect.value));
-            courseName.value = selectedCourse ? selectedCourse.courseName : '';
-            courseUnit.value = selectedCourse ? selectedCourse.courseUnit : '';
-            courseYear.value = selectedCourse ? selectedCourse.courseYear : '';
-            courseSem.value = selectedCourse ? selectedCourse.courseSem : '';
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                msgDiv.classList.add('hidden');
+            }, 5000);
         }
-    });
 
-    // Handle form submission for Create and Edit modals
-    document.addEventListener('submit', function(e) {
-        if (e.target.id === 'createClassForm' || e.target.id === 'editClassForm') {
-            e.preventDefault();
+        function openModal(id, url, target) {
+            currentPageBeforeModal = currentPage;
 
-            const form = e.target;
-            const formData = new FormData(form);
-            const isEdit = e.target.id === 'editClassForm';
-            const validationSummary = qs(isEdit ? '#validationSummaryEdit' : '#validationSummary');
-            const validationErrors = qs(isEdit ? '#validationErrorsEdit' : '#validationErrors');
+            const modal = qs('#' + id);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            qs(target).innerHTML = '<div class="py-8 text-center text-gray-500">Loading...</div>';
+            
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    const container = qs(target);
+                    container.innerHTML = html;
+                    
+                    const scripts = container.querySelectorAll('script');
+                    scripts.forEach(script => {
+                        const newScript = document.createElement('script');
+                        if (script.src) {
+                            newScript.src = script.src;
+                        } else {
+                            newScript.textContent = script.textContent;
+                        }
+                        script.parentNode.replaceChild(newScript, script);
+                    });
+                });
+        }
 
-            // Hide previous errors
-            if (validationSummary) {
-                validationSummary.classList.add('hidden');
-                validationErrors.innerHTML = '';
-            }
+        function closeModal(id) {
+            const modal = qs('#' + id);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
 
-            fetch(form.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+        // Expose closeModal globally (for partials)
+        window.closeModal = closeModal;
+
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'courseSelect') {
+
+                if (!window.currentCourses || !Array.isArray(window.currentCourses)) {
+                    // console.error('❌ window.currentCourses not available');
+                    return;
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Store success message and reload
-                    sessionStorage.setItem('successMessage', data.message);
-                    window.location.href = '@Url.Action("Index", "ClassManagement")';
-                } else {
-                    // Show validation errors
-                    if (validationSummary) {
-                        validationSummary.classList.remove('hidden');
-                        if (data.errors && data.errors.length > 0) {
-                            data.errors.forEach(error => {
-                                const li = document.createElement('li');
-                                li.textContent = error;
-                                validationErrors.appendChild(li);
-                            });
+
+                // console.log('✅ Available courses:', window.currentCourses);
+
+                const courseSelect = e.target;
+                const selectedId = parseInt(courseSelect.value);
+
+                const selectedCourse = window.currentCourses.find(c => c.Id === selectedId);
+
+                const form = courseSelect.closest('form');
+                const courseName = form.querySelector('#courseName');
+                const courseUnit = form.querySelector('#courseUnit');
+                const courseYear = form.querySelector('#courseYear');
+                const courseSem = form.querySelector('#courseSem');
+
+                if (selectedCourse) {
+                            if (courseName) {
+                                courseName.value = selectedCourse.CourseName || '';
+                                // console.log('Set CourseName:', selectedCourse.CourseName);
+                            }
+                            if (courseUnit) {
+                                courseUnit.value = selectedCourse.CourseUnit || '';
+                                // console.log('Set CourseUnit:', selectedCourse.CourseUnit);
+                            }
+                            if (courseYear) {
+                                courseYear.value = selectedCourse.YearLevel || '';
+                                // console.log('Set YearLevel:', selectedCourse.YearLevel);
+                            }
+                            if (courseSem) {
+                                courseSem.value = selectedCourse.AvailableSemester || '';
+                                // console.log('Set AvailableSemester:', selectedCourse.AvailableSemester);
+                            }
+                        } else {
+                            // console.warn('⚠️ No course found with ID:', selectedId);
+                            if (courseName) courseName.value = '';
+                            if (courseUnit) courseUnit.value = '';
+                            if (courseYear) courseYear.value = '';
+                            if (courseSem) courseSem.value = '';
                         }
                     }
+                });
+
+        // Handle form submission for Create and Edit modals
+        document.addEventListener('submit', function(e) {
+            if (e.target.id === 'createClassForm' || e.target.id === 'editClassForm') {
+                e.preventDefault();
+
+                const form = e.target;
+                const formData = new FormData(form);
+                const isEdit = e.target.id === 'editClassForm';
+                const validationSummary = qs(isEdit ? '#validationSummaryEdit' : '#validationSummary');
+                const validationErrors = qs(isEdit ? '#validationErrorsEdit' : '#validationErrors');
+
+                // Hide previous errors
+                if (validationSummary) {
+                    validationSummary.classList.add('hidden');
+                    validationErrors.innerHTML = '';
+                }
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Store success message and reload
+                        sessionStorage.setItem('successMessage', data.message);
+                        window.location.href = '@Url.Action("Index", "ClassManagement")';
+                    } else {
+                        // Show validation errors
+                        if (validationSummary) {
+                            validationSummary.classList.remove('hidden');
+                            if (data.errors && data.errors.length > 0) {
+                                data.errors.forEach(error => {
+                                    const li = document.createElement('li');
+                                    li.textContent = error;
+                                    validationErrors.appendChild(li);
+                                });
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+
+        // Create
+        qs('#openCreate').addEventListener('click', () =>
+            openModal('modalCreate', '@Url.Action("Create","ClassManagement")', '#createContent')
+        );
+
+        // Outside click close
+        qsa('[id^="modal"]').forEach(m => {
+            m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+        });
+
+        // Action menu toggle
+        document.addEventListener('click', e => {
+            const isActionBtn = e.target.closest('.action-btn');
+            const isInsideMenu = e.target.closest('.action-menu');
+            qsa('.action-menu').forEach(m => m.classList.add('hidden'));
+            if (isActionBtn) {
+                const menu = isActionBtn.parentElement.querySelector('.action-menu');
+                menu.classList.toggle('hidden');
+            }
+            if (isInsideMenu) e.stopPropagation();
+        });
+
+        // Edit
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('.edit-btn');
+            if (btn) {
+                const id = btn.dataset.id;
+                openModal('modalEdit', `@Url.Action("Edit","ClassManagement")/${id}`, '#editContent');
+            }
+        });
+
+        // Delete
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('.delete-btn');
+            if (btn) {
+                const id = btn.dataset.id;
+                openModal('modalDelete', `@Url.Action("Delete","ClassManagement")/${id}`, '#deleteContent');
+            }
+        });
+
+        // Details
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('.details-btn');
+            if (btn) {
+                const id = btn.dataset.id;
+                openModal('modalDetails', `@Url.Action("Details","ClassManagement")/${id}`, '#detailsContent');
+            }
+        });
+
+        // Confirm delete (called from partial)
+        window.confirmDelete = function (id) {
+            fetch(`@Url.Action("ConfirmDelete","ClassManagement")/${id}`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    const row = document.querySelector(`[data-edp="${id}"]`);
+                    if (row) row.remove();
+                    closeModal('modalDelete');
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(() => {
+                alert("An error occurred while deleting the class.");
             });
-        }
-    });
+        };
 
-    // Create
-    qs('#openCreate').addEventListener('click', () =>
-        openModal('modalCreate', '@Url.Action("Create","ClassManagement")', '#createContent')
-    );
-
-    // Outside click close
-    qsa('[id^="modal"]').forEach(m => {
-        m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
-    });
-
-    // Action menu toggle
-    document.addEventListener('click', e => {
-        const isActionBtn = e.target.closest('.action-btn');
-        const isInsideMenu = e.target.closest('.action-menu');
-        qsa('.action-menu').forEach(m => m.classList.add('hidden'));
-        if (isActionBtn) {
-            const menu = isActionBtn.parentElement.querySelector('.action-menu');
-            menu.classList.toggle('hidden');
-        }
-        if (isInsideMenu) e.stopPropagation();
-    });
-
-    // Edit
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('.edit-btn');
-        if (btn) {
-            const id = btn.dataset.id;
-            openModal('modalEdit', `@Url.Action("Edit","ClassManagement")/${id}`, '#editContent');
-        }
-    });
-
-    // Delete
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('.delete-btn');
-        if (btn) {
-            const id = btn.dataset.id;
-            openModal('modalDelete', `@Url.Action("Delete","ClassManagement")/${id}`, '#deleteContent');
-        }
-    });
-
-    // Details
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('.details-btn');
-        if (btn) {
-            const id = btn.dataset.id;
-            openModal('modalDetails', `@Url.Action("Details","ClassManagement")/${id}`, '#detailsContent');
-        }
-    });
-
-    // Confirm delete (called from partial)
-    window.confirmDelete = function (id) {
-        fetch(`@Url.Action("ConfirmDelete","ClassManagement")/${id}`, {
-            method: 'POST',
-            headers: {
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+        // Pagination functions
+        function initializePagination() {
+            const tbody = qs('#classTbody');
+            allRows = Array.from(tbody.querySelectorAll('tr[data-edp]'));
+            filteredRows = [...allRows];
+            
+            // Restore page from sessionStorage if exists
+            const savedPage = sessionStorage.getItem('currentPage');
+            if (savedPage) {
+                currentPage = parseInt(savedPage);
+                sessionStorage.removeItem('currentPage');
             }
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                const row = document.querySelector(`[data-edp="${id}"]`);
-                if (row) row.remove();
-                closeModal('modalDelete');
+            
+            renderPage();
+        }
+
+        function renderPage() {
+            const tbody = qs('#classTbody');
+            const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+            
+            // Clear tbody
+            tbody.innerHTML = '';
+            
+            // Calculate start and end indices
+            const startIdx = (currentPage - 1) * PAGE_SIZE;
+            const endIdx = Math.min(startIdx + PAGE_SIZE, filteredRows.length);
+            
+            // Add rows for current page
+            if (filteredRows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-gray-500 py-3">No classes found.</td></tr>';
             } else {
-                alert(data.message);
+                for (let i = startIdx; i < endIdx; i++) {
+                    tbody.appendChild(filteredRows[i].cloneNode(true));
+                }
             }
-        })
-        .catch(() => {
-            alert("An error occurred while deleting the class.");
+            
+            // Update pagination controls
+            updatePaginationControls(totalPages);
+        }
+
+        function updatePaginationControls(totalPages) {
+            const prevBtn = qs('#prevPage');
+            const nextBtn = qs('#nextPage');
+            const pageInput = qs('#pageInput');
+            const totalPagesSpan = qs('#totalPages');
+            
+            totalPagesSpan.textContent = totalPages;
+            pageInput.value = currentPage;
+            pageInput.max = totalPages;
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            if (totalPages === 0) page = 1;
+            
+            currentPage = page;
+            renderPage();
+        }
+
+        // Pagination event listeners
+        qs('#prevPage').addEventListener('click', () => {
+            goToPage(currentPage - 1);
         });
-    };
 
-    // Pagination functions
-    function initializePagination() {
-        const tbody = qs('#classTbody');
-        allRows = Array.from(tbody.querySelectorAll('tr[data-edp]'));
-        filteredRows = [...allRows];
-        
-        // Restore page from sessionStorage if exists
-        const savedPage = sessionStorage.getItem('currentPage');
-        if (savedPage) {
-            currentPage = parseInt(savedPage);
-            sessionStorage.removeItem('currentPage');
-        }
-        
-        renderPage();
-    }
+        qs('#nextPage').addEventListener('click', () => {
+            goToPage(currentPage + 1);
+        });
 
-    function renderPage() {
-        const tbody = qs('#classTbody');
-        const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
-        
-        // Clear tbody
-        tbody.innerHTML = '';
-        
-        // Calculate start and end indices
-        const startIdx = (currentPage - 1) * PAGE_SIZE;
-        const endIdx = Math.min(startIdx + PAGE_SIZE, filteredRows.length);
-        
-        // Add rows for current page
-        if (filteredRows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-gray-500 py-3">No classes found.</td></tr>';
-        } else {
-            for (let i = startIdx; i < endIdx; i++) {
-                tbody.appendChild(filteredRows[i].cloneNode(true));
+        qs('#pageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const page = parseInt(e.target.value);
+                if (!isNaN(page)) {
+                    goToPage(page);
+                }
             }
-        }
-        
-        // Update pagination controls
-        updatePaginationControls(totalPages);
-    }
+        });
 
-    function updatePaginationControls(totalPages) {
-        const prevBtn = qs('#prevPage');
-        const nextBtn = qs('#nextPage');
-        const pageInput = qs('#pageInput');
-        const totalPagesSpan = qs('#totalPages');
-        
-        totalPagesSpan.textContent = totalPages;
-        pageInput.value = currentPage;
-        pageInput.max = totalPages;
-        
-        prevBtn.disabled = currentPage === 1;
-        nextBtn.disabled = currentPage === totalPages || totalPages === 0;
-    }
-
-    function goToPage(page) {
-        const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
-        if (page < 1) page = 1;
-        if (page > totalPages) page = totalPages;
-        if (totalPages === 0) page = 1;
-        
-        currentPage = page;
-        renderPage();
-    }
-
-    // Pagination event listeners
-    qs('#prevPage').addEventListener('click', () => {
-        goToPage(currentPage - 1);
-    });
-
-    qs('#nextPage').addEventListener('click', () => {
-        goToPage(currentPage + 1);
-    });
-
-    qs('#pageInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+        qs('#pageInput').addEventListener('blur', (e) => {
             const page = parseInt(e.target.value);
             if (!isNaN(page)) {
                 goToPage(page);
+            } else {
+                e.target.value = currentPage;
             }
-        }
-    });
+        });
 
-    qs('#pageInput').addEventListener('blur', (e) => {
-        const page = parseInt(e.target.value);
-        if (!isNaN(page)) {
-            goToPage(page);
-        } else {
-            e.target.value = currentPage;
-        }
-    });
+        // Search functionality
+        qs('#searchEdpCode').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.trim().toLowerCase();
+            
+            if (!searchTerm) {
+                // Reset to all rows
+                filteredRows = [...allRows];
+            } else {
+                // Filter rows based on EDP code
+                filteredRows = allRows.filter(row => {
+                    const edpCode = row.dataset.edp?.toLowerCase() || '';
+                    return edpCode.includes(searchTerm);
+                });
+            }
+            
+            // Reset to page 1 when searching
+            currentPage = 1;
+            renderPage();
+        });
 
-    // Search functionality
-    qs('#searchEdpCode').addEventListener('input', (e) => {
-        const searchTerm = e.target.value.trim().toLowerCase();
-        
-        if (!searchTerm) {
-            // Reset to all rows
-            filteredRows = [...allRows];
-        } else {
-            // Filter rows based on EDP code
-            filteredRows = allRows.filter(row => {
-                const edpCode = row.dataset.edp?.toLowerCase() || '';
-                return edpCode.includes(searchTerm);
-            });
-        }
-        
-        // Reset to page 1 when searching
-        currentPage = 1;
-        renderPage();
-    });
-
-    // Initialize pagination on page load
-    initializePagination();
-})();
+        // Initialize pagination on page load
+        initializePagination();
+    })();
 </script>
 
-<style>
+    <style>
     .action-btn {
         font-size: 1.25rem;
         line-height: 1;

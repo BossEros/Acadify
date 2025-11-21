@@ -146,99 +146,99 @@
 </div>
 
 <script>
-(function() {
-    const PAGE_SIZE = 5;
-    let currentPage = 1;
-    let allRows = [];
-    let filteredRows = [];
+    (function() {
+        const PAGE_SIZE = 5;
+        let currentPage = 1;
+        let allRows = [];
+        let filteredRows = [];
 
-    function initStudentPagination() {
-        const tbody = document.querySelector('#studentTbody');
-        if (!tbody) return;
+        function initStudentPagination() {
+            const tbody = document.querySelector('#studentTbody');
+            if (!tbody) return;
 
-        allRows = Array.from(tbody.querySelectorAll('tr[data-stud]'));
-        filteredRows = [...allRows];
+            allRows = Array.from(tbody.querySelectorAll('tr[data-stud]'));
+            filteredRows = [...allRows];
 
-        renderStudentPage();
-    }
-
-    function renderStudentPage() {
-        const tbody = document.querySelector('#studentTbody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-
-        const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
-
-        const start = (currentPage - 1) * PAGE_SIZE;
-        const end = Math.min(start + PAGE_SIZE, filteredRows.length);
-
-        for (let i = start; i < end; i++) {
-            tbody.appendChild(filteredRows[i].cloneNode(true));
+            renderStudentPage();
         }
 
-        updateStudentControls(totalPages);
-    }
+        function renderStudentPage() {
+            const tbody = document.querySelector('#studentTbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
 
-    function updateStudentControls(totalPages) {
-        const totalPagesEl = document.querySelector('#studTotalPages');
-        const pageInputEl = document.querySelector('#studPageInput');
+            const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = Math.min(start + PAGE_SIZE, filteredRows.length);
+
+            for (let i = start; i < end; i++) {
+                tbody.appendChild(filteredRows[i].cloneNode(true));
+            }
+
+            updateStudentControls(totalPages);
+        }
+
+        function updateStudentControls(totalPages) {
+            const totalPagesEl = document.querySelector('#studTotalPages');
+            const pageInputEl = document.querySelector('#studPageInput');
+            const prevBtn = document.querySelector('#studPrevPage');
+            const nextBtn = document.querySelector('#studNextPage');
+
+            if (!totalPagesEl || !pageInputEl || !prevBtn || !nextBtn) return;
+
+            totalPagesEl.textContent = totalPages;
+            pageInputEl.value = currentPage;
+            pageInputEl.max = totalPages;
+
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        function studentGoToPage(page) {
+            const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages || 1;
+
+            currentPage = page;
+            renderStudentPage();
+        }
+
         const prevBtn = document.querySelector('#studPrevPage');
         const nextBtn = document.querySelector('#studNextPage');
+        const pageInput = document.querySelector('#studPageInput');
 
-        if (!totalPagesEl || !pageInputEl || !prevBtn || !nextBtn) return;
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+                studentGoToPage(currentPage - 1);
+            });
+        }
 
-        totalPagesEl.textContent = totalPages;
-        pageInputEl.value = currentPage;
-        pageInputEl.max = totalPages;
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                studentGoToPage(currentPage + 1);
+            });
+        }
 
-        prevBtn.disabled = currentPage === 1;
-        nextBtn.disabled = currentPage === totalPages || totalPages === 0;
-    }
+        if (pageInput) {
+            pageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const page = parseInt(e.target.value);
+                    if (!isNaN(page)) studentGoToPage(page);
+                }
+            });
 
-    function studentGoToPage(page) {
-        const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
-        if (page < 1) page = 1;
-        if (page > totalPages) page = totalPages || 1;
-
-        currentPage = page;
-        renderStudentPage();
-    }
-
-    const prevBtn = document.querySelector('#studPrevPage');
-    const nextBtn = document.querySelector('#studNextPage');
-    const pageInput = document.querySelector('#studPageInput');
-
-    if (prevBtn) {
-        prevBtn.addEventListener('click', function() {
-            studentGoToPage(currentPage - 1);
-        });
-    }
-
-    if (nextBtn) {
-        nextBtn.addEventListener('click', function() {
-            studentGoToPage(currentPage + 1);
-        });
-    }
-
-    if (pageInput) {
-        pageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+            pageInput.addEventListener('blur', function(e) {
                 const page = parseInt(e.target.value);
-                if (!isNaN(page)) studentGoToPage(page);
-            }
-        });
+                if (!isNaN(page)) {
+                    studentGoToPage(page);
+                } else {
+                    e.target.value = currentPage;
+                }
+            });
+        }
 
-        pageInput.addEventListener('blur', function(e) {
-            const page = parseInt(e.target.value);
-            if (!isNaN(page)) {
-                studentGoToPage(page);
-            } else {
-                e.target.value = currentPage;
-            }
-        });
-    }
-
-    initStudentPagination();
-})();
+        initStudentPagination();
+    })();
 </script>

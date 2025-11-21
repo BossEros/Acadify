@@ -1,21 +1,85 @@
-﻿@model ASI.Basecode.Data.Models.Class
+﻿@model ASI.Basecode.Services.DTOs.ClassDeleteDTO
+@{
+    Layout = null;
+}
 
 <div class="space-y-6">
-    <p class="text-gray-700">
-        Are you sure you want to delete class 
-        <span class="font-semibold text-red-600">@Model.Id</span>?
-        <br />
-        This action is <strong>irreversible</strong>.
-    </p>
+    <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+        <div class="flex justify-between">
+            <span class="text-sm text-gray-600">EDP Code:</span>
+            <span class="font-semibold text-gray-900">@Model.EDPCode</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-sm text-gray-600">Course Code:</span>
+            <span class="font-semibold text-gray-900">@Model.CourseCode</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-sm text-gray-600">Course Name:</span>
+            <span class="font-semibold text-gray-900">@Model.CourseName</span>
+        </div>
+    </div>
+
+    @if (Model.IsActive)
+    {
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <svg class="w-5 h-5 text-yellow-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <h4 class="text-sm font-semibold text-yellow-800">Cannot Delete Active Class</h4>
+                    <p class="text-sm text-yellow-700 mt-1">This class is currently active. Please deactivate it before deletion.</p>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.HasEnrolledStudents)
+    {
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <svg class="w-5 h-5 text-yellow-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <h4 class="text-sm font-semibold text-yellow-800">Cannot Delete Class with Students</h4>
+                    <p class="text-sm text-yellow-700 mt-1">This class has enrolled students. Please unenroll all students before deletion.</p>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <svg class="w-5 h-5 text-red-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <h4 class="text-sm font-semibold text-red-800">Confirm Deletion</h4>
+                    <p class="text-sm text-red-700 mt-1">
+                        Are you sure you want to delete class <strong>@Model.EDPCode</strong>?
+                        <br />
+                        This action is <strong>irreversible</strong> and cannot be undone.
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
 
     <div class="flex justify-end space-x-3 pt-4 border-t">
-        <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+        <button type="button" 
+                class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
                 onclick="closeModal('modalDelete')">
             Cancel
         </button>
-        <button type="button" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                onclick="confirmDelete('@Model.Id')">
-            Delete
-        </button>
+        
+        @if (!Model.IsActive && !Model.HasEnrolledStudents)
+        {
+            <button type="button" 
+                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    onclick="confirmDelete('@Model.EDPCode')">
+                Delete
+            </button>
+        }
     </div>
 </div>

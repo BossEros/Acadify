@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 public interface IClassManagementRepository
 {
-    Task<IEnumerable<Class>> GetAllAsync();
+    Task<IEnumerable<Class>> GetAllClassAsync();
     Task<Class?> GetByIdAsync(int id);
     Task<Class?> GetByIdIncludeInactiveAsync(int id);
     Task<int> GetNextClassIdAsync();
@@ -28,6 +28,9 @@ public interface IClassManagementRepository
     // Grade methods
     Task<Grade?> GetGradeByEnrollmentIdAsync(int enrollmentId);
     Task<Grade?> UpsertGradeAsync(int enrollmentId, decimal? midtermGrade, decimal? finalGrade, bool midtermProvided, bool finalProvided);
+
+    // Get enrollment (includes Class) for authorization checks
+    Task<Enrollment?> GetEnrollmentByIdAsync(int enrollmentId);
 }
 
 

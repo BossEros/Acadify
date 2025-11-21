@@ -3,6 +3,7 @@
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.WebApp.ViewModels.ClassManagement;
 using Microsoft.AspNetCore.Mvc;
+using ASI.Basecode.Services.DTOs;
 
 public class TeacherClassController : Controller
 {
@@ -18,24 +19,24 @@ public class TeacherClassController : Controller
     [HttpGet]
     public async Task<IActionResult> ViewClass(int id)
     {
-        var classEntity = await _classManagementService.GetClassByIdAsync(id);
+        var classDto = await _classManagementService.GetClassByIdAsync(id);
 
-        if (classEntity == null)
+        if (classDto == null)
             return NotFound();
 
         var viewModel = new TeacherClassViewModel
         {
-            CourseCode = classEntity.Course?.CourseCode ?? "N/A",
-            CourseName = classEntity.Course?.CourseName ?? "N/A",
-            Schedule = classEntity.Schedule ?? "N/A",
-            Units = classEntity.Course?.Units ?? 0,
+            CourseCode = classDto.CourseCode ?? "N/A",
+            CourseName = classDto.Description,
+            Schedule = classDto.Schedule ?? "N/A",
+            Units = classDto.Units,
 
-            Students = classEntity.Enrollments?.Select(e => new TeacherClassViewModel.StudentGradeItem
+            Students = classDto.Enrollments?.Select(e => new TeacherClassViewModel.StudentGradeItem
             {
-                StudentName = $"{e.Student?.FirstName} {e.Student?.LastName}",
-                MidtermGrade = (double)(e.Grade?.MidtermGrade ?? 0),
-                FinalGrade = (double)(e.Grade?.FinalGrade ?? 0),
-                Remarks = e.Grade?.Remarks ?? "N/A"
+                StudentName = $"{e.FirstName} {e.LastName}",
+                MidtermGrade = (double)(e.MidtermGrade ?? 0),
+                FinalGrade = (double)(e.FinalGrade ?? 0),
+                Remarks = e.Remarks ?? "N/A"
             }).ToList() ?? new List<TeacherClassViewModel.StudentGradeItem>()
         };
 
@@ -66,13 +67,13 @@ public class TeacherClassController : Controller
             .Where(c => c.TeacherId == teacherId)
             .Select(c => new TeacherDashboardViewModel.ClassCard
             {
-                Id = c.Id,
-                CourseCode = c.Course?.CourseCode ?? "N/A",
-                CourseName = c.Course?.CourseName ?? "N/A",
+                Id = c.EDPCode,
+                CourseCode = c.CourseCode ?? "N/A",
+                CourseName = c.Description,
                 Schedule = c.Schedule ?? "N/A",
                 Semester = c.Semester,
                 YearLevel = c.YearLevel,
-                IsActive = c.IsActive
+                IsActive = c.Status
             })
             .ToList();
 

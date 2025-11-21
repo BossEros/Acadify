@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Student")]
     public class GradeManagementController : Controller
     {
         private readonly IGradeManagementService _gradeManagementService;

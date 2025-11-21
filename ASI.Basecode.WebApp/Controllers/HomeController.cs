@@ -42,11 +42,11 @@ namespace Student_Performance_Tracker.Controllers
                 .Where(c => c.Enrollments != null && c.Enrollments.Any(e => e.StudentId == studentId))
                 .Select(c => new StudentDashboardViewModel.ClassCard
                 {
-                    Id = c.Id,
-                    CourseCode = c.Course?.CourseCode ?? "N/A",
-                    CourseName = c.Course?.CourseName ?? "N/A",
-                    Units = c.Course?.Units ?? 0,
-                    TeacherName = c.Teacher != null ? $"Prof. {c.Teacher.FirstName} {c.Teacher.LastName}" : "N/A",
+                    Id = c.EDPCode,
+                    CourseCode = c.CourseCode ?? "N/A",
+                    CourseName = c.Description ?? "N/A",
+                    Units = c.Units,
+                    TeacherName = c.TeacherName != null ? $"Prof. {c.TeacherName}" : "N/A",
                     Schedule = c.Schedule ?? "N/A"
                 })
                 .ToList();

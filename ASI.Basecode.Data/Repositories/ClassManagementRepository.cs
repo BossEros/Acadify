@@ -16,7 +16,7 @@ namespace ASI.Basecode.Data.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Class>> GetAllAsync()
+        public async Task<IEnumerable<Class>> GetAllClassAsync()
         {
             return await _dbContext.Classes
                 .Include(c => c.Course)
@@ -98,6 +98,15 @@ namespace ASI.Basecode.Data.Repositories
                     .ThenInclude(c => c.Course)
                 .Include(e => e.Grade)
                 .ToListAsync();
+        }
+
+        public async Task<Enrollment?> GetEnrollmentByIdAsync(int enrollmentId)
+        {
+            return await _dbContext.Enrollments
+                .Include(e => e.Class)
+                .Include(e => e.Grade)
+                .Include(e => e.Student)
+                .FirstOrDefaultAsync(e => e.Id == enrollmentId);
         }
 
         public async Task<bool> IsStudentEnrolledAsync(int studentId, int classId)

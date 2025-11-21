@@ -1,9 +1,9 @@
-﻿@model ASI.Basecode.WebApp.ViewModels.ClassManagement.CreateClassViewModel
+﻿@using ASI.Basecode.Services.DTOs
+@model ASI.Basecode.Services.DTOs.ClassCreateDTO
 @{
     Layout = null;
 }
 
-<!-- Validation Summary -->
 <div id="validationSummary" class="hidden mb-4 p-4 rounded bg-red-100 text-red-700">
     <ul id="validationErrors" class="list-disc list-inside space-y-1"></ul>
 </div>
@@ -11,11 +11,10 @@
 <form asp-action="Create" method="post" id="createClassForm" class="space-y-4">
     @Html.AntiForgeryToken()
 
-    <!-- Course Code & Description -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
             <label class="block text-sm text-gray-700 mb-1">Course Code</label>
-            <select id="courseSelect" asp-for="CourseId" asp-items="ViewBag.Courses"
+            <select id="courseSelect" name="SelectedCourseId" asp-items="Model.CourseOptions"
                     class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
                 <option disabled selected value="">Select a course</option>
             </select>
@@ -27,32 +26,19 @@
         </div>
     </div>
 
-    <!-- Course Data -->
     <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
         <div>
             <label class="block text-sm text-gray-700 mb-1">Units</label>
             <input id="courseUnit" readonly value="---"
                class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" />
         </div>
-        <!-- <div>
-            <label class="block text-sm text-gray-700 mb-1">Year</label>
-            <input id="courseYear" readonly value="---"
-                   class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" />
-        </div>
-        <div>
-            <label class="block text-sm text-gray-700 mb-1">Semester</label>
-            <input id="courseSem" readonly value="---"
-                   class="w-full rounded border border-gray-200 bg-gray-100 px-3 py-2" />
-        </div> -->
     </div>
 
     <hr class="my-4 border-t border-gray-300" />
 
-    <!-- Schedule -->
     <div class="space-y-4">
         <label class="block text-sm text-gray-700 font-semibold">Schedule</label>
 
-        <!-- Days -->
         <div>
             <label class="block text-sm text-gray-700 mb-1">Days</label>
 
@@ -63,7 +49,7 @@
                         <input type="checkbox"
                             class="rounded border-gray-300 text-green-600 focus:ring-green-500"
                             id="@day"
-                            name="Days"
+                            name="SelectedDays"
                             value="@day" />
                         <span>@day</span>
                     </label>
@@ -71,24 +57,21 @@
             </div>
         </div>
 
-        <!-- Time -->
         <div>
             <label class="block text-sm text-gray-700 mb-1">Time</label>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                <!-- Start Time -->
                 <div>
                     <label class="block text-sm text-gray-700 mb-1">Start Time</label>
-                    <input type="time" id="startTime" asp-for="StartTime"
+                    <input type="time" id="startTime" name="StartTime"
                         class="w-full rounded border border-gray-300 px-3 py-2
                                 focus:ring-2 focus:ring-green-500 focus:outline-none" />
                 </div>
 
-                <!-- End Time -->
                 <div>
                     <label class="block text-sm text-gray-700 mb-1">End Time</label>
-                    <input type="time" id="endTime" asp-for="EndTime"
+                    <input type="time" id="endTime" name="EndTime"
                         class="w-full rounded border border-gray-300 px-3 py-2
                                 focus:ring-2 focus:ring-green-500 focus:outline-none" />
                 </div>
@@ -98,25 +81,21 @@
     </div>
 
     <hr class="my-4 border-t border-gray-300" />
-    <!-- Teacher -->
     <div>
         <label class="block text-sm text-gray-700 mb-1">Teacher</label>
-        <select id="teacherSelect" asp-for="TeacherId" asp-items="ViewBag.Teachers"
+        <select id="teacherSelect" name="SelectedTeacherId" asp-items="Model.TeacherOptions"
                 class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
             <option disabled selected value="">Select a teacher</option>
         </select>
     </div>
 
-    <!-- Capacity -->
     <div>
         <label class="block text-sm text-gray-700 mb-1">Capacity</label>
-        <input type="number" asp-for="Capacity"
+        <input type="number" name="Capacity"
                class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none"
                placeholder="Enter maximum number of students" />
-        <span asp-validation-for="Capacity" class="text-red-600 text-sm"></span>
     </div>
 
-    <!-- Buttons -->
     <div class="flex justify-end space-x-2 pt-2">
         <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300" onclick="closeModal('modalCreate')">
             Cancel
@@ -128,5 +107,5 @@
 </form>
 
 <script>
-    window.currentCourses = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.CourseList ?? new List<object>()));
+    window.currentCourses = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AllCourseMetadata ?? new List<CourseMetadataDTO>()));
 </script>

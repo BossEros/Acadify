@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ASI.Basecode.Data.Models.Class>
+﻿@model IEnumerable<ASI.Basecode.Services.DTOs.ClassIndexDTO>
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Class Management";
@@ -87,17 +87,17 @@
                 {
                     foreach (var item in Model)
                     {
-                        <tr class="border-b" data-edp="@item.Id">
-                            <td class="p-3">@item.Id</td>
-                            <td class="p-3">@item.Course?.CourseCode</td>
-                            <td class="p-3">@item.Course?.CourseName</td>
-                            <td class="p-3">@item.Course?.Units</td>
+                        <tr class="border-b" data-edp="@item.EDPCode">
+                            <td class="p-3">@item.EDPCode</td>
+                            <td class="p-3">@item.CourseCode</td>
+                            <td class="p-3">@item.Description</td>
+                            <td class="p-3">@item.Units</td>
                             <td class="p-3">@item.Schedule</td>
-                            <td class="p-3">@($"{item.Teacher?.FirstName} {item.Teacher?.LastName}")</td>
+                            <td class="p-3">@($"{item.TeacherName}")</td>
                             <!-- <td class="p-3">@item.YearLevel</td>
                             <td class="p-3">@item.Semester</td> -->
                             <td class="p-3">
-                                @if (item.IsActive)
+                                @if (item.Status)
                                 {
                                     <span class="inline-block rounded-full bg-green-100 text-green-700 text-xs px-2 py-1">Active</span>
                                 }
@@ -111,13 +111,13 @@
                                     ⋮
                                 </button>
                                 <div class="action-menu hidden absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                                    <button type="button" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 edit-btn" data-id="@item.Id">
+                                    <button type="button" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 edit-btn" data-id="@item.EDPCode">
                                         ✏️ Edit
                                     </button>
-                                    <button type="button" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 delete-btn" data-id="@item.Id">
+                                    <button type="button" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 delete-btn" data-id="@item.EDPCode">
                                         🗑️ Delete
                                     </button>
-                                    <button type="button" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 details-btn" data-id="@item.Id">
+                                    <button type="button" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 details-btn" data-id="@item.EDPCode">
                                         📄 Details
                                     </button>
                                 </div>
@@ -165,7 +165,7 @@
 
     <!-- Modals -->
     <div id="modalDetails" class="hidden fixed inset-0 z-50 items-center justify-center bg-gray-900/50 backdrop-blur">
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow p-6">
+        <div class="bg-white w-full max-w-4xl rounded-xl shadow p-6">
             <h3 class="text-xl font-semibold mb-4">Class Details</h3>
             <div id="detailsContent"></div>
         </div>
@@ -193,9 +193,8 @@
     </div>
 </div>
 
-<!-- Scripts -->
 <script>
-(function () {
+(function () { 
     const qs = (s) => document.querySelector(s);
     const qsa = (s) => document.querySelectorAll(s);
 

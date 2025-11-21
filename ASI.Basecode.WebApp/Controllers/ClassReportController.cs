@@ -75,7 +75,7 @@ namespace ASI.Basecode.WebApp.Controllers
                 StudentGrades = enrollments.Select(e => new StudentGradeViewModel
                 {
                     EnrollmentId = e.Id,
-                    StudentId = e.StudentId,
+                    StudentId = e.Student?.IdNumber ?? 0,
                     StudentName = $"{e.Student.FirstName} {e.Student.LastName}",
                     MidtermGrade = e.Grade?.MidtermGrade,
                     FinalGrade = e.Grade?.FinalGrade,

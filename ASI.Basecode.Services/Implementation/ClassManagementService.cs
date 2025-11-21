@@ -176,7 +176,7 @@ namespace ASI.Basecode.Services.Implementation
             {
                 CourseId = model.SelectedCourseId,
                 TeacherId = model.SelectedTeacherId,
-                Capacity = model.Capacity,
+                Capacity = model.Capacity.Value,
                 Schedule = finalSchedule,
                 Status = false,
                 

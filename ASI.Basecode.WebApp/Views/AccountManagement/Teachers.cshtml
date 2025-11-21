@@ -153,7 +153,7 @@
                 return;
             }
 
-            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + encodeURIComponent(searchTerm))
+            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + encodeURIComponent(searchTerm) + '&role=Teacher')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -173,7 +173,7 @@
         }
 
         function loadTeacher(idNumber) {
-            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + idNumber)
+            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + idNumber + '&role=Teacher')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -269,13 +269,15 @@
 
         function showEditModal() {
             // Pre-fill current values
-            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + currentUserId)
+            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + currentUserId + '&role=Teacher')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         document.getElementById('editEmail').value = data.data.email;
                         document.getElementById('editIsActive').checked = data.data.isActive;
                         document.getElementById('editModal').classList.remove('hidden');
+                    } else {
+                        alert(data.message);
                     }
                 });
         }

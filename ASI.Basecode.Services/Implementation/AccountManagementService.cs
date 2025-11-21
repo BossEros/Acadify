@@ -6,6 +6,7 @@ using ASI.Basecode.Services.Results;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace ASI.Basecode.Services.Implementation
 {
@@ -76,7 +77,7 @@ namespace ASI.Basecode.Services.Implementation
             return new UserManagementDto
             {
                 Id = user.Id,
-                IdNumber = user.IdNumber, // added mapping
+                IdNumber = user.IdNumber, 
                 UserName = user.UserName!,
                 Email = user.Email!,
                 FirstName = user.FirstName,
@@ -381,7 +382,39 @@ namespace ASI.Basecode.Services.Implementation
                     return UserManagementResult.Failure("Class not found with the provided EDP code.");
                 }
 
-                // Check if student is already enrolled
+                // If user is a student, enforce "no same course" and "no same schedule" rules
+                var roles = await _userRepository.GetRolesAsync(user);
+                var isStudent = roles.Any(r => r.Equals("Student", System.StringComparison.OrdinalIgnoreCase));
+
+                if (isStudent)
+                {
+                    var enrollments = await _classRepository.GetEnrollmentsByStudentIdAsync(userId);
+
+                    // Prevent enrolling in the same course (if class has CourseId)
+                    if (classEntity.CourseId.HasValue)
+                    {
+                        var alreadyInCourse = enrollments.Any(e => e.Class?.CourseId == classEntity.CourseId);
+                        if (alreadyInCourse)
+                        {
+                            return UserManagementResult.Failure("Student is already enrolled in another class for the same course.");
+                        }
+                    }
+
+                    // Prevent enrolling in a class with the same schedule (exact match, case-insensitive)
+                    var newSchedule = classEntity.Schedule?.Trim();
+                    if (!string.IsNullOrWhiteSpace(newSchedule))
+                    {
+                        var scheduleConflict = enrollments.Any(e =>
+                            !string.IsNullOrWhiteSpace(e.Class?.Schedule) &&
+                            string.Equals(e.Class.Schedule.Trim(), newSchedule, System.StringComparison.OrdinalIgnoreCase));
+                        if (scheduleConflict)
+                        {
+                            return UserManagementResult.Failure("Student is already enrolled in a class with the same schedule.");
+                        }
+                    }
+                }
+
+                // Check if student is already enrolled in this exact class
                 var isEnrolled = await _classRepository.IsStudentEnrolledAsync(userId, classEntity.Id);
                 if (isEnrolled)
                 {

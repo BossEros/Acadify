@@ -88,7 +88,7 @@ namespace ASI.Basecode.WebApp.Controllers
         // ==== AJAX ENDPOINTS ====
 
         [HttpGet]
-        public async Task<IActionResult> FindUser(string searchTerm)
+        public async Task<IActionResult> FindUser(string searchTerm, string? role = null)
         {
             try
             {
@@ -97,17 +97,22 @@ namespace ASI.Basecode.WebApp.Controllers
                     return JsonResponse(false, "Please enter a user ID or email to search.");
                 }
 
-                // If numeric, try IdNumber first (school/student/teacher ID)
+                // Try numeric search (prefer IdNumber)
                 if (int.TryParse(searchTerm, out int numeric))
                 {
-                    // Prefer lookup by IdNumber
+                    // Try lookup by IdNumber first
                     var userByIdNumber = await _accountManagementService.GetUserByIdNumberAsync(numeric);
                     if (userByIdNumber != null)
                     {
+                        if (!string.IsNullOrWhiteSpace(role) && !string.Equals(userByIdNumber.Role, role, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return JsonResponse(false, $"No {role} found with the provided identifier.");
+                        }
+
                         return JsonResponse(true, "User found", new
                         {
-                            id = userByIdNumber.Id, // primary key for backend actions
-                            idNumber = userByIdNumber.IdNumber, // school ID for display
+                            id = userByIdNumber.Id,
+                            idNumber = userByIdNumber.IdNumber,
                             firstName = userByIdNumber.FirstName,
                             lastName = userByIdNumber.LastName,
                             email = userByIdNumber.Email,
@@ -116,10 +121,15 @@ namespace ASI.Basecode.WebApp.Controllers
                         });
                     }
 
-                    // Fall back to primary key lookup (in case a primary key matches the input)
+                    // Fall back to primary key lookup
                     var userById = await _accountManagementService.GetUserByIdAsync(numeric);
                     if (userById != null)
                     {
+                        if (!string.IsNullOrWhiteSpace(role) && !string.Equals(userById.Role, role, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return JsonResponse(false, $"No {role} found with the provided identifier.");
+                        }
+
                         return JsonResponse(true, "User found", new
                         {
                             id = userById.Id,
@@ -137,6 +147,11 @@ namespace ASI.Basecode.WebApp.Controllers
                 var userByEmail = await _accountManagementService.GetUserByEmailAsync(searchTerm);
                 if (userByEmail != null)
                 {
+                    if (!string.IsNullOrWhiteSpace(role) && !string.Equals(userByEmail.Role, role, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return JsonResponse(false, $"No {role} found with the provided identifier.");
+                    }
+
                     return JsonResponse(true, "User found", new
                     {
                         id = userByEmail.Id,

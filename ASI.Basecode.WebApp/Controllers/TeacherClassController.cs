@@ -4,6 +4,9 @@ using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.WebApp.ViewModels.ClassManagement;
 using Microsoft.AspNetCore.Mvc;
 using ASI.Basecode.Services.DTOs;
+using Microsoft.AspNetCore.Authorization;
+
+[Authorize(Roles = "Admin")]
 
 public class TeacherClassController : Controller
 {

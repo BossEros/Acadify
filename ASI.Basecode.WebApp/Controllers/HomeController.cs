@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ASI.Basecode.Services.Interfaces;
+﻿using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.WebApp.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Security.Claims;
 
 namespace Student_Performance_Tracker.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class HomeController : Controller
     {
         private readonly IClassManagementService _classService;

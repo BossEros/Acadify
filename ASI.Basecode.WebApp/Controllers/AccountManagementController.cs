@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    
     [Authorize(Roles = "Admin")]
     public class AccountManagementController : Controller
     {
@@ -98,20 +97,38 @@ namespace ASI.Basecode.WebApp.Controllers
                     return JsonResponse(false, "Please enter a user ID or email to search.");
                 }
 
-                // Try to parse as ID first
-                if (int.TryParse(searchTerm, out int userId))
+                // If numeric, try IdNumber first (school/student/teacher ID)
+                if (int.TryParse(searchTerm, out int numeric))
                 {
-                    var user = await _accountManagementService.GetUserByIdAsync(userId);
-                    if (user != null)
+                    // Prefer lookup by IdNumber
+                    var userByIdNumber = await _accountManagementService.GetUserByIdNumberAsync(numeric);
+                    if (userByIdNumber != null)
                     {
                         return JsonResponse(true, "User found", new
                         {
-                            id = user.Id,
-                            firstName = user.FirstName,
-                            lastName = user.LastName,
-                            email = user.Email,
-                            role = user.Role,
-                            isActive = user.IsActive
+                            id = userByIdNumber.Id, // primary key for backend actions
+                            idNumber = userByIdNumber.IdNumber, // school ID for display
+                            firstName = userByIdNumber.FirstName,
+                            lastName = userByIdNumber.LastName,
+                            email = userByIdNumber.Email,
+                            role = userByIdNumber.Role,
+                            isActive = userByIdNumber.IsActive
+                        });
+                    }
+
+                    // Fall back to primary key lookup (in case a primary key matches the input)
+                    var userById = await _accountManagementService.GetUserByIdAsync(numeric);
+                    if (userById != null)
+                    {
+                        return JsonResponse(true, "User found", new
+                        {
+                            id = userById.Id,
+                            idNumber = userById.IdNumber,
+                            firstName = userById.FirstName,
+                            lastName = userById.LastName,
+                            email = userById.Email,
+                            role = userById.Role,
+                            isActive = userById.IsActive
                         });
                     }
                 }
@@ -123,6 +140,7 @@ namespace ASI.Basecode.WebApp.Controllers
                     return JsonResponse(true, "User found", new
                     {
                         id = userByEmail.Id,
+                        idNumber = userByEmail.IdNumber,
                         firstName = userByEmail.FirstName,
                         lastName = userByEmail.LastName,
                         email = userByEmail.Email,

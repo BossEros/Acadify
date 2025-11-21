@@ -14,7 +14,7 @@
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-lg font-semibold mb-4">Find Student</h2>
         <div class="flex gap-4">
-            <input type="text" id="searchInput" placeholder="Enter Student ID or Email"
+            <input type="text" id="searchInput" placeholder="Enter ID Number or Email"
                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <button onclick="findUser()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center">
                 <i class="fas fa-search mr-2"></i> Find User
@@ -50,16 +50,6 @@
         </div>
     </div>
 
-        <!-- Student Info -->
-        <div id="studentInfo" class="border-t pt-4"></div>
-
-        <!-- Enrolled Classes -->
-        <div id="enrolledClasses" class="border-t pt-4 mt-4 hidden">
-            <h3 class="text-md font-semibold mb-2">Enrolled Classes</h3>
-            <div id="classesList" class="space-y-2"></div>
-        </div>
-    </div>
-
     <!-- Students List -->
     <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b">
@@ -69,7 +59,7 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Number</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -80,7 +70,7 @@
                     @foreach (var student in Model.Users)
                     {
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@student.Id</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@student.IdNumber</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@student.FullName</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@student.Email</td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -89,7 +79,7 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button onclick="loadStudent(@student.Id)" class="text-blue-600 hover:text-blue-900 mr-3">Select</button>
+                                <button onclick="loadStudent('@student.IdNumber')" class="text-blue-600 hover:text-blue-900 mr-3">Select</button>
                             </td>
                         </tr>
                     }
@@ -159,7 +149,7 @@
         function findUser() {
             const searchTerm = document.getElementById('searchInput').value.trim();
             if (!searchTerm) {
-                alert('Please enter a Student ID or Email');
+                alert('Please enter an ID Number or Email');
                 return;
             }
 
@@ -167,7 +157,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        currentUserId = data.data.id;
+                        currentUserId = data.data.id; // primary key used for server operations
                         displayUserInfo(data.data);
                         loadEnrolledClasses();
                         showStudentActions();
@@ -182,8 +172,8 @@
                 });
         }
 
-        function loadStudent(userId) {
-            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + userId)
+        function loadStudent(idNumber) {
+            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + idNumber)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -191,7 +181,7 @@
                         displayUserInfo(data.data);
                         loadEnrolledClasses();
                         showStudentActions();
-                        document.getElementById('searchInput').value = userId;
+                        document.getElementById('searchInput').value = idNumber;
                     } else {
                         alert(data.message);
                     }
@@ -208,8 +198,8 @@
                 <h3 class="text-md font-semibold mb-2">Student Information</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-sm text-gray-600">Student ID:</label>
-                        <p class="font-medium">${user.id}</p>
+                        <label class="text-sm text-gray-600">ID Number:</label>
+                        <p class="font-medium">${user.idNumber}</p>
                     </div>
                     <div>
                         <label class="text-sm text-gray-600">Name:</label>

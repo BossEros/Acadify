@@ -7,6 +7,7 @@ namespace ASI.Basecode.Services.Interfaces
     {
         Task<IEnumerable<UserManagementDto>> GetAllUsersAsync();
         Task<UserManagementDto?> GetUserByIdAsync(int id);
+        Task<UserManagementDto?> GetUserByIdNumberAsync(int idNumber); 
         Task<UserManagementDto?> GetUserByEmailAsync(string email);
         Task<UserManagementResult> CreateUserAsync(RegisterRequest request);
         Task<UserManagementResult> UpdateUserAsync(UpdateUserRequest request);

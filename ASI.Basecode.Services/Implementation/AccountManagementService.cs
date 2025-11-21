@@ -51,6 +51,7 @@ namespace ASI.Basecode.Services.Implementation
                 userDtos.Add(new UserManagementDto
                 {
                     Id = user.Id,
+                    IdNumber = user.IdNumber, // added mapping
                     UserName = user.UserName!,
                     Email = user.Email!,
                     FirstName = user.FirstName,
@@ -75,6 +76,32 @@ namespace ASI.Basecode.Services.Implementation
             return new UserManagementDto
             {
                 Id = user.Id,
+                IdNumber = user.IdNumber, // added mapping
+                UserName = user.UserName!,
+                Email = user.Email!,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Role = primaryRole,
+                IsActive = user.IsApproved,
+                CreatedAt = user.CreatedAt
+            };
+        }
+
+        public async Task<UserManagementDto?> GetUserByIdNumberAsync(int idNumber)
+        {
+            var user = await _userManager.Users
+                .Where(u => !u.IsDeleted && u.IdNumber == idNumber)
+                .FirstOrDefaultAsync();
+
+            if (user == null) return null;
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var primaryRole = roles.FirstOrDefault() ?? "Student";
+
+            return new UserManagementDto
+            {
+                Id = user.Id,
+                IdNumber = user.IdNumber,
                 UserName = user.UserName!,
                 Email = user.Email!,
                 FirstName = user.FirstName,
@@ -96,6 +123,7 @@ namespace ASI.Basecode.Services.Implementation
             return new UserManagementDto
             {
                 Id = user.Id,
+                IdNumber = user.IdNumber, // added mapping
                 UserName = user.UserName!,
                 Email = user.Email!,
                 FirstName = user.FirstName,

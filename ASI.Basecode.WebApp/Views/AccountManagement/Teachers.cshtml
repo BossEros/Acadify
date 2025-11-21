@@ -70,7 +70,7 @@
                     @foreach (var teacher in Model.Users)
                     {
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@teacher.Id</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@teacher.IdNumber</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@teacher.FullName</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@teacher.Email</td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -79,7 +79,7 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button onclick="loadTeacher(@teacher.Id)" class="text-blue-600 hover:text-blue-900 mr-3">Select</button>
+                                <button onclick="loadTeacher('@teacher.IdNumber')" class="text-blue-600 hover:text-blue-900 mr-3">Select</button>
                             </td>
                         </tr>
                     }
@@ -157,7 +157,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        currentUserId = data.data.id;
+                        currentUserId = data.data.id; // primary key
                         displayUserInfo(data.data);
                         loadAssignedClasses();
                         showTeacherActions();
@@ -172,8 +172,8 @@
                 });
         }
 
-        function loadTeacher(userId) {
-            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + userId)
+        function loadTeacher(idNumber) {
+            fetch('@Url.Action("FindUser", "AccountManagement")?searchTerm=' + idNumber)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -181,7 +181,7 @@
                         displayUserInfo(data.data);
                         loadAssignedClasses();
                         showTeacherActions();
-                        document.getElementById('searchInput').value = userId;
+                        document.getElementById('searchInput').value = idNumber;
                     } else {
                         alert(data.message);
                     }
@@ -199,7 +199,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm text-gray-600">Teacher ID:</label>
-                        <p class="font-medium">${user.id}</p>
+                        <p class="font-medium">${user.idNumber}</p>
                     </div>
                     <div>
                         <label class="text-sm text-gray-600">Name:</label>

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 public interface IClassManagementRepository
 {
-    Task<IEnumerable<Class>> GetAllAsync();
+    Task<IEnumerable<Class>> GetAllClassAsync();
     Task<Class?> GetByIdAsync(int id);
     Task<Class?> GetByIdIncludeInactiveAsync(int id);
     Task<int> GetNextClassIdAsync();

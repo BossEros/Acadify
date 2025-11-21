@@ -6,8 +6,6 @@ namespace ASI.Basecode.WebApp.ViewModels.ClassManagement
 {
     public class EditClassViewModel : IValidatableObject
     {
-        public int Id { get; set; }
-
         [Required(ErrorMessage = "Course is required")]
         [Display(Name = "Course")]
         public int? CourseId { get; set; }

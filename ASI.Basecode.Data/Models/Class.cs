@@ -10,7 +10,6 @@ namespace ASI.Basecode.Data.Models
         public int? TeacherId { get; set; }
         public short Semester { get; set; }
         public short YearLevel { get; set; }
-        // public short Units { get; set; }
         public string? Schedule { get; set; }
         public int Capacity { get; set; }
         public string? JoinCode { get; set; }

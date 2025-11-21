@@ -16,7 +16,7 @@ namespace ASI.Basecode.Data.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Class>> GetAllAsync()
+        public async Task<IEnumerable<Class>> GetAllClassAsync()
         {
             return await _dbContext.Classes
                 .Include(c => c.Course)

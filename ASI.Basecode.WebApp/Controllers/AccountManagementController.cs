@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
-    [AllowAnonymous]
+    
+    [Authorize(Roles = "Admin")]
     public class AccountManagementController : Controller
     {
         private readonly IAccountManagementService _accountManagementService;

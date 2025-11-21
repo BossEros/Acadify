@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace Student_Performance_Tracker.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Student")]
     public class HomeController : Controller
     {
         private readonly IClassManagementService _classService;

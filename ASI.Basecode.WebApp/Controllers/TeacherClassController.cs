@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using ASI.Basecode.Services.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Teacher")]
 
 public class TeacherClassController : Controller
 {

@@ -445,9 +445,10 @@ namespace ASI.Basecode.Services.Implementation
             var enrolledClasses = enrollments.Select(e => new EnrolledClassDto
             {
                 EdpCode = e.Class.Id.ToString(),
+                // Only include course name (remove semester/year)
                 ClassName = e.Class.Course != null
-                    ? $"{e.Class.Course.CourseName} (Sem {e.Class.Semester}, Year {e.Class.YearLevel})"
-                    : $"Class {e.ClassId} (Sem {e.Class.Semester}, Year {e.Class.YearLevel})"
+                    ? $"{e.Class.Course.CourseName}"
+                    : $"Class {e.ClassId}"
             }).ToList();
 
             return enrolledClasses;
@@ -488,7 +489,7 @@ namespace ASI.Basecode.Services.Implementation
                     return UserManagementResult.Failure("Student is not enrolled in this class.");
                 }
 
-                // Unenroll the student (Grade will be cascade deleted if exists)
+               
                 await _classRepository.UnenrollStudentAsync(userId, classEntity.Id);
 
                 return UserManagementResult.Success("Student unenrolled from class successfully.");
@@ -528,9 +529,10 @@ namespace ASI.Basecode.Services.Implementation
             var assignedClasses = classes.Select(c => new AssignedClassDto
             {
                 EdpCode = c.Id.ToString(),
+               
                 ClassName = c.Course != null
-                    ? $"{c.Course.CourseName} (Sem {c.Semester}, Year {c.YearLevel})"
-                    : $"Class {c.Id} (Sem {c.Semester}, Year {c.YearLevel})"
+                    ? $"{c.Course.CourseName}"
+                    : $"Class {c.Id}"
             }).ToList();
 
             return assignedClasses;

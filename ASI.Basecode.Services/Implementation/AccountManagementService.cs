@@ -6,6 +6,9 @@ using ASI.Basecode.Services.Results;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace ASI.Basecode.Services.Implementation
@@ -77,7 +80,7 @@ namespace ASI.Basecode.Services.Implementation
             return new UserManagementDto
             {
                 Id = user.Id,
-                IdNumber = user.IdNumber, 
+                IdNumber = user.IdNumber,
                 UserName = user.UserName!,
                 Email = user.Email!,
                 FirstName = user.FirstName,
@@ -391,26 +394,20 @@ namespace ASI.Basecode.Services.Implementation
                     var enrollments = await _classRepository.GetEnrollmentsByStudentIdAsync(userId);
 
                     // Prevent enrolling in the same course (if class has CourseId)
-                    if (classEntity.CourseId.HasValue)
+                    if (IsEnrolledInSameSubject(classEntity, enrollments))
                     {
-                        var alreadyInCourse = enrollments.Any(e => e.Class?.CourseId == classEntity.CourseId);
-                        if (alreadyInCourse)
-                        {
-                            return UserManagementResult.Failure("Student is already enrolled in another class for the same course.");
-                        }
+
+                        return UserManagementResult.Failure("Student is already enrolled in another class for the same course.");
+
                     }
 
                     // Prevent enrolling in a class with the same schedule (exact match, case-insensitive)
                     var newSchedule = classEntity.Schedule?.Trim();
-                    if (!string.IsNullOrWhiteSpace(newSchedule))
+                    if (HasScheduleConflict(classEntity, enrollments))
                     {
-                        var scheduleConflict = enrollments.Any(e =>
-                            !string.IsNullOrWhiteSpace(e.Class?.Schedule) &&
-                            string.Equals(e.Class.Schedule.Trim(), newSchedule, System.StringComparison.OrdinalIgnoreCase));
-                        if (scheduleConflict)
-                        {
-                            return UserManagementResult.Failure("Student is already enrolled in a class with the same schedule.");
-                        }
+
+                        return UserManagementResult.Failure("Student is already enrolled in a class with the same schedule.");
+
                     }
                 }
 
@@ -432,6 +429,7 @@ namespace ASI.Basecode.Services.Implementation
             }
         }
 
+
         public async Task<IEnumerable<EnrolledClassDto>> GetEnrolledClassesAsync(int userId)
         {
             var user = await _userRepository.FindByIdAsync(userId);
@@ -445,7 +443,6 @@ namespace ASI.Basecode.Services.Implementation
             var enrolledClasses = enrollments.Select(e => new EnrolledClassDto
             {
                 EdpCode = e.Class.Id.ToString(),
-                // Only include course name (remove semester/year)
                 ClassName = e.Class.Course != null
                     ? $"{e.Class.Course.CourseName}"
                     : $"Class {e.ClassId}"
@@ -489,7 +486,7 @@ namespace ASI.Basecode.Services.Implementation
                     return UserManagementResult.Failure("Student is not enrolled in this class.");
                 }
 
-               
+                // Unenroll the student (Grade will be cascade deleted if exists)
                 await _classRepository.UnenrollStudentAsync(userId, classEntity.Id);
 
                 return UserManagementResult.Success("Student unenrolled from class successfully.");
@@ -529,7 +526,6 @@ namespace ASI.Basecode.Services.Implementation
             var assignedClasses = classes.Select(c => new AssignedClassDto
             {
                 EdpCode = c.Id.ToString(),
-               
                 ClassName = c.Course != null
                     ? $"{c.Course.CourseName}"
                     : $"Class {c.Id}"
@@ -581,6 +577,158 @@ namespace ASI.Basecode.Services.Implementation
             {
                 return UserManagementResult.Failure($"Error unassigning teacher: {ex.Message}");
             }
+        }
+        private static bool IsEnrolledInSameSubject(Class targetClass, IEnumerable<Enrollment> enrollments)
+        {
+            var targetCourseId = targetClass.CourseId;
+            var targetCourseCode = targetClass.Course?.CourseCode;
+
+            return enrollments.Any(enrollment =>
+            {
+                var course = enrollment.Class?.Course;
+                if (course == null)
+                {
+                    return false;
+                }
+
+                if (targetCourseId.HasValue && course.Id == targetCourseId.Value)
+                {
+                    return true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(targetCourseCode) &&
+                    !string.IsNullOrWhiteSpace(course.CourseCode) &&
+                    string.Equals(course.CourseCode, targetCourseCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                return false;
+            });
+        }
+
+        private static bool HasScheduleConflict(Class targetClass, IEnumerable<Enrollment> enrollments)
+        {
+            var targetSchedule = ParseScheduleForComparison(targetClass?.Schedule);
+            if (!IsScheduleUsable(targetSchedule))
+            {
+                return false;
+            }
+
+            foreach (var enrollment in enrollments)
+            {
+                var existingSchedule = ParseScheduleForComparison(enrollment.Class?.Schedule);
+                if (!IsScheduleUsable(existingSchedule))
+                {
+                    continue;
+                }
+
+                if (SchedulesOverlap(targetSchedule, existingSchedule))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool SchedulesOverlap(ScheduleParts a, ScheduleParts b)
+        {
+            if (!a.Start.HasValue || !a.End.HasValue || !b.Start.HasValue || !b.End.HasValue)
+            {
+                return false;
+            }
+
+            var sharesDay = a.Days.Any(day => b.Days.Contains(day));
+            if (!sharesDay)
+            {
+                return false;
+            }
+
+            return a.Start.Value < b.End.Value && b.Start.Value < a.End.Value;
+        }
+
+        private static bool IsScheduleUsable(ScheduleParts schedule)
+        {
+            return schedule.Days.Count > 0 && schedule.Start.HasValue && schedule.End.HasValue;
+        }
+
+        private static ScheduleParts ParseScheduleForComparison(string? schedule)
+        {
+            var result = new ScheduleParts();
+            if (string.IsNullOrWhiteSpace(schedule))
+            {
+                return result;
+            }
+
+            var parts = schedule.Split(',', 2, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 0)
+            {
+                var dayPart = parts[0].Replace(" ", string.Empty, StringComparison.Ordinal).ToUpperInvariant();
+
+                if (dayPart.Contains("TH", StringComparison.Ordinal))
+                {
+                    result.Days.Add("TH");
+                    dayPart = dayPart.Replace("TH", string.Empty, StringComparison.Ordinal);
+                }
+
+                foreach (var character in dayPart)
+                {
+                    switch (character)
+                    {
+                        case 'M':
+                            result.Days.Add("M");
+                            break;
+                        case 'T':
+                            result.Days.Add("T");
+                            break;
+                        case 'W':
+                            result.Days.Add("W");
+                            break;
+                        case 'F':
+                            result.Days.Add("F");
+                            break;
+                        case 'S':
+                            result.Days.Add("S");
+                            break;
+                    }
+                }
+            }
+
+            if (parts.Length > 1)
+            {
+                var timeRange = parts[1];
+                var separatorIndex = timeRange.IndexOf('–');
+                if (separatorIndex < 0)
+                {
+                    separatorIndex = timeRange.IndexOf('-');
+                }
+
+                if (separatorIndex > 0)
+                {
+                    var start = timeRange[..separatorIndex].Trim();
+                    var end = timeRange[(separatorIndex + 1)..].Trim();
+
+                    if (DateTime.TryParse(start, CultureInfo.InvariantCulture, DateTimeStyles.None, out var startTime))
+                    {
+                        result.Start = startTime.TimeOfDay;
+                    }
+
+                    if (DateTime.TryParse(end, CultureInfo.InvariantCulture, DateTimeStyles.None, out var endTime))
+                    {
+                        result.End = endTime.TimeOfDay;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private class ScheduleParts
+        {
+            public HashSet<string> Days { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            public TimeSpan? Start { get; set; }
+            public TimeSpan? End { get; set; }
         }
     }
 }

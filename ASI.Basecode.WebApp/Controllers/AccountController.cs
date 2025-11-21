@@ -89,10 +89,6 @@ public class AccountController : Controller
         }
     }
 
-    // GET: /Account/RegisterConfirmation
-    [HttpGet]
-    public ViewResult RegisterConfirmation() => View();
-
     // POST: /Account/ResendEmailVerification
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -143,7 +139,7 @@ public class AccountController : Controller
 
             if (result.Succeeded)
             {
-                return RedirectToAction("RegisterConfirmation", "Account");
+                return View("RegisterConfirmation");
             }
 
             // Add errors to ModelState

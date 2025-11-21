@@ -17,68 +17,88 @@
         body {
             font-family: 'Poppins', sans-serif;
         }
+
         .custom-blue {
             background-color: #3A4D75;
         }
+
         .custom-blue-border {
             border-color: #3A4D75;
         }
+
         .custom-blue-text {
             color: #3A4D75;
         }
+
         .custom-blue-focus:focus {
             border-color: #3A4D75;
             box-shadow: 0 0 0 3px rgba(58, 77, 117, 0.1);
         }
+
         .custom-blue-hover:hover {
             background-color: #2d3a5a;
         }
     </style>
 </head>
-<body class="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-    <div class="w-full max-w-md">
-        <div class="bg-white rounded-2xl p-12 shadow-lg border border-gray-100">
-            <!-- Logo -->
-            <div class="flex justify-center mb-10">
-                <div class="w-16 h-16 custom-blue rounded-xl flex items-center justify-center">
-                    <span class="text-white font-bold text-2xl">A</span>
-                </div>
-            </div>
+<body class="min-h-screen bg-gray-50">
+    <div class="min-h-screen grid grid-cols-1 lg:grid-cols-2 relative">
 
-            <!-- Header -->
-            <div class="text-center mb-10">
-                <h2 class="text-2xl font-bold custom-blue-text mb-4">Verify Your Email</h2>
-                <p class="text-gray-500 text-lg">Check your inbox to complete registration</p>
-            </div>
-
-            <!-- Email Icon -->
-            <div class="flex justify-center mb-8">
-                <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
-                    <svg class="w-10 h-10 text-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 7.89a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- Success Message -->
-            <div class="text-center mb-10">
-                <h3 class="text-xl font-semibold text-gray-800 mb-3">Registration successful!</h3>
-                <p class="text-gray-600 mb-4">We've sent a verification email to your email address. Please check your inbox and click the verification link to activate your account.</p>
-                <div class="bg-blue-50 border-l-4 custom-blue-border p-4 rounded-lg mt-6">
-                    <p class="text-sm text-gray-700">
-                        <span class="font-semibold">Note:</span> The verification link expires in 30 minutes. Make sure to verify your email before attempting to log in.
+        <!-- Left Panel -->
+        <div class="bg-gray-100 flex items-center justify-center p-8">
+            <div class="max-w-lg text-center lg:text-left">
+                <h1 class="text-6xl font-bold custom-blue-text mb-4 tracking-tight">ACADIFY</h1>
+                <p class="text-xl text-gray-600 mb-6 font-medium">Student Performance Tracker</p>
+                <div class="space-y-4 text-gray-600">
+                    <p class="text-base leading-relaxed">
+                        Join our secure platform for tracking academic progress and managing student performance.
+                    </p>
+                    <p class="text-base leading-relaxed">
+                        Create your account to start managing grades and monitoring student performance effectively, anytime, anywhere.
                     </p>
                 </div>
             </div>
+        </div>
 
-            <!-- Back to Login Button -->
-            <a asp-controller="Account" asp-action="Login"
-               class="w-full py-4 custom-blue text-white rounded-lg font-semibold custom-blue-hover transition duration-200 inline-flex items-center justify-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Go to Login
-            </a>
+        <!-- Right Panel -->
+        <div class="custom-blue relative flex items-center justify-center p-8">
+            <div class="w-full max-w-md relative z-10">
+                <div class="bg-white rounded-2xl p-8 shadow-2xl border-0">
+                    <!-- Header -->
+                    <div class="text-center mb-7">
+                        <h2 class="text-2xl font-bold custom-blue-text mb-3">Verify Your Email</h2>
+                        <p class="text-gray-500 text-base">Check your inbox to complete registration</p>
+                    </div>
+
+                    <!-- Email Icon -->
+                    <div class="flex justify-center mb-7">
+                        <div class="w-20 h-20 custom-blue rounded-full flex items-center justify-center shadow-md">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 7.89a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div class="text-center mb-7">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Registration successful!</h3>
+                        <p class="text-sm text-gray-600 mb-5">We've sent a verification email to your email address. Please check your inbox and click the verification link to activate your account.</p>
+                        <div class="bg-blue-50 border-l-4 custom-blue-border p-4 rounded-lg mt-5">
+                            <p class="text-xs text-gray-700 leading-relaxed">
+                                <span class="font-semibold">Note:</span> The verification link expires in 30 minutes. Make sure to verify your email before attempting to log in.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Back to Login Button -->
+                    <a asp-controller="Account" asp-action="Login"
+                       class="w-full py-3 custom-blue text-white rounded-lg font-semibold custom-blue-hover transition duration-200 inline-flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Go to Login
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </body>

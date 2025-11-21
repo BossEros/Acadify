@@ -17,6 +17,23 @@ namespace ASI.Basecode.Data.Models
         public bool IsActive { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public bool Status 
+        { 
+            get 
+            {
+                if (!IsActive) return false;
+                
+                var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
+                if (CreatedAt < sixMonthsAgo) return false;
+                
+                return true;
+            }
+            set
+            {
+                IsActive = value;
+            }
+        }
+
         // Navigation properties
         public virtual Course? Course { get; set; }
         public virtual User? Teacher { get; set; }

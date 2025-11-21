@@ -37,7 +37,7 @@ namespace ASI.Basecode.Services.Implementation
                     Units = c.Course.Units,
                      Schedule = c.Schedule,
                     TeacherName = $"{c.Teacher.FirstName} {c.Teacher.LastName}",
-                    Status = c.IsActive,
+                    Status = c.Status,
                     Capacity = c.Capacity,
 
                     // Temporary dependent variables
@@ -80,7 +80,7 @@ namespace ASI.Basecode.Services.Implementation
                 Semester = classEntity.Semester,
                 YearLevel = classEntity.YearLevel,
                 Schedule = classEntity.Schedule,
-                Status = classEntity.IsActive,
+                Status = classEntity.Status,
                 Capacity = classEntity.Capacity,
                 DateCreated = classEntity.CreatedAt,
                 TeacherName = $"{classEntity.Teacher.FirstName} {classEntity.Teacher.LastName}",
@@ -109,7 +109,7 @@ namespace ASI.Basecode.Services.Implementation
                 TeacherName = $"{classEntity.Teacher.FirstName} {classEntity.Teacher.LastName}",
                 Semester = classEntity.Semester,
                 YearLevel = classEntity.YearLevel,
-                Status = classEntity.IsActive,
+                Status = classEntity.Status,
                 Capacity = classEntity.Capacity,
 
                 SelectedDays = scheduleData.Days,
@@ -178,7 +178,7 @@ namespace ASI.Basecode.Services.Implementation
                 TeacherId = model.SelectedTeacherId,
                 Capacity = model.Capacity,
                 Schedule = finalSchedule,
-                IsActive = false,
+                Status = false,
                 
                 YearLevel = course.YearLevel,
                 Semester = course.AvailableSemester,
@@ -273,7 +273,7 @@ namespace ASI.Basecode.Services.Implementation
             existingClass.TeacherId = model.TeacherId;
             existingClass.Schedule = newSchedule;
             existingClass.Capacity = model.Capacity;
-            existingClass.IsActive = model.Status;
+            existingClass.Status = model.Status;
 
             existingClass.JoinCode ??= "TEMP";
 
@@ -306,7 +306,7 @@ namespace ASI.Basecode.Services.Implementation
                 EDPCode = classEntity.Id,
                 CourseCode = classEntity.Course?.CourseCode ?? "N/A",
                 CourseName = classEntity.Course?.CourseName ?? "N/A",
-                IsActive = classEntity.IsActive,
+                Status = classEntity.Status,
                 HasEnrolledStudents = hasStudents
             };
 
@@ -328,7 +328,7 @@ namespace ASI.Basecode.Services.Implementation
                     return result;
                 }
 
-                if (classEntity.IsActive)
+                if (classEntity.Status)
                 {
                     result.Success = false;
                     result.Message = "Cannot delete an active class. Please deactivate it first.";
@@ -364,14 +364,14 @@ namespace ASI.Basecode.Services.Implementation
                 throw new Exception("Class not found with the provided EDP code.");
 
             // Check if class is already active and assigned to a different teacher
-            if (classEntity.IsActive && classEntity.TeacherId.HasValue && classEntity.TeacherId.Value != teacherId)
+            if (classEntity.Status && classEntity.TeacherId.HasValue && classEntity.TeacherId.Value != teacherId)
             {
                 throw new InvalidOperationException("This class is already active and assigned to another teacher.");
             }
 
             // Assign teacher and activate the class
             classEntity.TeacherId = teacherId;
-            classEntity.IsActive = true;
+            classEntity.Status = true;
 
             await _classManagementRepository.UpdateAsync(classEntity);
             return true;

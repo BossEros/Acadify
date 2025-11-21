@@ -114,7 +114,7 @@ namespace ASI.Basecode.Services.DTOs
         public int EDPCode { get; set; }
         public required string CourseCode { get; set; }
         public required string CourseName { get; set; }
-        public bool IsActive { get; set; }
+        public bool Status { get; set; }
         public bool HasEnrolledStudents { get; set; }
     }
 

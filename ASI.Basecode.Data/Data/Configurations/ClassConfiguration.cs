@@ -75,6 +75,8 @@ namespace ASI.Basecode.Data.Data.Configurations
                 .WithMany(u => u.ClassesTeaching)
                 .HasForeignKey(c => c.TeacherId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Ignore(c => c.Status);
         }
     }
 }

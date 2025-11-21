@@ -61,7 +61,7 @@ namespace ASI.Basecode.Services.Implementation
             var studentDtos = classEntity.Enrollments?
                 .Select(e => new EnrolledStudentDTO
                 {
-                    StudentId = e.StudentId,
+                    StudentId = e.Student.IdNumber,
                     FirstName = e.Student.FirstName,
                     LastName = e.Student.LastName,
                     MidtermGrade = e.Grade?.MidtermGrade,

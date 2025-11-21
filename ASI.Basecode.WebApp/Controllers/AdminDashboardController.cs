@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using ASI.Basecode.Services.Interfaces;
 using ASI.Basecode.WebApp.ViewModels;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ASI.Basecode.WebApp.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminDashboardController : Controller
     {
         private readonly IAdminDashboardService _dashboardService;

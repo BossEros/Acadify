@@ -72,7 +72,9 @@ namespace ASI.Basecode.Services.DTOs
         public int StudentId { get; set; }
         public required string FirstName { get; set; }
         public required string LastName { get; set; }
-
+        public decimal? MidtermGrade { get; set; }
+        public decimal? FinalGrade { get; set; }
+        public string? Remarks { get; set; }
     }
 
     public class ClassCreateDTO
